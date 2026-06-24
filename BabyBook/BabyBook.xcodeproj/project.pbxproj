@@ -1,0 +1,499 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 56;
+	objects = {
+
+/* Begin PBXBuildFile section */
+		E9C5B3DE1A5C4E8DAB90CD6C /* BabyBookApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = AD31ECBE20724AC5BF1BA87A /* BabyBookApp.swift */; };
+		29ABE88CBC404A3497AB116A /* APIModels.swift in Sources */ = {isa = PBXBuildFile; fileRef = 964C4784F4464367B1C59AF5 /* APIModels.swift */; };
+		90206A884E02447B8A37CE05 /* BookModels.swift in Sources */ = {isa = PBXBuildFile; fileRef = 738D9589D2C442E386554610 /* BookModels.swift */; };
+		D2CB3CFA545C48A8905A6E6F /* APIConfig.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0F2D76A1AD3D4E4EA58F471B /* APIConfig.swift */; };
+		3282078E91834CD1AC757196 /* AppServices.swift in Sources */ = {isa = PBXBuildFile; fileRef = F18C7364A9E04448AD91E2AA /* AppServices.swift */; };
+		E56A2074EB0041069D5F1782 /* ImageUploadService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9A9FAE218DC64BB7999E6D1D /* ImageUploadService.swift */; };
+		2ED21864B45A44EDA025B044 /* MockService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 71E28B5C15124D0EB65C779B /* MockService.swift */; };
+		F58446AF164A427D872FBF13 /* NetworkService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 62E2B34A6E12474CB8CF3A66 /* NetworkService.swift */; };
+		1FB8D47BB3D14765B80ED74E /* PDFService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 11AB0590E48547B48E56D19D /* PDFService.swift */; };
+		4DA51261FB0C4A9FA9BA855A /* PaymentService.swift in Sources */ = {isa = PBXBuildFile; fileRef = C272BD776EA84684A944E0B3 /* PaymentService.swift */; };
+		5A2D023094F841B890FBD032 /* DesignTokens.swift in Sources */ = {isa = PBXBuildFile; fileRef = C0B47CEE4FD1474BA5CB2129 /* DesignTokens.swift */; };
+		3B46688ABDC74C2C8D04BA8F /* BookDetailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6B1AB052DCC540B39A5F0A2E /* BookDetailView.swift */; };
+		0F528A6F2E66407AA5092CDC /* LoadingOverlay.swift in Sources */ = {isa = PBXBuildFile; fileRef = F803425050E04941A35B718A /* LoadingOverlay.swift */; };
+		6FF8E5FA6AE24AE2B367C21C /* CompleteView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7FE23C94AD0E467D902FF2C0 /* CompleteView.swift */; };
+		28ACC467F4F4453AA98EC459 /* GeneratingView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1B2BC28C0A7641C496876C89 /* GeneratingView.swift */; };
+		2C134FD0791D4E38B66DB0C2 /* HomeView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9F1489AEB776446EBC6013CE /* HomeView.swift */; };
+		404B11CB584F4B88A4733BC3 /* MyBooksView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 54625F66EE99453C9117218B /* MyBooksView.swift */; };
+		CDBBA8E4B86648D39B4FEE4B /* OnboardingView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4E8C70466854401983F228F3 /* OnboardingView.swift */; };
+		E543AF73FA144739B00E3044 /* PaymentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3B6F4024776748E9A9DC24C9 /* PaymentView.swift */; };
+		9D42F657545F4548AA4EC1FC /* UploadPhotoView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2EAD000EA2EF4F9CB208AD0A /* UploadPhotoView.swift */; };
+		67BBC169E5814A2C94A51F80 /* UploadSheetView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 42AD61A0F82643C4B505B660 /* UploadSheetView.swift */; };
+		3E2866D5C93F499AA284DE1A /* self_intro in Resources */ = {isa = PBXBuildFile; fileRef = F371CCCD554F4B9DB5EFAB44 /* self_intro */; };
+		34CE584340BA467D86463442 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = BAE2EC6574F44A9ABAEC5FEF /* Assets.xcassets */; };
+		B880F9EA91B345A6B769E736 /* color_recognition in Resources */ = {isa = PBXBuildFile; fileRef = 331E28211C174E55821A6537 /* color_recognition */; };
+		7BE21A2705F245C5AE409063 /* dream_job in Resources */ = {isa = PBXBuildFile; fileRef = 0EA3EAE55AE146988AF76B7D /* dream_job */; };
+		2BEA976B04124F6E9B603542 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = C48C780A97CA45FAB175E994 /* Assets.xcassets */; };
+/* End PBXBuildFile section */
+
+/* Begin PBXFileReference section */
+		B0A08C8DCF954709828D66AB /* BabyBookApp.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = BabyBookApp.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		AD31ECBE20724AC5BF1BA87A /* BabyBookApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = "BabyBookApp.swift"; path = "BabyBookApp.swift"; sourceTree = "<group>"; };
+		964C4784F4464367B1C59AF5 /* APIModels.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = "APIModels.swift"; path = "APIModels.swift"; sourceTree = "<group>"; };
+		738D9589D2C442E386554610 /* BookModels.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = "BookModels.swift"; path = "BookModels.swift"; sourceTree = "<group>"; };
+		0F2D76A1AD3D4E4EA58F471B /* APIConfig.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = "APIConfig.swift"; path = "APIConfig.swift"; sourceTree = "<group>"; };
+		F18C7364A9E04448AD91E2AA /* AppServices.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = "AppServices.swift"; path = "AppServices.swift"; sourceTree = "<group>"; };
+		9A9FAE218DC64BB7999E6D1D /* ImageUploadService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = "ImageUploadService.swift"; path = "ImageUploadService.swift"; sourceTree = "<group>"; };
+		71E28B5C15124D0EB65C779B /* MockService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = "MockService.swift"; path = "MockService.swift"; sourceTree = "<group>"; };
+		62E2B34A6E12474CB8CF3A66 /* NetworkService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = "NetworkService.swift"; path = "NetworkService.swift"; sourceTree = "<group>"; };
+		11AB0590E48547B48E56D19D /* PDFService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = "PDFService.swift"; path = "PDFService.swift"; sourceTree = "<group>"; };
+		C272BD776EA84684A944E0B3 /* PaymentService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = "PaymentService.swift"; path = "PaymentService.swift"; sourceTree = "<group>"; };
+		C0B47CEE4FD1474BA5CB2129 /* DesignTokens.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = "DesignTokens.swift"; path = "DesignTokens.swift"; sourceTree = "<group>"; };
+		6B1AB052DCC540B39A5F0A2E /* BookDetailView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = "BookDetailView.swift"; path = "BookDetailView.swift"; sourceTree = "<group>"; };
+		F803425050E04941A35B718A /* LoadingOverlay.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = "LoadingOverlay.swift"; path = "LoadingOverlay.swift"; sourceTree = "<group>"; };
+		7FE23C94AD0E467D902FF2C0 /* CompleteView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = "CompleteView.swift"; path = "CompleteView.swift"; sourceTree = "<group>"; };
+		1B2BC28C0A7641C496876C89 /* GeneratingView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = "GeneratingView.swift"; path = "GeneratingView.swift"; sourceTree = "<group>"; };
+		9F1489AEB776446EBC6013CE /* HomeView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = "HomeView.swift"; path = "HomeView.swift"; sourceTree = "<group>"; };
+		54625F66EE99453C9117218B /* MyBooksView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = "MyBooksView.swift"; path = "MyBooksView.swift"; sourceTree = "<group>"; };
+		4E8C70466854401983F228F3 /* OnboardingView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = "OnboardingView.swift"; path = "OnboardingView.swift"; sourceTree = "<group>"; };
+		3B6F4024776748E9A9DC24C9 /* PaymentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = "PaymentView.swift"; path = "PaymentView.swift"; sourceTree = "<group>"; };
+		2EAD000EA2EF4F9CB208AD0A /* UploadPhotoView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = "UploadPhotoView.swift"; path = "UploadPhotoView.swift"; sourceTree = "<group>"; };
+		42AD61A0F82643C4B505B660 /* UploadSheetView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = "UploadSheetView.swift"; path = "UploadSheetView.swift"; sourceTree = "<group>"; };
+		F371CCCD554F4B9DB5EFAB44 /* self_intro */ = {isa = PBXFileReference; lastKnownFileType = folder; name = "self_intro"; path = "self_intro"; sourceTree = "<group>"; };
+		BAE2EC6574F44A9ABAEC5FEF /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder; name = "Assets.xcassets"; path = "Assets.xcassets"; sourceTree = "<group>"; };
+		331E28211C174E55821A6537 /* color_recognition */ = {isa = PBXFileReference; lastKnownFileType = folder; name = "color_recognition"; path = "color_recognition"; sourceTree = "<group>"; };
+		0EA3EAE55AE146988AF76B7D /* dream_job */ = {isa = PBXFileReference; lastKnownFileType = folder; name = "dream_job"; path = "dream_job"; sourceTree = "<group>"; };
+		C48C780A97CA45FAB175E994 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; name = "Assets.xcassets"; path = "Assets.xcassets"; sourceTree = "<group>"; };
+/* End PBXFileReference section */
+
+/* Begin PBXFrameworksBuildPhase section */
+		930693E2103341D384FCCD23 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXFrameworksBuildPhase section */
+
+/* Begin PBXGroup section */
+		04224A20679F43B2B66CD1FF = {
+			isa = PBXGroup;
+			children = (
+				D47B086AC0E0461481E2AE72 /* Sources */,
+				337BDC5F20204EFE839E57E5 /* Products */,
+			);
+			sourceTree = "<group>";
+		};
+		337BDC5F20204EFE839E57E5 /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				B0A08C8DCF954709828D66AB /* BabyBookApp.app */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+		D47B086AC0E0461481E2AE72 /* Sources */ = {
+			isa = PBXGroup;
+			children = (
+				F5F103F381B84CF4A08560A4 /* BabyBookApp */,
+			);
+			path = Sources;
+			sourceTree = "<group>";
+		};
+		F5F103F381B84CF4A08560A4 /* BabyBookApp */ = {
+			isa = PBXGroup;
+			children = (
+				C10C8C45751B4146809C04A2 /* Models */,
+				6ACA862FA83E4B70AF4A6652 /* Resources */,
+				3E83468923FC4F4A899ECE2C /* Services */,
+				C7A3BF5E406949B6B1DC4F8C /* Utils */,
+				837122A7BA004894902B1D48 /* Views */,
+				AD31ECBE20724AC5BF1BA87A /* BabyBookApp.swift */,
+			);
+			path = BabyBookApp;
+			sourceTree = "<group>";
+		};
+		C10C8C45751B4146809C04A2 /* Models */ = {
+			isa = PBXGroup;
+			children = (
+				964C4784F4464367B1C59AF5 /* APIModels.swift */,
+				738D9589D2C442E386554610 /* BookModels.swift */,
+			);
+			path = Models;
+			sourceTree = "<group>";
+		};
+		6ACA862FA83E4B70AF4A6652 /* Resources */ = {
+			isa = PBXGroup;
+			children = (
+				B294FA3C51694057A2CCDCCE /* Assets.xcassets */,
+				6E36C62D165448EE8A5A6198 /* color_recognition */,
+				605347976A9D4E3EB6741A02 /* dream_job */,
+				185F570E0174467499D544E4 /* self_intro */,
+				F371CCCD554F4B9DB5EFAB44 /* self_intro */,
+				BAE2EC6574F44A9ABAEC5FEF /* Assets.xcassets */,
+				331E28211C174E55821A6537 /* color_recognition */,
+				0EA3EAE55AE146988AF76B7D /* dream_job */,
+				C48C780A97CA45FAB175E994 /* Assets.xcassets */,
+			);
+			path = Resources;
+			sourceTree = "<group>";
+		};
+		B294FA3C51694057A2CCDCCE /* Assets.xcassets */ = {
+			isa = PBXGroup;
+			children = (
+
+			);
+			path = Assets.xcassets;
+			sourceTree = "<group>";
+		};
+		6E36C62D165448EE8A5A6198 /* color_recognition */ = {
+			isa = PBXGroup;
+			children = (
+
+			);
+			path = color_recognition;
+			sourceTree = "<group>";
+		};
+		605347976A9D4E3EB6741A02 /* dream_job */ = {
+			isa = PBXGroup;
+			children = (
+
+			);
+			path = dream_job;
+			sourceTree = "<group>";
+		};
+		185F570E0174467499D544E4 /* self_intro */ = {
+			isa = PBXGroup;
+			children = (
+
+			);
+			path = self_intro;
+			sourceTree = "<group>";
+		};
+		3E83468923FC4F4A899ECE2C /* Services */ = {
+			isa = PBXGroup;
+			children = (
+				0F2D76A1AD3D4E4EA58F471B /* APIConfig.swift */,
+				F18C7364A9E04448AD91E2AA /* AppServices.swift */,
+				9A9FAE218DC64BB7999E6D1D /* ImageUploadService.swift */,
+				71E28B5C15124D0EB65C779B /* MockService.swift */,
+				62E2B34A6E12474CB8CF3A66 /* NetworkService.swift */,
+				11AB0590E48547B48E56D19D /* PDFService.swift */,
+				C272BD776EA84684A944E0B3 /* PaymentService.swift */,
+			);
+			path = Services;
+			sourceTree = "<group>";
+		};
+		C7A3BF5E406949B6B1DC4F8C /* Utils */ = {
+			isa = PBXGroup;
+			children = (
+				C0B47CEE4FD1474BA5CB2129 /* DesignTokens.swift */,
+			);
+			path = Utils;
+			sourceTree = "<group>";
+		};
+		837122A7BA004894902B1D48 /* Views */ = {
+			isa = PBXGroup;
+			children = (
+				CB2FE525172E4F53B20B69A0 /* BookDetail */,
+				FF7E378E5FB74D11B8F5AE1D /* Common */,
+				A27AD2DDDA324CE58753A7B3 /* Complete */,
+				E8CAA0C0E33245D08C069F62 /* Generating */,
+				17672925C5EA4CCB8DC74CC9 /* Home */,
+				D27F28E479864196BF2B183C /* MyBooks */,
+				CD5F94908E9F4660AFB9BB4D /* Onboarding */,
+				BCB2C910D54D4432855C823A /* Payment */,
+				443841C8A60A436A8611F537 /* Upload */,
+			);
+			path = Views;
+			sourceTree = "<group>";
+		};
+		CB2FE525172E4F53B20B69A0 /* BookDetail */ = {
+			isa = PBXGroup;
+			children = (
+				6B1AB052DCC540B39A5F0A2E /* BookDetailView.swift */,
+			);
+			path = BookDetail;
+			sourceTree = "<group>";
+		};
+		FF7E378E5FB74D11B8F5AE1D /* Common */ = {
+			isa = PBXGroup;
+			children = (
+				F803425050E04941A35B718A /* LoadingOverlay.swift */,
+			);
+			path = Common;
+			sourceTree = "<group>";
+		};
+		A27AD2DDDA324CE58753A7B3 /* Complete */ = {
+			isa = PBXGroup;
+			children = (
+				7FE23C94AD0E467D902FF2C0 /* CompleteView.swift */,
+			);
+			path = Complete;
+			sourceTree = "<group>";
+		};
+		E8CAA0C0E33245D08C069F62 /* Generating */ = {
+			isa = PBXGroup;
+			children = (
+				1B2BC28C0A7641C496876C89 /* GeneratingView.swift */,
+			);
+			path = Generating;
+			sourceTree = "<group>";
+		};
+		17672925C5EA4CCB8DC74CC9 /* Home */ = {
+			isa = PBXGroup;
+			children = (
+				9F1489AEB776446EBC6013CE /* HomeView.swift */,
+			);
+			path = Home;
+			sourceTree = "<group>";
+		};
+		D27F28E479864196BF2B183C /* MyBooks */ = {
+			isa = PBXGroup;
+			children = (
+				54625F66EE99453C9117218B /* MyBooksView.swift */,
+			);
+			path = MyBooks;
+			sourceTree = "<group>";
+		};
+		CD5F94908E9F4660AFB9BB4D /* Onboarding */ = {
+			isa = PBXGroup;
+			children = (
+				4E8C70466854401983F228F3 /* OnboardingView.swift */,
+			);
+			path = Onboarding;
+			sourceTree = "<group>";
+		};
+		BCB2C910D54D4432855C823A /* Payment */ = {
+			isa = PBXGroup;
+			children = (
+				3B6F4024776748E9A9DC24C9 /* PaymentView.swift */,
+			);
+			path = Payment;
+			sourceTree = "<group>";
+		};
+		443841C8A60A436A8611F537 /* Upload */ = {
+			isa = PBXGroup;
+			children = (
+				2EAD000EA2EF4F9CB208AD0A /* UploadPhotoView.swift */,
+				42AD61A0F82643C4B505B660 /* UploadSheetView.swift */,
+			);
+			path = Upload;
+			sourceTree = "<group>";
+		};
+/* End PBXGroup section */
+
+/* Begin PBXNativeTarget section */
+		2867D2980DB044B69894295D /* BabyBookApp */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = B94E31E43AD641B4A0206DA0 /* Build configuration list for PBXNativeTarget "BabyBookApp" */;
+			buildPhases = (
+				D61B4FA023354FD58D064E32 /* Sources */,
+				930693E2103341D384FCCD23 /* Frameworks */,
+				629916D00424414E8807937B /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = BabyBookApp;
+			productName = BabyBookApp;
+			productReference = B0A08C8DCF954709828D66AB /* BabyBookApp.app */;
+			productType = "com.apple.product-type.application";
+		};
+/* End PBXNativeTarget section */
+
+/* Begin PBXProject section */
+		20FF63ABCCFD4C6A99A835B1 /* Project object */ = {
+			isa = PBXProject;
+			buildConfigurationList = 2515DF9CDF674938BDEA4389 /* Build configuration list for PBXProject "BabyBook" */;
+			compatibilityVersion = "Xcode 14.0";
+			developmentRegion = en;
+			hasScannedForEncodings = 0;
+			knownRegions = (
+				en,
+				Base,
+			);
+			mainGroup = 04224A20679F43B2B66CD1FF;
+			productRefGroup = 337BDC5F20204EFE839E57E5 /* Products */;
+			projectDirPath = "";
+			projectRoot = "";
+			targets = (
+				2867D2980DB044B69894295D /* BabyBookApp */,
+			);
+		};
+/* End PBXProject section */
+
+/* Begin PBXResourcesBuildPhase section */
+		629916D00424414E8807937B /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				3E2866D5C93F499AA284DE1A /* self_intro in Resources */,
+				34CE584340BA467D86463442 /* Assets.xcassets in Resources */,
+				B880F9EA91B345A6B769E736 /* color_recognition in Resources */,
+				7BE21A2705F245C5AE409063 /* dream_job in Resources */,
+				2BEA976B04124F6E9B603542 /* Assets.xcassets in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXResourcesBuildPhase section */
+
+/* Begin PBXSourcesBuildPhase section */
+		D61B4FA023354FD58D064E32 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				E9C5B3DE1A5C4E8DAB90CD6C /* BabyBookApp.swift in Sources */,
+				29ABE88CBC404A3497AB116A /* APIModels.swift in Sources */,
+				90206A884E02447B8A37CE05 /* BookModels.swift in Sources */,
+				D2CB3CFA545C48A8905A6E6F /* APIConfig.swift in Sources */,
+				3282078E91834CD1AC757196 /* AppServices.swift in Sources */,
+				E56A2074EB0041069D5F1782 /* ImageUploadService.swift in Sources */,
+				2ED21864B45A44EDA025B044 /* MockService.swift in Sources */,
+				F58446AF164A427D872FBF13 /* NetworkService.swift in Sources */,
+				1FB8D47BB3D14765B80ED74E /* PDFService.swift in Sources */,
+				4DA51261FB0C4A9FA9BA855A /* PaymentService.swift in Sources */,
+				5A2D023094F841B890FBD032 /* DesignTokens.swift in Sources */,
+				3B46688ABDC74C2C8D04BA8F /* BookDetailView.swift in Sources */,
+				0F528A6F2E66407AA5092CDC /* LoadingOverlay.swift in Sources */,
+				6FF8E5FA6AE24AE2B367C21C /* CompleteView.swift in Sources */,
+				28ACC467F4F4453AA98EC459 /* GeneratingView.swift in Sources */,
+				2C134FD0791D4E38B66DB0C2 /* HomeView.swift in Sources */,
+				404B11CB584F4B88A4733BC3 /* MyBooksView.swift in Sources */,
+				CDBBA8E4B86648D39B4FEE4B /* OnboardingView.swift in Sources */,
+				E543AF73FA144739B00E3044 /* PaymentView.swift in Sources */,
+				9D42F657545F4548AA4EC1FC /* UploadPhotoView.swift in Sources */,
+				67BBC169E5814A2C94A51F80 /* UploadSheetView.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXSourcesBuildPhase section */
+
+/* Begin XCBuildConfiguration section */
+		8CDA4B8B8FE3489681E62762 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = "";
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = "";
+				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
+				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
+				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
+				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = UIInterfaceOrientationPortrait;
+				IPHONEOS_DEPLOYMENT_TARGET = 16.0;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.babybook.app;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = iphoneos;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Debug;
+		};
+		899ED3E15BDD48B486903486 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = "";
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = "";
+				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
+				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
+				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
+				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = UIInterfaceOrientationPortrait;
+				IPHONEOS_DEPLOYMENT_TARGET = 16.0;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.babybook.app;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = iphoneos;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Release;
+		};
+		D135B5E33F6846728D325781 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = dwarf;
+				ENABLE_TESTABILITY = YES;
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"DEBUG=1",
+					"$(inherited)",
+				);
+				IPHONEOS_DEPLOYMENT_TARGET = 16.0;
+				ONLY_ACTIVE_ARCH = YES;
+				SDKROOT = iphoneos;
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = DEBUG;
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+			};
+			name = Debug;
+		};
+		8AFC3983F7284D4B85E48AA1 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				ENABLE_NS_ASSERTIONS = NO;
+				GCC_NO_COMMON_BLOCKS = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 16.0;
+				SDKROOT = iphoneos;
+				SWIFT_COMPILATION_MODE = wholemodule;
+				VALIDATE_PRODUCT = YES;
+			};
+			name = Release;
+		};
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+		B94E31E43AD641B4A0206DA0 /* Build configuration list for PBXNativeTarget "BabyBookApp" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				8CDA4B8B8FE3489681E62762 /* Debug */,
+				899ED3E15BDD48B486903486 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		2515DF9CDF674938BDEA4389 /* Build configuration list for PBXProject "BabyBook" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				D135B5E33F6846728D325781 /* Debug */,
+				8AFC3983F7284D4B85E48AA1 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+/* End XCConfigurationList section */
+	};
+	rootObject = 20FF63ABCCFD4C6A99A835B1 /* Project object */;
+}

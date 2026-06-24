@@ -1,0 +1,50 @@
+# 依赖目录
+node_modules/
+
+# macOS 系统文件
+.DS_Store
+.AppleDouble
+.LSOverride
+
+# Xcode / iOS
+*.xcuserstate
+*.xcworkspace/xcuserdata/
+*.xcodeproj/xcuserdata/
+*.xcodeproj/project.xcworkspace/xcuserdata/
+DerivedData/
+build/
+*.ipa
+*.app.dSYM.zip
+*.dSYM
+
+# Swift Package Manager
+.build/
+Package.resolved
+
+# 日志和临时文件
+*.log
+*.tmp
+*.swp
+*.swo
+*~
+
+# 编辑器配置
+.vscode/
+.idea/
+
+# 环境变量和敏感信息
+.env
+.env.local
+.env.*.local
+
+# 后端构建输出
+backend/dist/
+backend/build/
+
+# 测试相关
+coverage/
+*.lcov
+
+# 其他
+ui-ux-pro-max-skill-main.zip
+ui-ux-pro-max-skill-main/

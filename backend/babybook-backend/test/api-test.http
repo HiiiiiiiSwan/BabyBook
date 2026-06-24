@@ -1,0 +1,65 @@
+### 测试后端 API 接口
+
+### 1. 创建订单
+POST http://localhost:3000/api/order/create
+Content-Type: application/json
+
+{
+  "bookId": "Book001",
+  "deviceId": "test_device_001",
+  "imageUrl": null
+}
+
+### 2. 查询订单详情
+GET http://localhost:3000/api/order/{{orderId}}
+
+### 3. 查询订单列表
+GET http://localhost:3000/api/order?deviceId=test_device_001&page=1&limit=10
+
+### 4. 更新订单图片
+PATCH http://localhost:3000/api/order/{{orderId}}/image
+Content-Type: application/json
+
+{
+  "imageUrl": "https://example.com/baby-photo.jpg"
+}
+
+### 5. 验证支付（Mock 收据）
+POST http://localhost:3000/api/payment/verify
+Content-Type: application/json
+
+{
+  "orderId": "{{orderId}}",
+  "receiptData": "mock-receipt-data-base64",
+  "transactionId": "1000000123456789",
+  "imageUrl": "https://example.com/baby-photo.jpg"
+}
+
+### 6. 查询任务状态
+GET http://localhost:3000/api/task/{{taskId}}
+
+### 7. 根据订单查询任务
+GET http://localhost:3000/api/task/order/{{orderId}}
+
+### 8. 取消任务
+POST http://localhost:3000/api/task/{{taskId}}/cancel
+
+### 9. 获取绘本下载信息
+GET http://localhost:3000/api/book/{{orderId}}/download
+
+### 10. 上传图片（multipart）
+POST http://localhost:3000/api/upload/image
+Content-Type: multipart/form-data; boundary=----WebKitFormBoundary
+
+------WebKitFormBoundary
+Content-Disposition: form-data; name="image"; filename="baby.jpg"
+Content-Type: image/jpeg
+
+< ./test-baby.jpg
+------WebKitFormBoundary--
+
+### 11. 删除临时图片
+DELETE http://localhost:3000/api/upload/image/baby-1234567890.jpg
+
+### 12. Swagger 文档
+GET http://localhost:3000/api/docs
