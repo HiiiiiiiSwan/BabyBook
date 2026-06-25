@@ -20,6 +20,7 @@ struct PaymentView: View {
     @State private var showError = false
     @State private var errorMessage = ""
     @State private var navigateToGenerating = false
+    @Environment(\.dismiss) private var dismiss
 
     var body: some View {
         ZStack {

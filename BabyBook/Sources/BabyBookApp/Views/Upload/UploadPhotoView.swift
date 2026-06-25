@@ -15,12 +15,14 @@ struct UploadPhotoView: View {
     @State private var faceDetected = false
     @State private var showError = false
     @State private var errorMessage = ""
-    @State private var navigateToPayment = false
+    @State private var navigateToGenerating = false
+    @State private var isProcessingPayment = false
     @State private var showSheet = false
     @State private var isCreatingOrder = false
     @State private var isUploadingImage = false
     @State private var createdOrder: BackendOrder?
     @State private var uploadedImageUrl: String?
+    @StateObject private var paymentService = PaymentService.shared
 
     var body: some View {
         ZStack {
@@ -107,13 +109,9 @@ struct UploadPhotoView: View {
                 // 底部半浮层
                 uploadSheet
             }
-            .navigationDestination(isPresented: $navigateToPayment) {
+            .navigationDestination(isPresented: $navigateToGenerating) {
                 if let order = createdOrder {
-                    #if canImport(UIKit)
-                    PaymentView(book: book, order: order, babyImage: selectedImage, babyImageUrl: uploadedImageUrl)
-                    #else
-                    PaymentView(book: book, order: order, babyImage: nil, babyImageUrl: uploadedImageUrl)
-                    #endif
+                    GeneratingView(book: book, order: order)
                 }
             }
             .alert("提示", isPresented: $showError) {
@@ -122,8 +120,8 @@ struct UploadPhotoView: View {
                 Text(errorMessage)
             }
             .overlay {
-                if isUploadingImage || isCreatingOrder {
-                    LoadingOverlay(message: isUploadingImage ? "正在上传照片..." : "正在创建订单...")
+                if isUploadingImage || isCreatingOrder || isProcessingPayment {
+                    LoadingOverlay(message: overlayMessage)
                 }
             }
         }
@@ -306,6 +304,16 @@ struct UploadPhotoView: View {
 
         Task {
             do {
+                #if targetEnvironment(simulator)
+                // 模拟器环境：跳过真实上传，使用 mock 图片 URL
+                try await Task.sleep(nanoseconds: 800_000_000)
+                let mockImageUrl = "https://mock.babybook.app/images/baby_\(Int.random(in: 1000...9999)).jpg"
+                uploadedImageUrl = mockImageUrl
+                await MainActor.run {
+                    isUploadingImage = false
+                }
+                createOrder(imageUrl: mockImageUrl)
+                #else
                 // 1. 上传宝宝照片到后端
                 let imageUrl = try await ImageUploadService.shared.uploadImage(image)
                 uploadedImageUrl = imageUrl
@@ -316,6 +324,7 @@ struct UploadPhotoView: View {
 
                 // 2. 创建订单（携带图片 URL）
                 createOrder(imageUrl: imageUrl)
+                #endif
             } catch {
                 await MainActor.run {
                     errorMessage = "图片上传失败: \(error.localizedDescription)"
@@ -328,6 +337,17 @@ struct UploadPhotoView: View {
         // 非 UIKit 平台直接创建订单（无图片上传）
         createOrder(imageUrl: nil)
         #endif
+    }
+
+    private var overlayMessage: String {
+        if isUploadingImage {
+            return "正在上传照片..."
+        } else if isCreatingOrder {
+            return "正在创建订单..."
+        } else if isProcessingPayment {
+            return "正在唤起支付..."
+        }
+        return ""
     }
 
     private func createOrder(imageUrl: String? = nil) {
@@ -354,8 +374,8 @@ struct UploadPhotoView: View {
                 await MainActor.run {
                     createdOrder = mockOrder
                     isCreatingOrder = false
-                    navigateToPayment = true
                 }
+                await startPayment(order: mockOrder)
                 #else
                 // 真机环境：调用真实后端 API
                 let deviceId = DeviceService.shared.deviceId
@@ -368,8 +388,8 @@ struct UploadPhotoView: View {
                 await MainActor.run {
                     createdOrder = order
                     isCreatingOrder = false
-                    navigateToPayment = true
                 }
+                await startPayment(order: order)
                 #endif
             } catch {
                 await MainActor.run {
@@ -377,6 +397,40 @@ struct UploadPhotoView: View {
                     showError = true
                     isCreatingOrder = false
                 }
+            }
+        }
+    }
+
+    private func startPayment(order: BackendOrder) async {
+        isProcessingPayment = true
+        do {
+            #if targetEnvironment(simulator)
+            try await Task.sleep(nanoseconds: 1_500_000_000)
+            #else
+            let _ = try await paymentService.purchase(
+                bookId: book.bookId,
+                orderId: order.id
+            )
+            if let imageUrl = uploadedImageUrl {
+                try? await NetworkService.shared.updateOrderImage(
+                    orderId: order.id,
+                    imageUrl: imageUrl
+                )
+            }
+            #endif
+            await MainActor.run {
+                isProcessingPayment = false
+                navigateToGenerating = true
+            }
+        } catch PaymentError.userCancelled {
+            await MainActor.run {
+                isProcessingPayment = false
+            }
+        } catch {
+            await MainActor.run {
+                errorMessage = error.localizedDescription
+                showError = true
+                isProcessingPayment = false
             }
         }
     }

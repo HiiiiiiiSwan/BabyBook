@@ -1,6 +1,11 @@
 import SwiftUI
 import StoreKit
 
+// MARK: - 全局通知名称
+extension Notification.Name {
+    static let resetNavigation = Notification.Name("resetNavigation")
+}
+
 @main
 struct BabyBookApp: App {
     // 调试模式：直接跳转到指定页面
@@ -21,15 +26,20 @@ struct BabyBookApp: App {
 struct ContentView: View {
     @ObservedObject private var onboardingManager = OnboardingManager.shared
     let debugMode: String?
+    @State private var navigationPath = NavigationPath()
 
     var body: some View {
         ZStack {
-            NavigationStack {
+            NavigationStack(path: $navigationPath) {
                 if let mode = debugMode {
                     debugDestination(mode: mode)
                 } else {
                     HomeView()
                 }
+            }
+            .environment(\.navPath, $navigationPath)
+            .onReceive(NotificationCenter.default.publisher(for: .resetNavigation)) { _ in
+                navigationPath.removeLast(navigationPath.count)
             }
 
             if onboardingManager.showOnboarding {

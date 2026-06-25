@@ -11,6 +11,7 @@ struct GeneratingView: View {
     @State private var statusText = "正在为宝宝制作专属绘本..."
     @State private var remainingSeconds = 60
     @State private var timer: Timer?
+    @Environment(\.dismiss) private var dismiss
 
     var body: some View {
         ZStack {

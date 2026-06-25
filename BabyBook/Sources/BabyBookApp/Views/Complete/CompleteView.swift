@@ -18,6 +18,8 @@ struct CompleteView: View {
     @State private var downloadedImage: UIImage?
     #endif
     @State private var pdfGenerated = false
+    @Environment(\.navPath) private var navPath
+    @Environment(\.dismiss) private var dismiss
 
     var body: some View {
         ZStack {
@@ -34,6 +36,21 @@ struct CompleteView: View {
             }
         }
         .navigationTitle("")
+        .navigationBarBackButtonHidden(true)
+        #if os(iOS)
+        .navigationBarTitleDisplayMode(.inline)
+        .toolbar {
+            ToolbarItem(placement: .topBarLeading) {
+                Button(action: { goBackToHome() }) {
+                    HStack(spacing: 4) {
+                        Image(systemName: "chevron.left")
+                            .font(.system(size: 20, weight: .semibold))
+                            .foregroundColor(Color(hex: "#222222"))
+                    }
+                }
+            }
+        }
+        #endif
         .alert("提示", isPresented: $showError) {
             Button("确定", role: .cancel) {}
         } message: {
@@ -306,6 +323,12 @@ struct CompleteView: View {
             let filePath = documentsPath.appendingPathComponent(fileName)
             try? imageData.write(to: filePath)
         }
+    }
+
+    // MARK: - 返回首页
+    private func goBackToHome() {
+        // 发送通知让根视图重置导航路径
+        NotificationCenter.default.post(name: .resetNavigation, object: nil)
     }
 }
 
