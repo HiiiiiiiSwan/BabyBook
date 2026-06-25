@@ -12,6 +12,12 @@ export declare class AiService {
     private readonly modelName;
     constructor(configService: ConfigService);
     generateBookImage(params: GenerateImageParams): Promise<string>;
+    private getTemplatePath;
     private buildPrompt;
+    private buildSelfIntroPrompt;
+    private buildDreamJobPrompt;
+    private buildColorRecognitionPrompt;
+    private downloadImageToBase64;
+    private saveImageToFile;
 }
 export {};

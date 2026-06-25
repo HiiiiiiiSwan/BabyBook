@@ -13,7 +13,7 @@ export class MockAiService {
    * Mock 生成绘本图片
    * 返回预设图片 URL，用于测试流程
    */
-  async generateBookImage(params: any): Promise<string> {
+  async generateBookImage(params: { bookId: string; imageUrl: string }): Promise<string> {
     const mockImageUrl = this.configService.get(
       'MOCK_IMAGE_URL',
       'https://picsum.photos/2048/2048',
