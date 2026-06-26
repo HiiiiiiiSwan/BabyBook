@@ -10,6 +10,28 @@
 
 ## [Unreleased]
 
+### 2026-06-26
+
+- `feat` 完成3本绘本AI九宫格生成方案验证，含生成脚本和效果测试
+  - 新增 `generate-grid-book.ts`: 《这是我》绘本单本生成脚本（2图参考模式）
+  - 新增 `generate-books.ts`: 多绘本批量生成脚本（职业+颜色）
+  - 验证3本绘本生成效果：《这是我》《我长大想做什么》《认识颜色》
+  - 测试不同宝宝照片（babyimage.png / babyimage2.png）的生成效果
+  - 对比2图 vs 3图参考模式，确认2图模式更稳定且人物特征保留更好
+  - 新增 babyimage2.png 测试素材
+  - 生成效果文件：uploads/grid-generated-*.png
+
+### 2026-06-25
+
+- `feat` 接入豆包 Seedream 5.0 图生图模型，实现绘本九宫格 AI 生成能力
+  - 重写 `ai.service.ts`，使用多图参考模式（模板图 + 宝宝照片）
+  - 构建详细中文 Prompt，精确控制每格内容、肤色、姿态、背景融合
+  - 支持 3 本绘本：《这是我》《我长大想做什么》《认识颜色》
+  - 更新 `mock-ai.service.ts` 兼容新接口签名
+  - 更新 `.env.example` 配置模板（模型名 `doubao-seedream-5-0-260128`）
+  - 效果已验证：《这是我》绘本生成成功，同一宝宝一致性、模板文字保留、身体部位对应均达标
+- `chore` 补充绘本模板素材：`dream_job/all-none.png`、`color_recognition/all-none.png`、`color_recognition/all.png`
+
 ### 2026-06-24
 
 - `feat` 初始化 Git 仓库，添加 `.gitignore` 和 `CHANGELOG.md`
