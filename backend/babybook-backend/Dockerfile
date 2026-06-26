@@ -7,13 +7,16 @@ WORKDIR /app
 
 # 复制 package 文件
 COPY package*.json ./
-RUN npm ci --only=production && npm cache clean --force
+RUN npm ci && npm cache clean --force
 
 # 复制源代码
 COPY . .
 
 # 构建 NestJS 项目
 RUN npm run build
+
+# 验证构建产物
+RUN ls -la dist/src/ && cat dist/src/main.js | head -5
 
 ###################
 # 生产阶段
@@ -30,6 +33,9 @@ COPY --from=builder /app/dist ./dist
 COPY --from=builder /app/node_modules ./node_modules
 COPY --from=builder /app/package*.json ./
 
+# 验证文件
+RUN ls -la dist/src/ && ls -la dist/src/main.js
+
 # 创建非 root 用户运行服务
 RUN addgroup -g 1001 -S nodejs && \
     adduser -S nodejs -u 1001
@@ -44,4 +50,4 @@ HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
   CMD node -e "require('http').get('http://localhost:3000/api/order', (r) => r.statusCode === 200 ? process.exit(0) : process.exit(1))"
 
 # 启动命令
-CMD ["dumb-init", "node", "dist/main.js"]
+CMD ["dumb-init", "node", "dist/src/main.js"]
