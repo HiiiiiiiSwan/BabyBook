@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>IAP 审核截图占位图</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    background: #FFF9F2;
+    font-family: -apple-system, BlinkMacSystemFont, 'PingFang SC', sans-serif;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 40px 20px;
+    gap: 40px;
+  }
+  .screenshot {
+    width: 320px;
+    height: 460px;
+    background: #FFFDF9;
+    border-radius: 32px;
+    border: 2px solid #F0E8DE;
+    overflow: hidden;
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 32px 24px;
+    box-shadow: 0 8px 30px rgba(0,0,0,0.06);
+  }
+  .screenshot::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 6px;
+    background: #F28C28;
+    border-radius: 32px 32px 0 0;
+  }
+  .tag {
+    position: absolute;
+    top: 16px;
+    right: 16px;
+    background: #F28C28;
+    color: white;
+    font-size: 11px;
+    font-weight: 600;
+    padding: 4px 12px;
+    border-radius: 999px;
+  }
+  .book-icon {
+    width: 120px;
+    height: 150px;
+    background: #FFF9F2;
+    border: 2px solid #F0E8DE;
+    border-radius: 16px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-top: 24px;
+    font-size: 60px;
+  }
+  .book-title {
+    margin-top: 20px;
+    font-size: 20px;
+    font-weight: 700;
+    color: #222222;
+    text-align: center;
+  }
+  .book-desc {
+    margin-top: 12px;
+    font-size: 13px;
+    color: #666666;
+    text-align: center;
+    line-height: 1.6;
+    padding: 0 8px;
+  }
+  .price-btn {
+    margin-top: auto;
+    width: 100%;
+    height: 48px;
+    background: #F28C28;
+    color: white;
+    border: none;
+    border-radius: 999px;
+    font-size: 16px;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .footer-note {
+    margin-top: 12px;
+    font-size: 11px;
+    color: #999999;
+    text-align: center;
+  }
+  h1 {
+    font-size: 24px;
+    color: #222222;
+    margin-bottom: 8px;
+  }
+  .subtitle {
+    color: #666666;
+    font-size: 14px;
+    margin-bottom: 24px;
+  }
+  .divider {
+    width: 100%;
+    max-width: 800px;
+    height: 1px;
+    background: #F0E8DE;
+    margin: 8px 0;
+  }
+  .info {
+    color: #999999;
+    font-size: 12px;
+    text-align: center;
+    max-width: 600px;
+    line-height: 1.8;
+  }
+</style>
+</head>
+<body>
+
+<h1>🎨 宝贝绘本 IAP 审核截图占位图</h1>
+<p class="subtitle">尺寸：640 × 920 像素（2x 缩放显示为 320 × 460）</p>
+
+<div class="screenshot">
+  <div class="tag">消耗型</div>
+  <div class="book-icon">👶</div>
+  <div class="book-title">《这是我》</div>
+  <div class="book-desc">AI 定制宝宝专属身体认知绘本<br>9 页精美插画，认识可爱的自己</div>
+  <div class="price-btn">¥12.00 购买</div>
+  <div class="footer-note">产品 ID: com.shihui.babybook.book001</div>
+</div>
+
+<div class="divider"></div>
+
+<div class="screenshot">
+  <div class="tag">消耗型</div>
+  <div class="book-icon">🚀</div>
+  <div class="book-title">《我长大想做什么》</div>
+  <div class="book-desc">AI 定制宝宝专属职业认知绘本<br>探索梦想职业，激发无限想象</div>
+  <div class="price-btn">¥12.00 购买</div>
+  <div class="footer-note">产品 ID: com.shihui.babybook.book002</div>
+</div>
+
+<div class="divider"></div>
+
+<div class="screenshot">
+  <div class="tag">消耗型</div>
+  <div class="book-icon">🎨</div>
+  <div class="book-title">《认识颜色》</div>
+  <div class="book-desc">AI 定制宝宝专属颜色认知绘本<br>在缤纷世界中快乐学习成长</div>
+  <div class="price-btn">¥12.00 购买</div>
+  <div class="footer-note">产品 ID: com.shihui.babybook.book003</div>
+</div>
+
+<div class="divider"></div>
+
+<p class="info">
+  💡 提示：这是 HTML 预览版本，用于展示截图内容布局。<br>
+  实际提交到 App Store Connect 时，请使用 Safari 打开此文件，按 Cmd+Shift+4 截取 640×920 像素的截图，<br>
+  或使用浏览器开发者工具将视口设为 640×920 后截图保存为 PNG 格式。<br>
+  截图需清晰展示产品名称、价格、购买按钮及消耗型标识。
+</p>
+
+</body>
+</html>

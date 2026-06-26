@@ -12,16 +12,16 @@ class PaymentService: ObservableObject {
 
     // 产品 ID 映射（与 App Store Connect 中配置的一致）
     let productIDs = [
-        "com.babybook.book001",  // 《这是我》
-        "com.babybook.book002",  // 《我长大想做什么》
-        "com.babybook.book003",  // 《认识颜色》
+        "com.shihui.babybook.book001",  // 《这是我》
+        "com.shihui.babybook.book002",  // 《我长大想做什么》
+        "com.shihui.babybook.book003",  // 《认识颜色》
     ]
 
     // 绘本 ID 到产品 ID 的映射
     private let bookToProductMap: [String: String] = [
-        "Book001": "com.babybook.book001",
-        "Book002": "com.babybook.book002",
-        "Book003": "com.babybook.book003",
+        "Book001": "com.shihui.babybook.book001",
+        "Book002": "com.shihui.babybook.book002",
+        "Book003": "com.shihui.babybook.book003",
     ]
 
     private init() {}
