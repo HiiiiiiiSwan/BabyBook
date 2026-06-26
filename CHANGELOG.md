@@ -12,6 +12,14 @@
 
 ### 2026-06-26
 
+- `feat` 配置 App Store IAP 产品 ID、Bundle ID、Team ID 和沙盒测试环境
+  - 更新 Bundle ID: `com.babybook.app` → `com.shihui.babybook`（与 App Store Connect 一致）
+  - 设置 Development Team ID: `7BSKXTD6DF`
+  - 更新 IAP 产品 ID 前缀: `com.shihui.babybook.book001/002/003`
+  - 添加 `StoreKit.framework` 和 In-App Purchase Capability
+  - 新增 `BabyBookApp.entitlements` 启用 IAP 权限
+  - 生成 3 张 IAP 审核截图占位图 (640×920)，用于 App Store Connect 提交
+
 - `feat` 完成3本绘本AI九宫格生成方案验证，含生成脚本和效果测试
   - 新增 `generate-grid-book.ts`: 《这是我》绘本单本生成脚本（2图参考模式）
   - 新增 `generate-books.ts`: 多绘本批量生成脚本（职业+颜色）
