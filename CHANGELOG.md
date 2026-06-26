@@ -12,6 +12,13 @@
 
 ### 2026-06-26
 
+- `security` 将 device_id 从 UserDefaults 迁移到 iOS Keychain 存储
+  - 新增 `KeychainService` 封装类，基于 iOS Security 框架
+  - 支持 save/read/delete 操作，使用 `kSecAttrAccessibleAfterFirstUnlock` 安全级别
+  - `DeviceService` 优先从 Keychain 读取，兼容旧版本 UserDefaults 自动迁移
+  - 卸载 App 后 device_id 仍然保留，符合匿名设备模式设计规范
+  - 新增 `BabyBookApp.entitlements` 文件修复编译问题
+
 - `feat` 配置 App Store IAP 产品 ID、Bundle ID、Team ID 和沙盒测试环境
   - 更新 Bundle ID: `com.babybook.app` → `com.shihui.babybook`（与 App Store Connect 一致）
   - 设置 Development Team ID: `7BSKXTD6DF`

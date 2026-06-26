@@ -2,6 +2,88 @@ import Foundation
 #if canImport(UIKit)
 import UIKit
 #endif
+import Security
+
+// MARK: - Keychain 服务
+/// 基于 iOS Security 框架的 Keychain 封装
+/// 用于安全存储 device_id 等敏感标识信息，App 卸载后数据仍然保留
+enum KeychainError: Error {
+    case itemNotFound
+    case duplicateItem
+    case invalidStatus(OSStatus)
+    case conversionFailed
+}
+
+class KeychainService {
+    static let shared = KeychainService()
+
+    private let service = "com.babybook.app"
+
+    /// 保存字符串到 Keychain
+    func save(key: String, value: String) throws {
+        guard let data = value.data(using: .utf8) else {
+            throw KeychainError.conversionFailed
+        }
+
+        // 先尝试删除已存在的项
+        try? delete(key: key)
+
+        let query: [String: Any] = [
+            kSecClass as String: kSecClassGenericPassword,
+            kSecAttrAccount as String: key,
+            kSecAttrService as String: service,
+            kSecValueData as String: data,
+            kSecAttrAccessible as String: kSecAttrAccessibleAfterFirstUnlock
+        ]
+
+        let status = SecItemAdd(query as CFDictionary, nil)
+        guard status == errSecSuccess else {
+            throw KeychainError.invalidStatus(status)
+        }
+    }
+
+    /// 从 Keychain 读取字符串
+    func read(key: String) throws -> String {
+        let query: [String: Any] = [
+            kSecClass as String: kSecClassGenericPassword,
+            kSecAttrAccount as String: key,
+            kSecAttrService as String: service,
+            kSecReturnData as String: true,
+            kSecMatchLimit as String: kSecMatchLimitOne
+        ]
+
+        var result: AnyObject?
+        let status = SecItemCopyMatching(query as CFDictionary, &result)
+
+        guard status == errSecSuccess else {
+            if status == errSecItemNotFound {
+                throw KeychainError.itemNotFound
+            }
+            throw KeychainError.invalidStatus(status)
+        }
+
+        guard let data = result as? Data,
+              let value = String(data: data, encoding: .utf8) else {
+            throw KeychainError.conversionFailed
+        }
+
+        return value
+    }
+
+    /// 从 Keychain 删除项
+    func delete(key: String) throws {
+        let query: [String: Any] = [
+            kSecClass as String: kSecClassGenericPassword,
+            kSecAttrAccount as String: key,
+            kSecAttrService as String: service
+        ]
+
+        let status = SecItemDelete(query as CFDictionary)
+        guard status == errSecSuccess || status == errSecItemNotFound else {
+            throw KeychainError.invalidStatus(status)
+        }
+    }
+}
 
 // MARK: - 设备标识服务
 class DeviceService {
@@ -10,21 +92,31 @@ class DeviceService {
     private let deviceIdKey = "com.babybook.deviceId"
 
     /// 获取设备唯一标识
-    /// 首次启动时生成，存入 iOS Keychain，卸载后重新安装会生成新的
+    /// 首次启动时生成，存入 iOS Keychain，卸载后重新安装不会丢失
     var deviceId: String {
-        // 先尝试从 UserDefaults 读取（开发阶段使用，生产环境应使用 Keychain）
-        if let storedId = UserDefaults.standard.string(forKey: deviceIdKey) {
-            return storedId
+        // 1. 优先从 Keychain 读取（生产环境）
+        if let keychainId = try? KeychainService.shared.read(key: deviceIdKey) {
+            return keychainId
         }
 
-        // 生成新的 deviceId
+        // 2. 尝试从 UserDefaults 迁移（兼容旧版本）
+        if let legacyId = UserDefaults.standard.string(forKey: deviceIdKey) {
+            // 迁移到 Keychain
+            try? KeychainService.shared.save(key: deviceIdKey, value: legacyId)
+            // 清除 UserDefaults 中的旧数据
+            UserDefaults.standard.removeObject(forKey: deviceIdKey)
+            return legacyId
+        }
+
+        // 3. 生成新的 deviceId
         let newId = "device_\(UUID().uuidString.replacingOccurrences(of: "-", with: "").prefix(16))"
-        UserDefaults.standard.set(newId, forKey: deviceIdKey)
+        try? KeychainService.shared.save(key: deviceIdKey, value: newId)
         return newId
     }
 
     /// 重置设备标识（调试用）
     func resetDeviceId() {
+        try? KeychainService.shared.delete(key: deviceIdKey)
         UserDefaults.standard.removeObject(forKey: deviceIdKey)
     }
 }
