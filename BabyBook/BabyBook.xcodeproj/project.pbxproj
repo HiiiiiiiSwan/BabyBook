@@ -7,6 +7,8 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		D2C8FF736AB54A398BFFAC2B /* LocalBookStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = EADEDCBF5F474A7494374722 /* LocalBookStore.swift */; };
+		ECCA6656457F4B4F99EB8669 /* LocalBookDetailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5164C8FFE963410C86A84F7F /* LocalBookDetailView.swift */; };
 		A0B57262DDD1428AA5871CF6 /* StoreKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = B0B57262DDD1428AA5871CF6 /* StoreKit.framework */; };
 		0C785CF2F5ED46A0B22D52E1 /* BabyBookApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 58AA247818F44D7EAD07435F /* BabyBookApp.swift */; };
 		D96BA4D5195A444199B16D04 /* APIModels.swift in Sources */ = {isa = PBXBuildFile; fileRef = E0EDFE60D0B54BBDB8ED26F1 /* APIModels.swift */; };
@@ -38,6 +40,8 @@
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
+		EADEDCBF5F474A7494374722 /* LocalBookStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = "LocalBookStore.swift"; path = "LocalBookStore.swift"; sourceTree = "<group>"; };
+		5164C8FFE963410C86A84F7F /* LocalBookDetailView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = "LocalBookDetailView.swift"; path = "LocalBookDetailView.swift"; sourceTree = "<group>"; };
 		C98609E736AB48A893C4948C /* BabyBookApp.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = BabyBookApp.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		58AA247818F44D7EAD07435F /* BabyBookApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = "BabyBookApp.swift"; path = "BabyBookApp.swift"; sourceTree = "<group>"; };
 		E0EDFE60D0B54BBDB8ED26F1 /* APIModels.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = "APIModels.swift"; path = "APIModels.swift"; sourceTree = "<group>"; };
@@ -194,6 +198,7 @@
 				EAC5FB7EA88D466BB3807DCC /* NetworkService.swift */,
 				11C541F36570456DACF3920F /* PDFService.swift */,
 				2C82FAE94D8541B38F6E5988 /* PaymentService.swift */,
+				EADEDCBF5F474A7494374722 /* LocalBookStore.swift */,
 			);
 			path = Services;
 			sourceTree = "<group>";
@@ -267,6 +272,7 @@
 			isa = PBXGroup;
 			children = (
 				601E5C87F1294DD8BBBD982A /* MyBooksView.swift */,
+				5164C8FFE963410C86A84F7F /* LocalBookDetailView.swift */,
 			);
 			path = MyBooks;
 			sourceTree = "<group>";
@@ -369,6 +375,8 @@
 				C6C529004EA2408FA7ED9896 /* NetworkService.swift in Sources */,
 				49CEEBCBC8F142EAB9DE9D4E /* PDFService.swift in Sources */,
 				A0B57262DDD1428AA5871CF6 /* PaymentService.swift in Sources */,
+				ECCA6656457F4B4F99EB8669 /* LocalBookDetailView.swift in Sources */,
+				D2C8FF736AB54A398BFFAC2B /* LocalBookStore.swift in Sources */,
 				1E2DC093117C490FB4388F13 /* DesignTokens.swift in Sources */,
 				CD3CF68741AD464B854608E3 /* NavigationPath+Environment.swift in Sources */,
 				C93D64B509D94C82BCFF8DF5 /* BookDetailView.swift in Sources */,

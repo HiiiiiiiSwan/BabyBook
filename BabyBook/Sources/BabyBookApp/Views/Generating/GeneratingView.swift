@@ -8,7 +8,7 @@ struct GeneratingView: View {
     @StateObject private var statusManager = OrderStatusManager.shared
     @State private var showCancelAlert = false
     @State private var navigateToComplete = false
-    @State private var statusText = "正在为宝宝制作专属绘本..."
+    @State private var statusText = "魔法生成中..."
     @State private var remainingSeconds = 60
     @State private var timer: Timer?
     @Environment(\.dismiss) private var dismiss
@@ -89,7 +89,7 @@ struct GeneratingView: View {
 
             // 状态文字
             Text(statusText)
-                .font(.system(size: 20, weight: .bold))
+                .font(.system(size: 28, weight: .bold))
                 .foregroundColor(Color(hex: "#222222"))
 
             if statusManager.isPolling {

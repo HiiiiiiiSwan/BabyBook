@@ -65,7 +65,7 @@ struct CompleteView: View {
                     .font(.system(size: 20))
                     .foregroundColor(Color(hex: "#F28C28"))
                 Text("专属绘本已生成！")
-                    .font(.system(size: 22, weight: .bold))
+                    .font(.system(size: 28, weight: .bold))
                     .foregroundColor(Color(hex: "#222222"))
                 Image(systemName: "sparkles")
                     .font(.system(size: 20))
@@ -77,7 +77,7 @@ struct CompleteView: View {
 
     private var bookPreviewSection: some View {
         VStack(spacing: 12) {
-            // 正方形绘本封面
+            // 正方形绘本封面（屏幕宽度 - 64px 边距）
             ZStack {
                 RoundedRectangle(cornerRadius: 16)
                     .fill(Color.white)
@@ -88,8 +88,10 @@ struct CompleteView: View {
                     Image(uiImage: image)
                         .resizable()
                         .scaledToFit()
-                        .frame(width: 220, height: 220)
+                        .frame(maxWidth: .infinity)
+                        .aspectRatio(1, contentMode: .fit)
                         .clipShape(RoundedRectangle(cornerRadius: 12))
+                        .padding(12)
                 } else {
                     bookPreviewPlaceholder
                 }
@@ -97,7 +99,8 @@ struct CompleteView: View {
                 bookPreviewPlaceholder
                 #endif
             }
-            .frame(width: 240, height: 240)
+            .aspectRatio(1, contentMode: .fit)
+            .padding(.horizontal, 32)
 
             Text("《\(book.name)》")
                 .font(.system(size: 18, weight: .bold))
@@ -318,17 +321,25 @@ struct CompleteView: View {
 
     // 保存图片到 Documents 目录
     private func saveImageToDocuments(imageData: Data) {
-        let fileName = "book_\(order.id).png"
-        if let documentsPath = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask).first {
-            let filePath = documentsPath.appendingPathComponent(fileName)
-            try? imageData.write(to: filePath)
+        guard let documentsPath = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask).first else {
+            return
         }
+        let fileName = "book_\(order.id).png"
+        let filePath = documentsPath.appendingPathComponent(fileName)
+        try? imageData.write(to: filePath)
+
+        // 同时保存绘本元数据
+        LocalBookStore.shared.save(
+            orderId: order.id,
+            bookId: order.bookId,
+            bookName: book.name,
+            filePath: filePath.path
+        )
     }
 
-    // MARK: - 返回首页
+    // MARK: - 返回首页（直接清空导航栈）
     private func goBackToHome() {
-        // 发送通知让根视图重置导航路径
-        NotificationCenter.default.post(name: .resetNavigation, object: nil)
+        navPath.wrappedValue = NavigationPath()
     }
 }
 

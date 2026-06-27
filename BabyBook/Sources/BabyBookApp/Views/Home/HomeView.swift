@@ -6,7 +6,7 @@ import UIKit
 
 // MARK: - 首页（截图布局版本）
 struct HomeView: View {
-    @State private var selectedBook: Book? = nil
+    @State private var selectedBook: Book? = MockService.shared.mockBooks.first
     @State private var showDetail = false
     @State private var showUploadSheet = false
 
@@ -14,17 +14,7 @@ struct HomeView: View {
         ZStack {
             DesignTokens.Colors.background.ignoresSafeArea()
 
-            ScrollView(showsIndicators: false) {
-                VStack(spacing: 0) {
-                    headerSection
-                    guideSection
-                    bookCarouselSection
-                    bottomActionSection
-                    // 调试入口
-                    debugSection
-                    Spacer().frame(height: 40)
-                }
-            }
+            homeContent
         }
         .navigationDestination(isPresented: $showDetail) {
             if let book = selectedBook {
@@ -40,22 +30,49 @@ struct HomeView: View {
         }
     }
 
+    // MARK: - 首页内容
+    private var homeContent: some View {
+        ScrollView(showsIndicators: false) {
+            VStack(spacing: 0) {
+                headerSection
+                guideSection
+                bookCarouselSection
+                bottomActionSection
+                // 调试入口
+                debugSection
+                Spacer().frame(height: 40)
+            }
+        }
+    }
+
+    // MARK: - 自定义 TabBar（已移除）
+    // 我的绘本入口已移至底部操作区，作为文字按钮展示
+
     // MARK: - 顶部 App 名称
     private var headerSection: some View {
         HStack(spacing: 8) {
-            Image(systemName: "book.closed.fill")
-                .font(.system(size: 20))
-                .foregroundColor(DesignTokens.Colors.primary)
+            Image("appicon-small")
+                .resizable()
+                .scaledToFit()
+                .frame(width: 24, height: 24)
             Text("宝贝绘本")
-                .font(DesignTokens.Typography.h2)
+                .font(.system(size: 18, weight: .bold))
                 .foregroundColor(DesignTokens.Colors.primaryText)
             Text("BabyBook")
-                .font(.system(size: 14, weight: .medium))
+                .font(.system(size: 12, weight: .medium))
                 .foregroundColor(DesignTokens.Colors.tertiaryText)
             Spacer()
         }
         .padding(.horizontal, DesignTokens.Layout.pagePadding)
-        .padding(.top, DesignTokens.Spacing.xl)
+        .padding(.top, 50)
+        .overlay(alignment: .topTrailing) {
+            Image("balloon")
+                .resizable()
+                .scaledToFit()
+                .frame(width: 60, height: 60)
+                .padding(.top, 80)
+                .padding(.trailing, 20)
+        }
     }
 
     // MARK: - 指引操作文案
@@ -80,6 +97,7 @@ struct HomeView: View {
                 .font(.system(size: 28, weight: .bold))
                 .foregroundColor(DesignTokens.Colors.primaryText)
         }
+        .frame(maxWidth: .infinity, alignment: .leading)
         .padding(.horizontal, DesignTokens.Layout.pagePadding)
         .padding(.top, DesignTokens.Spacing.xl)
     }
@@ -110,65 +128,75 @@ struct HomeView: View {
 
     // MARK: - 底部操作区
     private var bottomActionSection: some View {
-        VStack(spacing: 0) {
-            VStack(spacing: 8) {
-                // 一键定制按钮（与绘本详情页样式一致）
-                ZStack(alignment: .bottom) {
-                    Button(action: {
-                        if selectedBook != nil {
-                            withAnimation(.easeInOut(duration: 0.25)) {
-                                showUploadSheet = true
+        ZStack(alignment: .bottom) {
+            // 底部插画（作为背景，贴底对齐）
+            Image("homeBG")
+                .resizable()
+                .scaledToFit()
+                .frame(maxWidth: .infinity)
+                .padding(.horizontal, 45)
+                .padding(.bottom, 110)
+
+            // 按钮内容
+            VStack(spacing: 0) {
+                VStack(spacing: 8) {
+                    // 一键定制按钮（与绘本详情页样式一致）
+                    ZStack(alignment: .bottom) {
+                        Button(action: {
+                            if selectedBook != nil {
+                                withAnimation(.easeInOut(duration: 0.25)) {
+                                    showUploadSheet = true
+                                }
                             }
+                        }) {
+                            Text("一键定制")
+                                .font(.system(size: 18, weight: .bold))
+                                .foregroundColor(.white)
+                                .frame(maxWidth: .infinity)
+                                .frame(height: 60)
+                                .background(Color(hex: "#F28C28"))
+                                .cornerRadius(60)
                         }
-                    }) {
-                        Text("一键定制")
-                            .font(.system(size: 18, weight: .bold))
+                        .padding(.horizontal, 32)
+
+                        Text("仅需¥\(String(format: "%.1f", selectedBook?.price ?? 9.9))")
+                            .font(.system(size: 12, weight: .bold))
                             .foregroundColor(.white)
-                            .frame(maxWidth: .infinity)
-                            .frame(height: 60)
-                            .background(Color(hex: "#F28C28"))
-                            .cornerRadius(60)
+                            .padding(.horizontal, 10)
+                            .padding(.vertical, 4)
+                            .background(Color(hex: "#E85D5D"))
+                            .cornerRadius(12)
+                            .offset(x: 80, y: -20)
                     }
-                    .padding(.horizontal, 32)
+                    .padding(.top, 16)
 
-                    Text("仅需¥\(String(format: "%.1f", selectedBook?.price ?? 9.9))")
-                        .font(.system(size: 12, weight: .bold))
-                        .foregroundColor(.white)
-                        .padding(.horizontal, 10)
-                        .padding(.vertical, 4)
-                        .background(Color(hex: "#E85D5D"))
-                        .cornerRadius(12)
-                        .offset(x: 80, y: -20)
-                }
-                .padding(.top, 16)
-
-                // 获取实体书按钮 + 我的绘本按钮
-                HStack(spacing: 40) {
-                    Button(action: {}) {
-                        HStack(spacing: 4) {
-                            Text("获取实体书")
-                                .font(.system(size: 14, weight: .medium))
-                            Image(systemName: "chevron.right")
-                                .font(.system(size: 12))
+                    // 获取实体书 + 我的绘本（并排一行）
+                    HStack(spacing: 32) {
+                        Button(action: {}) {
+                            HStack(spacing: 4) {
+                                Text("获取实体书")
+                                    .font(.system(size: 14, weight: .medium))
+                                Image(systemName: "chevron.right")
+                                    .font(.system(size: 12))
+                            }
+                            .foregroundColor(Color(hex: "#666666"))
                         }
-                        .foregroundColor(Color(hex: "#666666"))
-                    }
 
-                    Button(action: {}) {
-                        HStack(spacing: 4) {
-                            Text("我的绘本")
-                                .font(.system(size: 14, weight: .medium))
-                            Image(systemName: "chevron.right")
-                                .font(.system(size: 12))
+                        NavigationLink(destination: MyBooksView()) {
+                            HStack(spacing: 4) {
+                                Text("我的绘本")
+                                    .font(.system(size: 14, weight: .medium))
+                                Image(systemName: "chevron.right")
+                                    .font(.system(size: 12))
+                            }
+                            .foregroundColor(Color(hex: "#666666"))
                         }
-                        .foregroundColor(Color(hex: "#666666"))
                     }
+                    .padding(.vertical, 8)
                 }
-                .padding(.vertical, 8)
+                .padding(.horizontal, 0)
+                .padding(.vertical, 12)
             }
-            .padding(.horizontal, 0)
-            .padding(.vertical, 12)
-            .background(Color(hex: "#FFF9F2"))
         }
         .padding(.top, DesignTokens.Spacing.xl)
     }
@@ -406,9 +434,11 @@ struct UploadPhotoSheet: View {
                         .fill(DesignTokens.Colors.secondary.opacity(0.3))
                         .frame(width: 100, height: 100)
 
-                    Image(systemName: "person.crop.circle.fill")
-                        .font(.system(size: 50))
-                        .foregroundColor(DesignTokens.Colors.primary.opacity(0.3))
+                    Image("photocase")
+                        .resizable()
+                        .scaledToFill()
+                        .frame(width: 100, height: 100)
+                        .clipShape(RoundedRectangle(cornerRadius: 16))
                 }
                 .overlay(
                     Text("示例")
