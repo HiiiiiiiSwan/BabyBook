@@ -10,6 +10,27 @@
 
 ## [Unreleased]
 
+### 2026-06-28
+
+- `feat` P2 模块：体验优化（人脸检测 + 拍照功能 + 取消退款提示）
+  - 新增 `FaceDetectionService.swift`：基于 Apple Vision 框架实现真实人脸检测
+    - 支持检测单张/多张人脸、无人脸、检测失败三种结果
+    - 使用 `VNDetectFaceRectanglesRequest` 进行人脸矩形检测
+    - 非 UIKit 平台自动跳过检测
+  - 新增 `CameraView.swift`：基于 AVFoundation 的相机拍照功能
+    - 使用 `UIViewControllerRepresentable` 桥接 UIKit 到 SwiftUI
+    - 支持实时预览、拍照、切换前后摄像头、点击对焦
+    - 相机权限检查（未授权时引导用户到设置）
+  - 更新 `UploadPhotoView.swift` 和 `HomeView.swift` 的 `UploadPhotoSheet`：
+    - 拍照按钮从空 action 改为调用 `checkCameraPermission()`
+    - 从相册选择后调用 `performFaceDetection()` 替代模拟延迟
+    - 新增人脸检测失败 Alert（未检测到人脸 / 多张人脸 / 检测失败）
+  - 更新 `GeneratingView.swift`：取消生成后显示退款提示
+    - 新增 `showRefundAlert`："绘本生成已取消，已支付金额将原路退回（预计 1-3 个工作日到账）"
+    - 点击"返回首页"清空导航栈回到首页
+  - 更新 `project.pbxproj`：添加 `NSCameraUsageDescription` 和 `NSPhotoLibraryUsageDescription` 权限声明
+  - 截图验收：新增 `07-generating-page.png`, `08-home-camera-button.png`
+
 ### 2026-06-27
 
 - `style` 调整首页插画布局、完成页和生成页标题字号

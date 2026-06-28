@@ -20,6 +20,8 @@ struct PaymentView: View {
     @State private var showError = false
     @State private var errorMessage = ""
     @State private var navigateToGenerating = false
+    @State private var showTaskConfirmError = false
+    @State private var taskConfirmErrorMessage = ""
     @Environment(\.dismiss) private var dismiss
 
     var body: some View {
@@ -280,6 +282,9 @@ struct PaymentView: View {
                     )
                 }
 
+                // 支付成功后，确认后端已创建生成任务
+                try await confirmTaskCreated(orderId: order.id)
+
                 await MainActor.run {
                     isProcessing = false
                     navigateToGenerating = true
@@ -297,6 +302,41 @@ struct PaymentView: View {
                 }
             }
         }
+    }
+    // MARK: - 确认后端已创建生成任务
+    private func confirmTaskCreated(orderId: String) async throws {
+        // 最多重试 5 次，每次间隔 2 秒
+        let maxRetries = 5
+        let retryInterval: UInt64 = 2_000_000_000 // 2 秒
+
+        for attempt in 1...maxRetries {
+            do {
+                // 查询订单状态
+                let order = try await NetworkService.shared.getOrder(orderId: orderId)
+
+                // 如果订单状态已经是 GENERATING 或 SUCCESS，说明任务已创建
+                if order.status == "GENERATING" || order.status == "SUCCESS" {
+                    print("确认任务已创建，订单状态: \(order.status)")
+                    return
+                }
+
+                // 如果订单状态是 PAID，说明支付成功但任务可能还没创建，继续等待
+                if order.status == "PAID" && attempt < maxRetries {
+                    print("订单状态为 PAID，等待任务创建... (第 \(attempt) 次重试)")
+                    try await Task.sleep(nanoseconds: retryInterval)
+                    continue
+                }
+            } catch {
+                print("确认任务创建失败 (第 \(attempt) 次): \(error)")
+                if attempt == maxRetries {
+                    throw PaymentError.verificationFailed("无法确认生成任务已创建，请稍后重试或联系客服")
+                }
+                try await Task.sleep(nanoseconds: retryInterval)
+            }
+        }
+
+        // 如果循环结束仍未确认，抛出错误
+        throw PaymentError.verificationFailed("生成任务创建超时，请稍后重试或联系客服")
     }
 }
 

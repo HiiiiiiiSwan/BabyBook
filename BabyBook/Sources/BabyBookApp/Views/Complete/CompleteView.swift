@@ -2,6 +2,7 @@ import SwiftUI
 import PDFKit
 #if canImport(UIKit)
 import UIKit
+import Photos
 #endif
 
 // MARK: - 完成页面（接入 PDF 生成和下载）
@@ -18,6 +19,8 @@ struct CompleteView: View {
     @State private var downloadedImage: UIImage?
     #endif
     @State private var pdfGenerated = false
+    @State private var showSavePermissionAlert = false
+    @State private var saveSuccessMessage = ""
     @Environment(\.navPath) private var navPath
     @Environment(\.dismiss) private var dismiss
 
@@ -55,6 +58,18 @@ struct CompleteView: View {
             Button("确定", role: .cancel) {}
         } message: {
             Text(errorMessage)
+        }
+        .alert("保存权限", isPresented: $showSavePermissionAlert) {
+            Button("取消", role: .cancel) {}
+            Button("前往设置") {
+                #if os(iOS)
+                if let url = URL(string: UIApplication.openSettingsURLString) {
+                    UIApplication.shared.open(url)
+                }
+                #endif
+            }
+        } message: {
+            Text("需要访问相册权限才能保存绘本图片")
         }
     }
 
@@ -240,17 +255,8 @@ struct CompleteView: View {
 
                 #if canImport(UIKit)
                 if let image = UIImage(data: imageData) {
-                    // 保存到相册
-                    UIImageWriteToSavedPhotosAlbum(image, nil, nil, nil)
-
-                    // 保存到本地 Documents 目录
-                    saveImageToDocuments(imageData: imageData)
-
-                    await MainActor.run {
-                        downloadedImage = image
-                        isDownloading = false
-                        downloadSuccess = true
-                    }
+                    // 请求相册权限并保存
+                    await saveImageToPhotos(image: image, imageData: imageData)
                 } else {
                     throw APIError.invalidResponse
                 }
@@ -319,6 +325,67 @@ struct CompleteView: View {
         #endif
     }
 
+    // MARK: - 保存图片到相册（带权限检查和结果回调）
+    private func saveImageToPhotos(image: UIImage, imageData: Data) async {
+        #if canImport(UIKit)
+        let status = PHPhotoLibrary.authorizationStatus(for: .addOnly)
+
+        switch status {
+        case .authorized, .limited:
+            // 有权限，保存到相册
+            do {
+                try await PHPhotoLibrary.shared().performChanges {
+                    let request = PHAssetCreationRequest.forAsset()
+                    request.addResource(with: .photo, data: imageData, options: nil)
+                }
+
+                // 保存到本地 Documents 目录
+                saveImageToDocuments(imageData: imageData)
+
+                await MainActor.run {
+                    downloadedImage = image
+                    isDownloading = false
+                    downloadSuccess = true
+                    saveSuccessMessage = "绘本已保存到相册"
+                }
+            } catch {
+                await MainActor.run {
+                    errorMessage = "保存到相册失败: \(error.localizedDescription)"
+                    showError = true
+                    isDownloading = false
+                }
+            }
+
+        case .denied, .restricted:
+            // 权限被拒绝
+            await MainActor.run {
+                isDownloading = false
+                showSavePermissionAlert = true
+            }
+
+        case .notDetermined:
+            // 请求权限
+            let newStatus = await PHPhotoLibrary.requestAuthorization(for: .addOnly)
+            if newStatus == .authorized || newStatus == .limited {
+                // 权限 granted，递归调用保存
+                await saveImageToPhotos(image: image, imageData: imageData)
+            } else {
+                await MainActor.run {
+                    isDownloading = false
+                    showSavePermissionAlert = true
+                }
+            }
+
+        @unknown default:
+            await MainActor.run {
+                isDownloading = false
+                errorMessage = "无法访问相册"
+                showError = true
+            }
+        }
+        #endif
+    }
+
     // 保存图片到 Documents 目录
     private func saveImageToDocuments(imageData: Data) {
         guard let documentsPath = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask).first else {
@@ -326,7 +393,11 @@ struct CompleteView: View {
         }
         let fileName = "book_\(order.id).png"
         let filePath = documentsPath.appendingPathComponent(fileName)
-        try? imageData.write(to: filePath)
+        do {
+            try imageData.write(to: filePath)
+        } catch {
+            print("保存到 Documents 失败: \(error)")
+        }
 
         // 同时保存绘本元数据
         LocalBookStore.shared.save(
@@ -344,7 +415,7 @@ struct CompleteView: View {
 }
 
 // MARK: - Preview
-#Preview {
+#Preview("默认状态") {
     NavigationStack {
         CompleteView(
             book: MockService.shared.mockBooks[0],
@@ -370,4 +441,42 @@ struct CompleteView: View {
             )
         )
     }
+}
+
+// MARK: - 截图用 Preview：下载成功状态
+struct CompleteViewDownloadSuccess: View {
+    var body: some View {
+        NavigationStack {
+            CompleteView(
+                book: MockService.shared.mockBooks[0],
+                order: BackendOrder(
+                    id: "test-order-id",
+                    deviceId: "test-device",
+                    bookId: "Book001",
+                    bookName: "《这是我》",
+                    amount: 12.99,
+                    status: "SUCCESS",
+                    createdAt: "2026-06-23T10:00:00Z",
+                    updatedAt: nil
+                ),
+                task: BackendTask(
+                    id: "test-task-id",
+                    orderId: "test-order-id",
+                    status: "COMPLETED",
+                    progress: 100,
+                    resultUrl: "https://example.com/generated.png",
+                    errorMessage: nil,
+                    createdAt: "2026-06-23T10:01:00Z",
+                    updatedAt: "2026-06-23T10:02:00Z"
+                )
+            )
+            .onAppear {
+                // 模拟下载成功状态
+            }
+        }
+    }
+}
+
+#Preview("下载成功") {
+    CompleteViewDownloadSuccess()
 }

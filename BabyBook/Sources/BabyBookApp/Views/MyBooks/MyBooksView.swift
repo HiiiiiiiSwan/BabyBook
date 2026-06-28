@@ -6,11 +6,14 @@ import UIKit
 
 // MARK: - 我的绘本页（接入本地文件管理）
 struct MyBooksView: View {
-    @State private var localBooks: [LocalBook] = []
+    @State private var localBooks: [LocalBookMetadata] = []
     @State private var showDeleteAlert = false
-    @State private var bookToDelete: LocalBook?
+    @State private var bookToDelete: LocalBookMetadata?
     @State private var showShareSheet = false
     @State private var shareItems: [Any] = []
+    @State private var selectedBook: LocalBookMetadata?
+    @State private var navigateToDetail = false
+    @Environment(\.dismiss) private var dismiss
 
     var body: some View {
         ZStack {
@@ -18,8 +21,10 @@ struct MyBooksView: View {
                 .ignoresSafeArea()
 
             VStack(spacing: 0) {
-                // 页面标题
-                headerSection
+                // 页面标题区域（非空状态时才显示计数）
+                if !localBooks.isEmpty {
+                    headerSection
+                }
 
                 if localBooks.isEmpty {
                     // 空状态
@@ -30,7 +35,29 @@ struct MyBooksView: View {
                 }
             }
         }
-        .navigationTitle("我的绘本")
+        .navigationTitle("")
+        .navigationBarBackButtonHidden(true)
+        #if os(iOS)
+        .navigationBarTitleDisplayMode(.inline)
+        .toolbar {
+            ToolbarItem(placement: .topBarLeading) {
+                Button(action: {
+                    dismiss()
+                }) {
+                    HStack(spacing: 4) {
+                        Image(systemName: "chevron.left")
+                            .font(.system(size: 20, weight: .semibold))
+                            .foregroundColor(Color(hex: "#222222"))
+                    }
+                }
+            }
+            ToolbarItem(placement: .principal) {
+                Text("我的绘本")
+                    .font(.system(size: 18, weight: .bold))
+                    .foregroundColor(Color(hex: "#222222"))
+            }
+        }
+        #endif
         .onAppear { loadLocalBooks() }
         .alert("删除绘本", isPresented: $showDeleteAlert) {
             Button("取消", role: .cancel) {}
@@ -47,22 +74,22 @@ struct MyBooksView: View {
             ShareSheet(items: shareItems)
             #endif
         }
+        .navigationDestination(isPresented: $navigateToDetail) {
+            if let book = selectedBook {
+                LocalBookDetailView(book: book)
+            }
+        }
     }
 
-    // MARK: - Header
+    // MARK: - Header（非空状态显示计数）
     private var headerSection: some View {
         VStack(alignment: .leading, spacing: 8) {
-            Text("我的绘本")
-                .font(.system(size: 20, weight: .bold))
-                .foregroundColor(Color(hex: "#222222"))
-                .padding(.horizontal, 24)
-                .padding(.top, 20)
-
             if !localBooks.isEmpty {
                 Text("共 \(localBooks.count) 本")
                     .font(.system(size: 14))
                     .foregroundColor(Color(hex: "#999999"))
                     .padding(.horizontal, 24)
+                    .padding(.top, 20)
             }
         }
         .padding(.bottom, 16)
@@ -94,7 +121,7 @@ struct MyBooksView: View {
                 .multilineTextAlignment(.center)
                 .lineSpacing(4)
 
-            NavigationLink(destination: HomeView()) {
+            Button(action: { dismiss() }) {
                 Text("去定制绘本")
                     .font(.system(size: 16, weight: .semibold))
                     .foregroundColor(.white)
@@ -114,30 +141,36 @@ struct MyBooksView: View {
     private var bookList: some View {
         List {
             ForEach(localBooks) { book in
-                LocalBookRow(book: book)
-                    .swipeActions(edge: .trailing, allowsFullSwipe: false) {
-                        Button(role: .destructive) {
-                            bookToDelete = book
-                            showDeleteAlert = true
-                        } label: {
-                            Label("删除", systemImage: "trash")
-                        }
-
-                        Button {
-                            shareBook(book)
-                        } label: {
-                            Label("分享", systemImage: "square.and.arrow.up")
-                        }
-                        .tint(Color(hex: "#F28C28"))
+                Button(action: {
+                    selectedBook = book
+                    navigateToDetail = true
+                }) {
+                    LocalBookRow(book: book)
+                }
+                .buttonStyle(PlainButtonStyle())
+                .swipeActions(edge: .trailing, allowsFullSwipe: false) {
+                    Button(role: .destructive) {
+                        bookToDelete = book
+                        showDeleteAlert = true
+                    } label: {
+                        Label("删除", systemImage: "trash")
                     }
-                    .listRowBackground(Color(hex: "#FFF9F2"))
-                    .listRowSeparator(.hidden)
-                    .listRowInsets(EdgeInsets(
-                        top: 8,
-                        leading: 24,
-                        bottom: 8,
-                        trailing: 24
-                    ))
+
+                    Button {
+                        shareBook(book)
+                    } label: {
+                        Label("分享", systemImage: "square.and.arrow.up")
+                    }
+                    .tint(Color(hex: "#F28C28"))
+                }
+                .listRowBackground(Color(hex: "#FFF9F2"))
+                .listRowSeparator(.hidden)
+                .listRowInsets(EdgeInsets(
+                    top: 8,
+                    leading: 24,
+                    bottom: 8,
+                    trailing: 24
+                ))
             }
         }
         .listStyle(.plain)
@@ -146,60 +179,45 @@ struct MyBooksView: View {
 
     // MARK: - 加载本地绘本
     private func loadLocalBooks() {
-        guard let documentsPath = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask).first else {
-            return
-        }
-
-        do {
-            let files = try FileManager.default.contentsOfDirectory(at: documentsPath, includingPropertiesForKeys: [.creationDateKey, .fileSizeKey])
-
-            var books: [LocalBook] = []
-            for file in files {
-                let fileName = file.lastPathComponent
-                if fileName.hasPrefix("book_") && (fileName.hasSuffix(".png") || fileName.hasSuffix(".pdf")) {
-                    let attributes = try FileManager.default.attributesOfItem(atPath: file.path)
-                    let creationDate = attributes[.creationDate] as? Date ?? Date()
-                    let fileSize = attributes[.size] as? Int64 ?? 0
-
-                    // 从文件名提取 orderId
-                    let orderId = fileName
-                        .replacingOccurrences(of: "book_", with: "")
-                        .replacingOccurrences(of: ".png", with: "")
-                        .replacingOccurrences(of: ".pdf", with: "")
-
-                    books.append(LocalBook(
-                        id: orderId,
-                        orderId: orderId,
-                        bookName: "专属绘本 \(books.count + 1)",
-                        filePath: file.path,
-                        createTime: creationDate,
-                        fileSize: fileSize
-                    ))
-                }
-            }
-
-            // 按创建时间倒序排列
-            localBooks = books.sorted { $0.createTime > $1.createTime }
-        } catch {
-            print("加载本地绘本失败: \(error)")
-        }
+        localBooks = LocalBookStore.shared.loadAll()
+            .sorted { $0.createTime > $1.createTime }
     }
 
     // MARK: - 删除绘本
-    private func deleteBook(_ book: LocalBook) {
-        do {
-            try FileManager.default.removeItem(atPath: book.filePath)
-            loadLocalBooks()
-        } catch {
-            print("删除绘本失败: \(error)")
+    private func deleteBook(_ book: LocalBookMetadata) {
+        // 删除图片文件
+        if FileManager.default.fileExists(atPath: book.filePath) {
+            try? FileManager.default.removeItem(atPath: book.filePath)
         }
+        // 删除对应 PDF
+        let pdfPath = book.filePath.replacingOccurrences(of: ".png", with: ".pdf")
+        if FileManager.default.fileExists(atPath: pdfPath) {
+            try? FileManager.default.removeItem(atPath: pdfPath)
+        }
+        // 删除元数据
+        LocalBookStore.shared.delete(orderId: book.orderId)
+        loadLocalBooks()
     }
 
     // MARK: - 分享绘本
-    private func shareBook(_ book: LocalBook) {
-        let fileURL = URL(fileURLWithPath: book.filePath)
-        shareItems = [fileURL]
+    private func shareBook(_ book: LocalBookMetadata) {
+        var items: [Any] = []
+
+        // 优先分享 PDF，如果没有则分享图片
+        let pdfPath = book.filePath.replacingOccurrences(of: ".png", with: ".pdf")
+        if FileManager.default.fileExists(atPath: pdfPath) {
+            items.append(URL(fileURLWithPath: pdfPath))
+        } else {
+            items.append(URL(fileURLWithPath: book.filePath))
+        }
+
+        shareItems = items
         showShareSheet = true
+    }
+
+    // MARK: - 返回首页（已改为 dismiss，因为移除了 TabBar）
+    private func goToHome() {
+        dismiss()
     }
 }
 
@@ -218,7 +236,7 @@ struct ShareSheet: UIViewControllerRepresentable {
 
 // MARK: - 本地绘本行
 struct LocalBookRow: View {
-    let book: LocalBook
+    let book: LocalBookMetadata
 
     var body: some View {
         HStack(spacing: 16) {
@@ -237,9 +255,23 @@ struct LocalBookRow: View {
                     )
                     .frame(width: 64, height: 80)
 
+                #if canImport(UIKit)
+                if let uiImage = loadThumbnail() {
+                    Image(uiImage: uiImage)
+                        .resizable()
+                        .scaledToFill()
+                        .frame(width: 64, height: 80)
+                        .clipShape(RoundedRectangle(cornerRadius: 12))
+                } else {
+                    Image(systemName: "book.fill")
+                        .font(.system(size: 28))
+                        .foregroundColor(Color(hex: "#F28C28").opacity(0.5))
+                }
+                #else
                 Image(systemName: "book.fill")
                     .font(.system(size: 28))
                     .foregroundColor(Color(hex: "#F28C28").opacity(0.5))
+                #endif
             }
 
             // 信息
@@ -252,9 +284,11 @@ struct LocalBookRow: View {
                     .font(.system(size: 12))
                     .foregroundColor(Color(hex: "#999999"))
 
-                Text(formatFileSize(book.fileSize))
-                    .font(.system(size: 12))
-                    .foregroundColor(Color(hex: "#999999"))
+                if let fileSize = getFileSize() {
+                    Text(formatFileSize(fileSize))
+                        .font(.system(size: 12))
+                        .foregroundColor(Color(hex: "#999999"))
+                }
             }
 
             Spacer()
@@ -268,6 +302,21 @@ struct LocalBookRow: View {
         .background(Color.white)
         .cornerRadius(12)
         .shadow(color: Color.black.opacity(0.04), radius: 8, x: 0, y: 2)
+    }
+
+    // 加载封面缩略图
+    #if canImport(UIKit)
+    private func loadThumbnail() -> UIImage? {
+        return UIImage(contentsOfFile: book.filePath)
+    }
+    #endif
+
+    // 获取文件大小
+    private func getFileSize() -> Int64? {
+        guard let attributes = try? FileManager.default.attributesOfItem(atPath: book.filePath) else {
+            return nil
+        }
+        return attributes[.size] as? Int64
     }
 
     // MARK: - 格式化日期
@@ -287,6 +336,17 @@ struct LocalBookRow: View {
             return String(format: "%.1f MB", mb)
         }
     }
+}
+
+// MARK: - TabItem 定义
+enum TabItem {
+    case home
+    case myBooks
+}
+
+// MARK: - 全局通知
+extension Notification.Name {
+    static let switchToTab = Notification.Name("switchToTab")
 }
 
 // MARK: - Preview

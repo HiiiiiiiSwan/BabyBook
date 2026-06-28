@@ -1,6 +1,11 @@
 import Foundation
 import StoreKit
 
+// MARK: - 支付相关通知
+extension Notification.Name {
+    static let orderPaymentRestored = Notification.Name("orderPaymentRestored")
+}
+
 // MARK: - StoreKit2 支付服务
 @MainActor
 class PaymentService: ObservableObject {
@@ -141,11 +146,47 @@ class PaymentService: ObservableObject {
             for await verificationResult in Transaction.updates {
                 do {
                     let transaction = try checkVerified(verificationResult)
-                    // 处理未完成的交易
+
+                    // 检查交易是否已完成验证
+                    if transaction.revocationDate == nil {
+                        // 从未完成的交易恢复：提取 orderId 并验证
+                        await handleUnfinishedTransaction(transaction)
+                    }
+
+                    // 完成交易
                     await transaction.finish()
                 } catch {
                     print("交易更新处理失败: \(error)")
                 }
+            }
+        }
+    }
+
+    // MARK: - 处理未完成的交易（App 崩溃/杀后台后恢复）
+    private func handleUnfinishedTransaction(_ transaction: Transaction) async {
+        // 从交易备注中提取 orderId（如果购买时存储了）
+        // StoreKit2 不直接支持自定义 payload，我们通过本地存储关联
+
+        // 查询本地是否有待验证的订单
+        if let pendingOrderId = OrderStatusManager.shared.loadPendingOrderId() {
+            print("发现未完成的交易，关联订单: \(pendingOrderId)")
+
+            do {
+                // 向后端验证支付
+                try await verifyPaymentWithBackend(
+                    transaction: transaction,
+                    orderId: pendingOrderId
+                )
+
+                // 验证成功，通知恢复订单
+                await MainActor.run {
+                    NotificationCenter.default.post(
+                        name: .orderPaymentRestored,
+                        object: pendingOrderId
+                    )
+                }
+            } catch {
+                print("恢复交易验证失败: \(error)")
             }
         }
     }

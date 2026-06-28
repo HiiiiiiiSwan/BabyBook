@@ -6,6 +6,9 @@ import UIKit
 
 // MARK: - 首页（截图布局版本）
 struct HomeView: View {
+    @State private var showGenerating = false
+    @State private var restoredOrder: BackendOrder?
+    @State private var restoredBook: Book?
     @State private var selectedBook: Book? = MockService.shared.mockBooks.first
     @State private var showDetail = false
     @State private var showUploadSheet = false
@@ -21,11 +24,25 @@ struct HomeView: View {
                 BookDetailView(book: book)
             }
         }
+        .navigationDestination(isPresented: $showGenerating) {
+            if let book = restoredBook, let order = restoredOrder {
+                GeneratingView(book: book, order: order)
+            }
+        }
         .overlay {
             if showUploadSheet {
                 UploadPhotoSheet(book: selectedBook!, isPresented: $showUploadSheet)
                     .transition(.opacity)
                     .zIndex(100)
+            }
+        }
+        .onReceive(NotificationCenter.default.publisher(for: .navigateToGenerating)) { notification in
+            if let userInfo = notification.object as? [String: Any],
+               let book = userInfo["book"] as? Book,
+               let order = userInfo["order"] as? BackendOrder {
+                self.restoredBook = book
+                self.restoredOrder = order
+                self.showGenerating = true
             }
         }
     }
@@ -349,6 +366,12 @@ struct UploadPhotoSheet: View {
     @State private var createdOrder: BackendOrder?
     @State private var uploadedImageUrl: String?
     @StateObject private var paymentService = PaymentService.shared
+    @State private var showPermissionAlert = false
+    @State private var permissionAlertMessage = ""
+    @State private var showCamera = false
+    @State private var showFaceDetectionError = false
+    @State private var faceDetectionErrorMessage = ""
+    @State private var showPhotoPicker = false
 
     var body: some View {
         ZStack {
@@ -379,10 +402,41 @@ struct UploadPhotoSheet: View {
         } message: {
             Text(errorMessage)
         }
+        .alert("相册权限", isPresented: $showPermissionAlert) {
+            Button("取消", role: .cancel) {}
+            Button("前往设置") {
+                #if canImport(UIKit)
+                if let url = URL(string: UIApplication.openSettingsURLString) {
+                    UIApplication.shared.open(url)
+                }
+                #endif
+            }
+        } message: {
+            Text(permissionAlertMessage)
+        }
+        .alert("人脸检测", isPresented: $showFaceDetectionError) {
+            Button("确定", role: .cancel) {}
+        } message: {
+            Text(faceDetectionErrorMessage)
+        }
         .overlay {
             if isUploadingImage || isCreatingOrder || isProcessingPayment {
                 LoadingOverlay(message: overlayMessage)
             }
+        }
+        .sheet(isPresented: $showCamera) {
+            #if canImport(UIKit)
+            CameraView(
+                capturedImage: $selectedImage,
+                isPresented: $showCamera,
+                onCancel: {}
+            )
+            .onDisappear {
+                if selectedImage != nil {
+                    performFaceDetection()
+                }
+            }
+            #endif
         }
     }
 
@@ -457,7 +511,7 @@ struct UploadPhotoSheet: View {
             // 按钮：拍照（次按钮）+ 从相册选择（主按钮）
             HStack(spacing: 12) {
                 // 拍照按钮（次按钮样式：浅色底黑字）
-                Button(action: {}) {
+                Button(action: { checkCameraPermission() }) {
                     HStack {
                         Image(systemName: "camera.fill")
                         Text("拍照")
@@ -479,7 +533,7 @@ struct UploadPhotoSheet: View {
                     } else {
                         selectedImage = createPlaceholderImage()
                     }
-                    simulateFaceDetection()
+                    performFaceDetection()
                     #endif
                 }) {
                     HStack {
@@ -494,7 +548,9 @@ struct UploadPhotoSheet: View {
                     .cornerRadius(28)
                 }
                 #else
-                PhotosPicker(selection: $selectedPhoto, matching: .images) {
+                Button(action: {
+                    checkPhotoPermission()
+                }) {
                     HStack {
                         Image(systemName: "photo.on.rectangle")
                         Text("从相册选择")
@@ -538,7 +594,7 @@ struct UploadPhotoSheet: View {
                         selectedImage = nil
                     }
                     #endif
-                    simulateFaceDetection()
+                    performFaceDetection()
                 case .success(nil):
                     errorMessage = "无法读取图片"; showError = true; isAnalyzing = false
                 case .failure(let error):
@@ -548,11 +604,89 @@ struct UploadPhotoSheet: View {
         }
     }
 
-    private func simulateFaceDetection() {
-        DispatchQueue.main.asyncAfter(deadline: .now() + 1.5) {
-            isAnalyzing = false; faceDetected = true
-            uploadImageAndCreateOrder()
+    private func checkPhotoPermission() {
+        #if canImport(UIKit)
+        let status = PHPhotoLibrary.authorizationStatus()
+        switch status {
+        case .authorized, .limited:
+            showPhotoPicker = true
+        case .denied, .restricted:
+            permissionAlertMessage = "需要访问相册才能选择宝宝照片，请在设置中开启权限"
+            showPermissionAlert = true
+        case .notDetermined:
+            PHPhotoLibrary.requestAuthorization { newStatus in
+                DispatchQueue.main.async {
+                    if newStatus == .authorized || newStatus == .limited {
+                        showPhotoPicker = true
+                    } else {
+                        permissionAlertMessage = "需要访问相册才能选择宝宝照片，请在设置中开启权限"
+                        showPermissionAlert = true
+                    }
+                }
+            }
+        @unknown default:
+            break
         }
+        #endif
+    }
+
+    private func checkCameraPermission() {
+        #if canImport(UIKit)
+        let status = AVCaptureDevice.authorizationStatus(for: .video)
+        switch status {
+        case .authorized:
+            showCamera = true
+        case .denied, .restricted:
+            permissionAlertMessage = "需要访问相机才能拍摄宝宝照片，请在设置中开启权限"
+            showPermissionAlert = true
+        case .notDetermined:
+            AVCaptureDevice.requestAccess(for: .video) { granted in
+                DispatchQueue.main.async {
+                    if granted {
+                        showCamera = true
+                    } else {
+                        permissionAlertMessage = "需要访问相机才能拍摄宝宝照片，请在设置中开启权限"
+                        showPermissionAlert = true
+                    }
+                }
+            }
+        @unknown default:
+            break
+        }
+        #endif
+    }
+
+    private func performFaceDetection() {
+        #if canImport(UIKit)
+        guard let image = selectedImage else { return }
+        isAnalyzing = true
+        faceDetected = false
+
+        Task {
+            let result = await FaceDetectionService.shared.detectFaces(in: image)
+            await MainActor.run {
+                isAnalyzing = false
+                switch result {
+                case .success:
+                    faceDetected = true
+                    uploadImageAndCreateOrder()
+                case .noFaceDetected:
+                    faceDetectionErrorMessage = "未检测到人脸，请上传宝宝正脸清晰照片"
+                    showFaceDetectionError = true
+                case .multipleFacesDetected(let count):
+                    faceDetectionErrorMessage = "检测到 \(count) 张人脸，请只上传1张宝宝照片"
+                    showFaceDetectionError = true
+                case .failed(let error):
+                    faceDetectionErrorMessage = "人脸检测失败: \(error.localizedDescription)"
+                    showFaceDetectionError = true
+                }
+            }
+        }
+        #else
+        // 非 UIKit 平台跳过人脸检测
+        faceDetected = true
+        uploadImageAndCreateOrder()
+        #endif
     }
 
     private var overlayMessage: String {
@@ -629,6 +763,8 @@ struct UploadPhotoSheet: View {
                     createdOrder = mockOrder
                     isCreatingOrder = false
                 }
+                // 保存订单到本地（用于崩溃恢复）
+                OrderStatusManager.shared.saveCurrentOrder(mockOrder)
                 await startPayment(order: mockOrder)
                 #else
                 let deviceId = DeviceService.shared.deviceId
@@ -642,6 +778,8 @@ struct UploadPhotoSheet: View {
                     createdOrder = order
                     isCreatingOrder = false
                 }
+                // 保存订单到本地（用于崩溃恢复）
+                OrderStatusManager.shared.saveCurrentOrder(order)
                 await startPayment(order: order)
                 #endif
             } catch {

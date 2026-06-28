@@ -7,11 +7,13 @@ struct GeneratingView: View {
 
     @StateObject private var statusManager = OrderStatusManager.shared
     @State private var showCancelAlert = false
+    @State private var showRefundAlert = false
     @State private var navigateToComplete = false
     @State private var statusText = "魔法生成中..."
     @State private var remainingSeconds = 60
     @State private var timer: Timer?
     @Environment(\.dismiss) private var dismiss
+    @Environment(\.navPath) private var navPath
 
     var body: some View {
         ZStack {
@@ -61,6 +63,13 @@ struct GeneratingView: View {
             Button("确认取消", role: .destructive) { cancelGeneration() }
         } message: {
             Text("绘本生成即将完成，确定要取消吗？已支付金额将原路退回。")
+        }
+        .alert("退款提示", isPresented: $showRefundAlert) {
+            Button("返回首页") {
+                goBackToHome()
+            }
+        } message: {
+            Text("绘本生成已取消，已支付金额将原路退回（预计 1-3 个工作日到账）。")
         }
     }
 
@@ -169,7 +178,25 @@ struct GeneratingView: View {
                 }
             }
         }
+
+        // 监听超时状态
+        Task {
+            for await isTimeout in statusManager.$isTimeout.values {
+                if isTimeout {
+                    await MainActor.run {
+                        handleTimeout()
+                    }
+                }
+            }
+        }
         #endif
+    }
+
+    private func handleTimeout() {
+        timer?.invalidate()
+        statusManager.stopPolling()
+        errorMessage = "生成超时，请检查网络后重试或联系客服"
+        showError = true
     }
 
     private func checkTaskStatus() {
@@ -180,6 +207,8 @@ struct GeneratingView: View {
             statusText = "生成完成！"
             timer?.invalidate()
             statusManager.stopPolling()
+            // 生成完成，清除本地保存的订单
+            OrderStatusManager.shared.clearSavedOrder()
             DispatchQueue.main.asyncAfter(deadline: .now() + 0.8) {
                 navigateToComplete = true
             }
@@ -205,7 +234,14 @@ struct GeneratingView: View {
         timer?.invalidate()
         Task {
             await statusManager.cancelTask()
+            await MainActor.run {
+                showRefundAlert = true
+            }
         }
+    }
+
+    private func goBackToHome() {
+        navPath.wrappedValue = NavigationPath()
     }
 }
 

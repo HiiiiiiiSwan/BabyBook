@@ -32,6 +32,8 @@
 		34231976795B49FCB0057471 /* PaymentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A054E94365A54D5EA96C7BA7 /* PaymentView.swift */; };
 		F20D2086364046818B487BC6 /* UploadPhotoView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F5863B80B6DD47C6A0A2200F /* UploadPhotoView.swift */; };
 		A3EF57A1D5F34A55BEDD28F5 /* UploadSheetView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 948A634C78C143FFB934C54D /* UploadSheetView.swift */; };
+		FACE1234BEEF5678CAFE9012 /* FaceDetectionService.swift in Sources */ = {isa = PBXBuildFile; fileRef = FACE1234BEEF5678CAFE9013 /* FaceDetectionService.swift */; };
+		FACE1234BEEF5678CAFE9014 /* CameraView.swift in Sources */ = {isa = PBXBuildFile; fileRef = FACE1234BEEF5678CAFE9015 /* CameraView.swift */; };
 		A1493B5358F24D4FA1AB3893 /* self_intro in Resources */ = {isa = PBXBuildFile; fileRef = 02B21E25151E47CF95C55203 /* self_intro */; };
 		C96FBA404BFE410580FB8208 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = D97C93F182B94E83BA8440BA /* Assets.xcassets */; };
 		18E79DF9F46F4110B48332F1 /* color_recognition in Resources */ = {isa = PBXBuildFile; fileRef = 267364CFADBF409EBE0A4DDC /* color_recognition */; };
@@ -65,6 +67,8 @@
 		A054E94365A54D5EA96C7BA7 /* PaymentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = "PaymentView.swift"; path = "PaymentView.swift"; sourceTree = "<group>"; };
 		F5863B80B6DD47C6A0A2200F /* UploadPhotoView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = "UploadPhotoView.swift"; path = "UploadPhotoView.swift"; sourceTree = "<group>"; };
 		948A634C78C143FFB934C54D /* UploadSheetView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = "UploadSheetView.swift"; path = "UploadSheetView.swift"; sourceTree = "<group>"; };
+		FACE1234BEEF5678CAFE9013 /* FaceDetectionService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = "FaceDetectionService.swift"; path = "FaceDetectionService.swift"; sourceTree = "<group>"; };
+		FACE1234BEEF5678CAFE9015 /* CameraView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = "CameraView.swift"; path = "CameraView.swift"; sourceTree = "<group>"; };
 		02B21E25151E47CF95C55203 /* self_intro */ = {isa = PBXFileReference; lastKnownFileType = folder; name = "self_intro"; path = "self_intro"; sourceTree = "<group>"; };
 		D97C93F182B94E83BA8440BA /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder; name = "Assets.xcassets"; path = "Assets.xcassets"; sourceTree = "<group>"; };
 		267364CFADBF409EBE0A4DDC /* color_recognition */ = {isa = PBXFileReference; lastKnownFileType = folder; name = "color_recognition"; path = "color_recognition"; sourceTree = "<group>"; };
@@ -198,6 +202,7 @@
 				EAC5FB7EA88D466BB3807DCC /* NetworkService.swift */,
 				11C541F36570456DACF3920F /* PDFService.swift */,
 				2C82FAE94D8541B38F6E5988 /* PaymentService.swift */,
+				FACE1234BEEF5678CAFE9013 /* FaceDetectionService.swift */,
 				EADEDCBF5F474A7494374722 /* LocalBookStore.swift */,
 			);
 			path = Services;
@@ -298,6 +303,7 @@
 			children = (
 				F5863B80B6DD47C6A0A2200F /* UploadPhotoView.swift */,
 				948A634C78C143FFB934C54D /* UploadSheetView.swift */,
+				FACE1234BEEF5678CAFE9015 /* CameraView.swift */,
 			);
 			path = Upload;
 			sourceTree = "<group>";
@@ -389,6 +395,8 @@
 				34231976795B49FCB0057471 /* PaymentView.swift in Sources */,
 				F20D2086364046818B487BC6 /* UploadPhotoView.swift in Sources */,
 				A3EF57A1D5F34A55BEDD28F5 /* UploadSheetView.swift in Sources */,
+			FACE1234BEEF5678CAFE9012 /* FaceDetectionService.swift in Sources */,
+			FACE1234BEEF5678CAFE9014 /* CameraView.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -409,6 +417,8 @@
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
+				INFOPLIST_KEY_NSCameraUsageDescription = "需要访问相机拍摄宝宝照片，用于生成专属绘本";
+				INFOPLIST_KEY_NSPhotoLibraryUsageDescription = "需要访问相册选择宝宝照片，用于生成专属绘本";
 				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
 				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = UIInterfaceOrientationPortrait;
 				IPHONEOS_DEPLOYMENT_TARGET = 16.0;
@@ -440,6 +450,8 @@
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
+				INFOPLIST_KEY_NSCameraUsageDescription = "需要访问相机拍摄宝宝照片，用于生成专属绘本";
+				INFOPLIST_KEY_NSPhotoLibraryUsageDescription = "需要访问相册选择宝宝照片，用于生成专属绘本";
 				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
 				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = UIInterfaceOrientationPortrait;
 				IPHONEOS_DEPLOYMENT_TARGET = 16.0;

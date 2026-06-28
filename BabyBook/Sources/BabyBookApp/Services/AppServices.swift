@@ -128,14 +128,107 @@ class OrderStatusManager: ObservableObject {
     @Published var currentOrder: BackendOrder?
     @Published var currentTask: BackendTask?
     @Published var isPolling = false
+    @Published var isTimeout = false  // 新增：超时标志
 
     private var pollingTask: Task<Void, Never>?
+    private var timeoutTask: Task<Void, Never>?  // 新增：超时计时器
     private let pollingInterval: UInt64 = 3_000_000_000 // 3 秒（纳秒）
+    private let maxPollingDuration: UInt64 = 300_000_000_000 // 5 分钟（纳秒）
+
+    // MARK: - 本地持久化
+    private let orderKey = "com.babybook.lastOrder"
+    private let orderStatusKey = "com.babybook.lastOrderStatus"
+
+    /// 保存当前订单到本地（用于崩溃/杀后台后恢复）
+    func saveCurrentOrder(_ order: BackendOrder) {
+        if let data = try? JSONEncoder().encode(order) {
+            UserDefaults.standard.set(data, forKey: orderKey)
+            UserDefaults.standard.set(order.status, forKey: orderStatusKey)
+        }
+    }
+
+    /// 加载本地保存的订单
+    func loadLastOrder() -> BackendOrder? {
+        guard let data = UserDefaults.standard.data(forKey: orderKey) else { return nil }
+        return try? JSONDecoder().decode(BackendOrder.self, from: data)
+    }
+
+    /// 加载待验证的订单 ID（用于交易恢复）
+    func loadPendingOrderId() -> String? {
+        guard let order = loadLastOrder() else { return nil }
+        // 只有 UNPAID 或 GENERATING 状态的订单才需要恢复
+        if order.status == "UNPAID" || order.status == "GENERATING" || order.status == "PAID" {
+            return order.id
+        }
+        return nil
+    }
+
+    /// 清除本地保存的订单
+    func clearSavedOrder() {
+        UserDefaults.standard.removeObject(forKey: orderKey)
+        UserDefaults.standard.removeObject(forKey: orderStatusKey)
+    }
+
+    /// 恢复订单：App 启动时调用，检查是否有未完成的订单
+    func restoreOrderIfNeeded() async -> BackendOrder? {
+        guard let order = loadLastOrder() else { return nil }
+
+        do {
+            // 从后端获取最新订单状态
+            let latestOrder = try await NetworkService.shared.getOrder(orderId: order.id)
+
+            await MainActor.run {
+                self.currentOrder = latestOrder
+            }
+
+            // 根据状态决定是否需要恢复
+            switch latestOrder.status {
+            case "PAID":
+                // 已支付但未开始生成，需要跳转到生成页
+                return latestOrder
+            case "GENERATING":
+                // 生成中，需要恢复轮询
+                startPolling(orderId: latestOrder.id)
+                return latestOrder
+            case "SUCCESS":
+                // 已完成，清除本地记录
+                clearSavedOrder()
+                return latestOrder
+            case "FAILED", "CANCELLED":
+                // 失败或取消，清除本地记录
+                clearSavedOrder()
+                return nil
+            default:
+                return nil
+            }
+        } catch {
+            print("恢复订单失败: \(error)")
+            return nil
+        }
+    }
 
     /// 开始轮询任务状态
     func startPolling(orderId: String) {
         stopPolling()
         isPolling = true
+        isTimeout = false
+
+        // 保存当前订单到本地（用于崩溃恢复）
+        if let order = currentOrder {
+            saveCurrentOrder(order)
+        }
+
+        // 启动超时计时器（5分钟）
+        timeoutTask = Task {
+            try? await Task.sleep(nanoseconds: maxPollingDuration)
+            await MainActor.run {
+                if self.isPolling {
+                    self.isTimeout = true
+                    self.isPolling = false
+                    self.pollingTask?.cancel()
+                }
+            }
+        }
 
         pollingTask = Task {
             while !Task.isCancelled {
@@ -167,6 +260,8 @@ class OrderStatusManager: ObservableObject {
     func stopPolling() {
         pollingTask?.cancel()
         pollingTask = nil
+        timeoutTask?.cancel()
+        timeoutTask = nil
         isPolling = false
     }
 

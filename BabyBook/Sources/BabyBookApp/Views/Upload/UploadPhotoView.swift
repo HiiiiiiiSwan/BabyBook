@@ -2,6 +2,7 @@ import SwiftUI
 import PhotosUI
 #if canImport(UIKit)
 import UIKit
+import Photos
 #endif
 
 // MARK: - 上传照片页面（接入真实 API）
@@ -18,11 +19,17 @@ struct UploadPhotoView: View {
     @State private var navigateToGenerating = false
     @State private var isProcessingPayment = false
     @State private var showSheet = false
+    @State private var showPhotoPicker = false
     @State private var isCreatingOrder = false
     @State private var isUploadingImage = false
     @State private var createdOrder: BackendOrder?
     @State private var uploadedImageUrl: String?
     @StateObject private var paymentService = PaymentService.shared
+    @State private var showPermissionAlert = false
+    @State private var permissionAlertMessage = ""
+    @State private var showCamera = false
+    @State private var showFaceDetectionError = false
+    @State private var faceDetectionErrorMessage = ""
 
     var body: some View {
         ZStack {
@@ -119,6 +126,18 @@ struct UploadPhotoView: View {
             } message: {
                 Text(errorMessage)
             }
+            .alert("相册权限", isPresented: $showPermissionAlert) {
+                Button("取消", role: .cancel) {}
+                Button("前往设置") {
+                    #if canImport(UIKit)
+                    if let url = URL(string: UIApplication.openSettingsURLString) {
+                        UIApplication.shared.open(url)
+                    }
+                    #endif
+                }
+            } message: {
+                Text(permissionAlertMessage)
+            }
             .overlay {
                 if isUploadingImage || isCreatingOrder || isProcessingPayment {
                     LoadingOverlay(message: overlayMessage)
@@ -198,7 +217,7 @@ struct UploadPhotoView: View {
                         // 如果找不到图片，创建一个纯色图片作为占位
                         selectedImage = createPlaceholderImage()
                     }
-                    simulateFaceDetection()
+                    performFaceDetection()
                     #endif
                 }) {
                     HStack {
@@ -213,7 +232,9 @@ struct UploadPhotoView: View {
                     .cornerRadius(22)
                 }
                 #else
-                PhotosPicker(selection: $selectedPhoto, matching: .images) {
+                Button(action: {
+                    checkPhotoPermission()
+                }) {
                     HStack {
                         Image(systemName: "photo.on.rectangle")
                         Text("从相册选择")
@@ -227,7 +248,7 @@ struct UploadPhotoView: View {
                 }
                 #endif
 
-                Button(action: {}) {
+                Button(action: { checkCameraPermission() }) {
                     HStack {
                         Image(systemName: "camera.fill")
                         Text("拍照")
@@ -261,9 +282,121 @@ struct UploadPhotoView: View {
         .background(Color.white)
         .cornerRadius(24)
         .shadow(color: Color.black.opacity(0.08), radius: 16, x: 0, y: -4)
+        .sheet(isPresented: $showPhotoPicker) {
+            PhotosPicker(selection: $selectedPhoto, matching: .images) {
+                Text("选择照片")
+            }
+        }
         .onChange(of: selectedPhoto) { newItem in
             if let newItem { loadImage(from: newItem) }
         }
+        .sheet(isPresented: $showCamera) {
+            #if canImport(UIKit)
+            CameraView(
+                capturedImage: $selectedImage,
+                isPresented: $showCamera,
+                onCancel: {}
+            )
+            .onDisappear {
+                if selectedImage != nil {
+                    performFaceDetection()
+                }
+            }
+            #endif
+        }
+        .alert("人脸检测", isPresented: $showFaceDetectionError) {
+            Button("确定", role: .cancel) {}
+        } message: {
+            Text(faceDetectionErrorMessage)
+        }
+    }
+
+    private func checkPhotoPermission() {
+        #if canImport(UIKit)
+        let status = PHPhotoLibrary.authorizationStatus()
+        switch status {
+        case .authorized, .limited:
+            // 有权限，打开 PhotosPicker
+            showPhotoPicker = true
+        case .denied, .restricted:
+            // 权限被拒绝，显示引导
+            permissionAlertMessage = "需要访问相册才能选择宝宝照片，请在设置中开启权限"
+            showPermissionAlert = true
+        case .notDetermined:
+            // 请求权限
+            PHPhotoLibrary.requestAuthorization { newStatus in
+                DispatchQueue.main.async {
+                    if newStatus == .authorized || newStatus == .limited {
+                        showPhotoPicker = true
+                    } else {
+                        permissionAlertMessage = "需要访问相册才能选择宝宝照片，请在设置中开启权限"
+                        showPermissionAlert = true
+                    }
+                }
+            }
+        @unknown default:
+            break
+        }
+        #endif
+    }
+
+    private func performFaceDetection() {
+        #if canImport(UIKit)
+        guard let image = selectedImage else { return }
+        isAnalyzing = true
+        faceDetected = false
+
+        Task {
+            let result = await FaceDetectionService.shared.detectFaces(in: image)
+            await MainActor.run {
+                isAnalyzing = false
+                switch result {
+                case .success:
+                    faceDetected = true
+                    uploadImageAndCreateOrder()
+                case .noFaceDetected:
+                    faceDetectionErrorMessage = "未检测到人脸，请上传宝宝正脸清晰照片"
+                    showFaceDetectionError = true
+                case .multipleFacesDetected(let count):
+                    faceDetectionErrorMessage = "检测到 \(count) 张人脸，请只上传1张宝宝照片"
+                    showFaceDetectionError = true
+                case .failed(let error):
+                    faceDetectionErrorMessage = "人脸检测失败: \(error.localizedDescription)"
+                    showFaceDetectionError = true
+                }
+            }
+        }
+        #else
+        // 非 UIKit 平台跳过人脸检测
+        faceDetected = true
+        uploadImageAndCreateOrder()
+        #endif
+    }
+
+    private func checkCameraPermission() {
+        #if canImport(UIKit)
+        let status = AVCaptureDevice.authorizationStatus(for: .video)
+        switch status {
+        case .authorized:
+            showCamera = true
+        case .denied, .restricted:
+            permissionAlertMessage = "需要访问相机才能拍摄宝宝照片，请在设置中开启权限"
+            showPermissionAlert = true
+        case .notDetermined:
+            AVCaptureDevice.requestAccess(for: .video) { granted in
+                DispatchQueue.main.async {
+                    if granted {
+                        showCamera = true
+                    } else {
+                        permissionAlertMessage = "需要访问相机才能拍摄宝宝照片，请在设置中开启权限"
+                        showPermissionAlert = true
+                    }
+                }
+            }
+        @unknown default:
+            break
+        }
+        #endif
     }
 
     private func loadImage(from item: PhotosPickerItem) {
@@ -279,21 +412,13 @@ struct UploadPhotoView: View {
                         selectedImage = nil
                     }
                     #endif
-                    simulateFaceDetection()
+                    performFaceDetection()
                 case .success(nil):
                     errorMessage = "无法读取图片"; showError = true; isAnalyzing = false
                 case .failure(let error):
                     errorMessage = "加载失败: \(error.localizedDescription)"; showError = true; isAnalyzing = false
                 }
             }
-        }
-    }
-
-    private func simulateFaceDetection() {
-        DispatchQueue.main.asyncAfter(deadline: .now() + 1.5) {
-            isAnalyzing = false; faceDetected = true
-            // 检测到人脸后，先上传图片，再创建订单
-            uploadImageAndCreateOrder()
         }
     }
 
