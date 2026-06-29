@@ -318,10 +318,15 @@ struct CompleteView: View {
 
     // MARK: - 打开实体书微店
     private func openPhysicalBookStore() {
-        // TODO: 替换为实际微店链接
-        let storeURL = URL(string: "https://weidian.com")!
+        let wechatURL = URL(string: "weixin://")!
+        let fallbackURL = URL(string: "https://weixin.qq.com")!
+
         #if os(iOS)
-        UIApplication.shared.open(storeURL)
+        if UIApplication.shared.canOpenURL(wechatURL) {
+            UIApplication.shared.open(wechatURL)
+        } else {
+            UIApplication.shared.open(fallbackURL)
+        }
         #endif
     }
 

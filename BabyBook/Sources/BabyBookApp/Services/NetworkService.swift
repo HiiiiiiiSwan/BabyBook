@@ -42,6 +42,11 @@ class NetworkService {
         request.setValue("application/json", forHTTPHeaderField: "Content-Type")
         request.setValue("application/json", forHTTPHeaderField: "Accept")
 
+        // 添加设备认证头
+        if let deviceId = DeviceService.shared.deviceId {
+            request.setValue(deviceId, forHTTPHeaderField: "X-Device-Id")
+        }
+
         // 添加请求体
         if let body = body {
             request.httpBody = try JSONEncoder().encode(body)

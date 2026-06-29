@@ -39,6 +39,11 @@ class ImageUploadService {
         request.httpMethod = "POST"
         request.setValue("multipart/form-data; boundary=\(boundary)", forHTTPHeaderField: "Content-Type")
 
+        // 添加设备认证头
+        if let deviceId = DeviceService.shared.deviceId {
+            request.setValue(deviceId, forHTTPHeaderField: "X-Device-Id")
+        }
+
         // 构建请求体
         let body = createMultipartBody(imageData: imageData, boundary: boundary, filename: "baby_photo.jpg")
         request.httpBody = body

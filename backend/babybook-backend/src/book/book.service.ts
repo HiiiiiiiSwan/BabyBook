@@ -19,6 +19,17 @@ export class BookService {
   ) {}
 
   /**
+   * 获取订单信息（供控制器验证设备权限使用）
+   */
+  async getOrder(orderId: string): Promise<Order> {
+    const order = await this.orderRepository.findOne({ where: { id: orderId } });
+    if (!order) {
+      throw new NotFoundException('订单不存在');
+    }
+    return order;
+  }
+
+  /**
    * 获取绘本下载信息
    * 返回生成的九宫格图片 URL（由客户端下载后本地制作 PDF）
    */

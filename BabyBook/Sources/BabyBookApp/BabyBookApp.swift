@@ -9,7 +9,8 @@ struct ScreenshotTestView: View {
     @State private var showPhotoPermissionDenied = false
     @State private var showSavePermissionDenied = false
     @State private var showDownloadSuccess = false
-    @State private var showRefundAlert = false
+    @State private var showCannotRefundAlert = false
+    @State private var showCancelAlert = false
     @State private var showFaceDetectionError = false
 
     var body: some View {
@@ -51,62 +52,54 @@ struct ScreenshotTestView: View {
                     }
                 }
                 Section("P2 - 取消退款") {
-                    Button("显示取消退款 Alert") {
-                        showRefundAlert = true
+                    Button("显示取消确认 Alert") {
+                        showCancelAlert = true
                     }
-                }
-
-                Section("P2 - 人脸检测") {
-                    Button("显示人脸检测失败 Alert") {
-                        showFaceDetectionError = true
+                    Button("显示取消成功 Alert（无法退款）") {
+                        showCannotRefundAlert = true
                     }
                 }
             }
             .navigationTitle("截图验收")
-            .onAppear {
-                // 自动显示下载成功状态用于截图
-                DispatchQueue.main.asyncAfter(deadline: .now() + 1) {
-                    showDownloadSuccess = true
-                }
-            }
-            .alert("恢复订单", isPresented: $showOrderRestoreAlert) {
-                Button("取消", role: .cancel) {}
-                Button("继续") {}
-            } message: {
-                Text("检测到未完成的绘本生成订单，是否继续？")
-            }
-            .alert("提示", isPresented: $showPaymentConfirmError) {
-                Button("确定", role: .cancel) {}
-            } message: {
-                Text("无法确认生成任务已创建，请稍后重试或联系客服")
-            }
-            .alert("提示", isPresented: $showGeneratingTimeout) {
-                Button("确定", role: .cancel) {}
-            } message: {
-                Text("生成超时，请检查网络后重试或联系客服")
-            }
-            .alert("相册权限", isPresented: $showPhotoPermissionDenied) {
-                Button("取消", role: .cancel) {}
-                Button("前往设置") {}
-            } message: {
-                Text("需要访问相册才能选择宝宝照片，请在设置中开启权限")
-            }
-            .alert("保存权限", isPresented: $showSavePermissionDenied) {
-                Button("取消", role: .cancel) {}
-                Button("前往设置") {}
-            } message: {
-                Text("需要访问相册权限才能保存绘本图片")
-            }
-            .alert("退款提示", isPresented: $showRefundAlert) {
-                Button("返回首页") {}
-            } message: {
-                Text("绘本生成已取消，已支付金额将原路退回（预计 1-3 个工作日到账）。")
-            }
-            .alert("人脸检测", isPresented: $showFaceDetectionError) {
-                Button("确定", role: .cancel) {}
-            } message: {
-                Text("未检测到人脸，请上传宝宝正脸清晰照片")
-            }
+        }
+        .alert("恢复订单", isPresented: $showOrderRestoreAlert) {
+            Button("取消", role: .cancel) {}
+            Button("继续") {}
+        } message: {
+            Text("检测到未完成的绘本生成订单，是否继续？")
+        }
+        .alert("提示", isPresented: $showPaymentConfirmError) {
+            Button("确定", role: .cancel) {}
+        } message: {
+            Text("无法确认生成任务已创建，请稍后重试")
+        }
+        .alert("提示", isPresented: $showGeneratingTimeout) {
+            Button("确定", role: .cancel) {}
+        } message: {
+            Text("生成超时，请检查网络后重试")
+        }
+        .alert("相册权限", isPresented: $showPhotoPermissionDenied) {
+            Button("取消", role: .cancel) {}
+            Button("前往设置") {}
+        } message: {
+            Text("需要访问相册才能选择宝宝照片，请在设置中开启权限")
+        }
+        .alert("保存权限", isPresented: $showSavePermissionDenied) {
+            Button("取消", role: .cancel) {}
+            Button("前往设置") {}
+        } message: {
+            Text("需要访问相册权限才能保存绘本图片")
+        }
+        .alert("取消生成", isPresented: $showCancelAlert) {
+            Button("继续生成", role: .cancel) {}
+            Button("确认取消", role: .destructive) {}
+        } message: {
+            Text("图片生成费用订单已生成，无法退款，是否确认取消？")
+        }
+        .alert("提示", isPresented: $showCannotRefundAlert) {
+            Button("确定", role: .cancel) {}
+        } message: {
+            Text("绘本生成已取消。由于图片生成服务已调用，订单费用无法退回。")
         }
         .sheet(isPresented: $showDownloadSuccess) {
             NavigationStack {
@@ -148,6 +141,7 @@ extension Notification.Name {
 struct BabyBookApp: App {
     // 调试模式：直接跳转到指定页面
     // 可选值：home, detail, upload, payment, generating, complete, mybooks
+    // 上线前必须设为 nil
     private let debugMode: String? = nil
 
     init() {
@@ -321,6 +315,8 @@ struct ContentView: View {
             )
         case "mybooks":
             MyBooksView()
+        case "screenshot":
+            ScreenshotTestView()
         default:
             HomeView()
         }

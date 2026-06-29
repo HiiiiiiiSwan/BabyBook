@@ -7,7 +7,7 @@ struct GeneratingView: View {
 
     @StateObject private var statusManager = OrderStatusManager.shared
     @State private var showCancelAlert = false
-    @State private var showRefundAlert = false
+    @State private var showCannotRefundAlert = false
     @State private var navigateToComplete = false
     @State private var statusText = "魔法生成中..."
     @State private var remainingSeconds = 60
@@ -62,14 +62,14 @@ struct GeneratingView: View {
             Button("继续生成", role: .cancel) {}
             Button("确认取消", role: .destructive) { cancelGeneration() }
         } message: {
-            Text("绘本生成即将完成，确定要取消吗？已支付金额将原路退回。")
+            Text("图片生成费用订单已生成，无法退款，是否确认取消？")
         }
-        .alert("退款提示", isPresented: $showRefundAlert) {
-            Button("返回首页") {
+        .alert("提示", isPresented: $showCannotRefundAlert) {
+            Button("确定", role: .cancel) {
                 goBackToHome()
             }
         } message: {
-            Text("绘本生成已取消，已支付金额将原路退回（预计 1-3 个工作日到账）。")
+            Text("绘本生成已取消。由于图片生成服务已调用，订单费用无法退回。")
         }
     }
 
@@ -117,9 +117,8 @@ struct GeneratingView: View {
     }
 
     private var bottomIllustration: some View {
-        let imagePath = "/Users/wang/Documents/Vibe coding/【新】宝贝绘本/design/generating.png"
         #if os(iOS)
-        if let uiImage = UIImage(contentsOfFile: imagePath) {
+        if let uiImage = UIImage(named: "generating") {
             return AnyView(
                 Image(uiImage: uiImage)
                     .resizable()
@@ -128,7 +127,7 @@ struct GeneratingView: View {
             )
         }
         #else
-        if let nsImage = NSImage(contentsOfFile: imagePath) {
+        if let nsImage = NSImage(named: "generating") {
             return AnyView(
                 Image(nsImage: nsImage)
                     .resizable()
@@ -195,7 +194,7 @@ struct GeneratingView: View {
     private func handleTimeout() {
         timer?.invalidate()
         statusManager.stopPolling()
-        errorMessage = "生成超时，请检查网络后重试或联系客服"
+        errorMessage = "生成超时，请检查网络后重试"
         showError = true
     }
 
@@ -235,7 +234,7 @@ struct GeneratingView: View {
         Task {
             await statusManager.cancelTask()
             await MainActor.run {
-                showRefundAlert = true
+                showCannotRefundAlert = true
             }
         }
     }

@@ -171,18 +171,18 @@ struct PaymentView: View {
                 .font(.system(size: 16, weight: .semibold))
                 .foregroundColor(Color(hex: "#222222"))
 
-            // Apple Pay 选项
+            // In-App Purchase 选项
             HStack(spacing: 16) {
-                Image(systemName: "apple.logo")
+                Image(systemName: "lock.shield.fill")
                     .font(.system(size: 24))
-                    .foregroundColor(Color(hex: "#222222"))
+                    .foregroundColor(Color(hex: "#F28C28"))
 
                 VStack(alignment: .leading, spacing: 4) {
-                    Text("Apple Pay")
+                    Text("App Store 支付")
                         .font(.system(size: 16, weight: .semibold))
                         .foregroundColor(Color(hex: "#222222"))
 
-                    Text("安全快捷支付")
+                    Text("安全快捷，由 Apple 处理")
                         .font(.system(size: 12))
                         .foregroundColor(Color(hex: "#999999"))
                 }
@@ -232,8 +232,7 @@ struct PaymentView: View {
                             .scaleEffect(0.8)
                             .tint(.white)
                     } else {
-                        Image(systemName: "apple.logo")
-                        Text("Apple Pay 支付")
+                        Text("立即支付")
                     }
                 }
                 .font(.system(size: 16, weight: .semibold))
@@ -329,14 +328,14 @@ struct PaymentView: View {
             } catch {
                 print("确认任务创建失败 (第 \(attempt) 次): \(error)")
                 if attempt == maxRetries {
-                    throw PaymentError.verificationFailed("无法确认生成任务已创建，请稍后重试或联系客服")
+                    throw PaymentError.verificationFailed("无法确认生成任务已创建，请稍后重试")
                 }
                 try await Task.sleep(nanoseconds: retryInterval)
             }
         }
 
         // 如果循环结束仍未确认，抛出错误
-        throw PaymentError.verificationFailed("生成任务创建超时，请稍后重试或联系客服")
+        throw PaymentError.verificationFailed("生成任务创建超时，请稍后重试")
     }
 }
 

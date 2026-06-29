@@ -42,3 +42,6 @@ coverage/
 # Uploads
 uploads/
 !uploads/.gitkeep
+.env
+.env.local
+.env.production

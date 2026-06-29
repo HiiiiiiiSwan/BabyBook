@@ -1,9 +1,11 @@
-import { Controller, Post, UseInterceptors, UploadedFile, Get, Param, Res, NotFoundException, Delete } from '@nestjs/common';
+import { Controller, Post, UseInterceptors, UploadedFile, Get, Param, Res, NotFoundException, Delete, UseGuards, Req, UnauthorizedException } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { ApiTags, ApiOperation, ApiResponse, ApiConsumes } from '@nestjs/swagger';
 import type { Response } from 'express';
 import { existsSync, unlinkSync } from 'fs';
 import { ConfigService } from '@nestjs/config';
+import { DeviceAuthGuard } from '../common/guards/device-auth.guard';
+import { Request } from 'express';
 
 /**
  * 图片上传配置
@@ -43,10 +45,12 @@ export class UploadController {
    * 上传宝宝照片
    */
   @Post('image')
+  @UseGuards(DeviceAuthGuard)
   @ApiOperation({ summary: '上传宝宝照片' })
   @ApiConsumes('multipart/form-data')
   @ApiResponse({ status: 201, description: '上传成功' })
   @ApiResponse({ status: 400, description: '文件格式错误' })
+  @ApiResponse({ status: 401, description: '缺少或无效的设备标识' })
   @UseInterceptors(
     FileInterceptor('image', {
       storage: storage,
@@ -56,7 +60,7 @@ export class UploadController {
       },
     }),
   )
-  async uploadImage(@UploadedFile() file: any) {
+  async uploadImage(@UploadedFile() file: any, @Req() req: Request) {
     if (!file) {
       throw new Error('上传文件为空');
     }
@@ -93,9 +97,11 @@ export class UploadController {
    * 生成完成后调用，符合数据最小化原则
    */
   @Delete('image/:filename')
+  @UseGuards(DeviceAuthGuard)
   @ApiOperation({ summary: '删除临时图片' })
   @ApiResponse({ status: 200, description: '删除成功' })
-  async deleteImage(@Param('filename') filename: string) {
+  @ApiResponse({ status: 401, description: '缺少或无效的设备标识' })
+  async deleteImage(@Param('filename') filename: string, @Req() req: Request) {
     const filePath = `./uploads/temp/${filename}`;
 
     if (existsSync(filePath)) {

@@ -15,6 +15,10 @@ struct MyBooksView: View {
     @State private var navigateToDetail = false
     @Environment(\.dismiss) private var dismiss
 
+    @State private var showRestoreAlert = false
+    @State private var restoreMessage = ""
+    @State private var isRestoring = false
+
     var body: some View {
         ZStack {
             Color(hex: "#FFF9F2")
@@ -56,6 +60,21 @@ struct MyBooksView: View {
                     .font(.system(size: 18, weight: .bold))
                     .foregroundColor(Color(hex: "#222222"))
             }
+            ToolbarItem(placement: .topBarTrailing) {
+                Button(action: {
+                    restorePurchases()
+                }) {
+                    if isRestoring {
+                        ProgressView()
+                            .scaleEffect(0.8)
+                    } else {
+                        Text("恢复购买")
+                            .font(.system(size: 14, weight: .medium))
+                            .foregroundColor(Color(hex: "#F28C28"))
+                    }
+                }
+                .disabled(isRestoring)
+            }
         }
         #endif
         .onAppear { loadLocalBooks() }
@@ -68,6 +87,11 @@ struct MyBooksView: View {
             }
         } message: {
             Text("确定要删除这本绘本吗？删除后将无法恢复。")
+        }
+        .alert("恢复购买", isPresented: $showRestoreAlert) {
+            Button("确定", role: .cancel) {}
+        } message: {
+            Text(restoreMessage)
         }
         .sheet(isPresented: $showShareSheet) {
             #if canImport(UIKit)
@@ -213,6 +237,28 @@ struct MyBooksView: View {
 
         shareItems = items
         showShareSheet = true
+    }
+
+    // MARK: - 恢复购买
+    private func restorePurchases() {
+        isRestoring = true
+
+        Task {
+            do {
+                try await PaymentService.shared.restorePurchases()
+                await MainActor.run {
+                    isRestoring = false
+                    restoreMessage = "购买恢复成功！已购买的绘本将自动显示。"
+                    showRestoreAlert = true
+                }
+            } catch {
+                await MainActor.run {
+                    isRestoring = false
+                    restoreMessage = "恢复购买失败：\(error.localizedDescription)"
+                    showRestoreAlert = true
+                }
+            }
+        }
     }
 
     // MARK: - 返回首页（已改为 dismiss，因为移除了 TabBar）

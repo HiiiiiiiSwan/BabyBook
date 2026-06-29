@@ -55,8 +55,10 @@ struct HomeView: View {
                 guideSection
                 bookCarouselSection
                 bottomActionSection
-                // 调试入口
+                // 调试入口（仅在 DEBUG 模式下显示）
+                #if DEBUG
                 debugSection
+                #endif
                 Spacer().frame(height: 40)
             }
         }
@@ -189,7 +191,7 @@ struct HomeView: View {
 
                     // 获取实体书 + 我的绘本（并排一行）
                     HStack(spacing: 32) {
-                        Button(action: {}) {
+                        Button(action: { openPhysicalBookStore() }) {
                             HStack(spacing: 4) {
                                 Text("获取实体书")
                                     .font(.system(size: 14, weight: .medium))
@@ -218,7 +220,8 @@ struct HomeView: View {
         .padding(.top, DesignTokens.Spacing.xl)
     }
 
-    // MARK: - 调试入口
+    // MARK: - 调试入口（上线前移除）
+    #if DEBUG
     private var debugSection: some View {
         VStack(spacing: 12) {
             Text("调试入口")
@@ -268,6 +271,7 @@ struct HomeView: View {
         .padding(.horizontal, DesignTokens.Layout.pagePadding)
         .padding(.top, 32)
     }
+    #endif
 }
 
     // MARK: - 绘本轮播卡片
@@ -853,6 +857,20 @@ private func createPlaceholderImage() -> UIImage {
     return UIGraphicsGetImageFromCurrentImageContext()!
 }
 #endif
+
+// MARK: - 打开实体书微店
+private func openPhysicalBookStore() {
+    let wechatURL = URL(string: "weixin://")!
+    let fallbackURL = URL(string: "https://weixin.qq.com")!
+
+    #if os(iOS)
+    if UIApplication.shared.canOpenURL(wechatURL) {
+        UIApplication.shared.open(wechatURL)
+    } else {
+        UIApplication.shared.open(fallbackURL)
+    }
+    #endif
+}
 
 // MARK: - Preview
 struct HomeView_Previews: PreviewProvider {

@@ -75,6 +75,20 @@ export class TaskService {
   }
 
   /**
+   * 根据任务ID获取关联订单（供控制器验证设备权限使用）
+   */
+  async getOrderByTaskId(taskId: string): Promise<Order> {
+    const task = await this.taskRepository.findOne({
+      where: { id: taskId },
+      relations: ['order'],
+    });
+    if (!task || !task.order) {
+      throw new NotFoundException('任务不存在或关联订单已删除');
+    }
+    return task.order;
+  }
+
+  /**
    * 根据订单ID查询任务
    */
   async findByOrderId(orderId: string): Promise<TaskResponseDto | null> {

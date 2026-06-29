@@ -319,14 +319,9 @@ struct BookDetailView: View {
 
     // 加载固定说明图片
     private func loadDirectionsImage() -> Image? {
-        let imagePath = "/Users/wang/Documents/Vibe coding/【新】宝贝绘本/design/directions.png"
         #if os(iOS)
-        if let uiImage = UIImage(contentsOfFile: imagePath) {
+        if let uiImage = UIImage(named: "directions") {
             return Image(uiImage: uiImage)
-        }
-        #else
-        if let nsImage = NSImage(contentsOfFile: imagePath) {
-            return Image(nsImage: nsImage)
         }
         #endif
         return nil
@@ -364,7 +359,7 @@ struct BookDetailView: View {
                 .padding(.top, 16)
 
                 // 获取实体书按钮
-                Button(action: {}) {
+                Button(action: { openPhysicalBookStore() }) {
                     HStack(spacing: 4) {
                         Text("获取实体书")
                             .font(.system(size: 14, weight: .medium))
@@ -383,40 +378,40 @@ struct BookDetailView: View {
         .ignoresSafeArea(.keyboard)
     }
 
+    // MARK: - 打开实体书微店
+    private func openPhysicalBookStore() {
+        let wechatURL = URL(string: "weixin://")!
+        let fallbackURL = URL(string: "https://weixin.qq.com")!
+
+        #if os(iOS)
+        if UIApplication.shared.canOpenURL(wechatURL) {
+            UIApplication.shared.open(wechatURL)
+        } else {
+            UIApplication.shared.open(fallbackURL)
+        }
+        #endif
+    }
+
     // 加载绘本页面图片
     private func loadPageImage(named: String) -> Image? {
         #if os(iOS)
-        let basePath: String
+        let imageName: String
         switch book.bookId {
         case "Book001":
-            basePath = "/Users/wang/Documents/Vibe coding/【新】宝贝绘本/templates/self_intro/pages"
+            imageName = "self_intro_\(named)"
         case "Book002":
-            basePath = "/Users/wang/Documents/Vibe coding/【新】宝贝绘本/templates/dream_job/page"
+            imageName = "dream_job_\(named)"
         case "Book003":
-            basePath = "/Users/wang/Documents/Vibe coding/【新】宝贝绘本/templates/color_recognition/page"
+            imageName = "color_recognition_\(named)"
         default:
-            basePath = "/Users/wang/Documents/Vibe coding/【新】宝贝绘本/templates/self_intro/pages"
+            imageName = "self_intro_\(named)"
         }
-        let imagePath = "\(basePath)/\(named).png"
 
-        if let uiImage = UIImage(contentsOfFile: imagePath) {
+        if let uiImage = UIImage(named: imageName) {
             return Image(uiImage: uiImage)
         }
         #else
-        let basePath: String
-        switch book.bookId {
-        case "Book001":
-            basePath = "/Users/wang/Documents/Vibe coding/【新】宝贝绘本/templates/self_intro/pages"
-        case "Book002":
-            basePath = "/Users/wang/Documents/Vibe coding/【新】宝贝绘本/templates/dream_job/page"
-        case "Book003":
-            basePath = "/Users/wang/Documents/Vibe coding/【新】宝贝绘本/templates/color_recognition/page"
-        default:
-            basePath = "/Users/wang/Documents/Vibe coding/【新】宝贝绘本/templates/self_intro/pages"
-        }
-        let imagePath = "\(basePath)/\(named).png"
-
-        if let nsImage = NSImage(contentsOfFile: imagePath) {
+        if let nsImage = NSImage(named: "\(book.bookId)_\(named)") {
             return Image(nsImage: nsImage)
         }
         #endif

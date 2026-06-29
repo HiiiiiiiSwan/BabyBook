@@ -164,34 +164,35 @@ for d in sorted(all_dirs):
 \t\t}};
 """
 
-# 构建 phases
-sources_phase_uuid = gen_uuid()
-frameworks_phase_uuid = gen_uuid()
-resources_phase_uuid = gen_uuid()
+# 构建资源构建列表
+resource_build_list = ""
+for rel, u in resource_build_files.items():
+    name = os.path.basename(rel)
+    resource_build_list += f"\t\t\t\t{u} /* {name} in Resources */,\n"
+if xcassets_build:
+    resource_build_list += f"\t\t\t\t{xcassets_build} /* Assets.xcassets in Resources */,\n"
 
-# 构建配置
-build_config_list_target_uuid = gen_uuid()
-build_config_list_project_uuid = gen_uuid()
+# 构建源码构建列表
+source_build_list = ""
+for rel, u in build_files.items():
+    name = os.path.basename(rel)
+    source_build_list += f"\t\t\t\t{u} /* {name} in Sources */,\n"
+
+# 生成 UUID
+frameworks_phase_uuid = gen_uuid()
+sources_phase_uuid = gen_uuid()
+resources_phase_uuid = gen_uuid()
 debug_config_uuid = gen_uuid()
 release_config_uuid = gen_uuid()
 debug_project_config_uuid = gen_uuid()
 release_project_config_uuid = gen_uuid()
+build_config_list_target_uuid = gen_uuid()
+build_config_list_project_uuid = gen_uuid()
 
-# 资源构建文件列表
-resource_build_list_items = []
-for rel, u in resource_build_files.items():
-    name = os.path.basename(rel)
-    resource_build_list_items.append(f"\t\t\t\t{u} /* {name} in Resources */,")
-if xcassets_build:
-    resource_build_list_items.append(f"\t\t\t\t{xcassets_build} /* Assets.xcassets in Resources */,")
-resource_build_list = "\n".join(resource_build_list_items)
+# 找到 Sources 目录的 UUID
+sources_dir_uuid = group_uuids.get(os.path.join(PROJECT_DIR, "Sources"), gen_uuid())
 
-# 源文件构建列表
-source_build_list = "\n".join([f"\t\t\t\t{build_files[rel]} /* {os.path.basename(rel)} in Sources */," for rel in build_files])
-
-sources_dir_uuid = group_uuids[os.path.join(PROJECT_DIR, "Sources")]
-
-# 构建 project.pbxproj
+# 生成 pbxproj 内容
 pbxproj = f"""// !$*UTF8*$!
 {{
 \tarchiveVersion = 1;
@@ -321,12 +322,15 @@ pbxproj = f"""// !$*UTF8*$!
 \t\t\t\t\t"@executable_path/Frameworks",
 \t\t\t\t);
 \t\t\t\tMARKETING_VERSION = 1.0;
-\t\t\t\tPRODUCT_BUNDLE_IDENTIFIER = com.babybook.app;
+\t\t\t\tPRODUCT_BUNDLE_IDENTIFIER = com.shihui.babybook;
 \t\t\t\tPRODUCT_NAME = "$(TARGET_NAME)";
 \t\t\t\tSDKROOT = iphoneos;
 \t\t\t\tSWIFT_EMIT_LOC_STRINGS = YES;
 \t\t\t\tSWIFT_VERSION = 5.0;
 \t\t\t\tTARGETED_DEVICE_FAMILY = "1,2";
+\t\t\t\t// 隐私权限描述
+\t\t\t\tINFOPLIST_KEY_NSCameraUsageDescription = "需要访问相机以拍摄宝宝照片，用于生成专属绘本";
+\t\t\t\tINFOPLIST_KEY_NSPhotoLibraryUsageDescription = "需要访问相册以选择宝宝照片，用于生成专属绘本";
 \t\t\t}};
 \t\t\tname = Debug;
 \t\t}};
@@ -351,12 +355,15 @@ pbxproj = f"""// !$*UTF8*$!
 \t\t\t\t\t"@executable_path/Frameworks",
 \t\t\t\t);
 \t\t\t\tMARKETING_VERSION = 1.0;
-\t\t\t\tPRODUCT_BUNDLE_IDENTIFIER = com.babybook.app;
+\t\t\t\tPRODUCT_BUNDLE_IDENTIFIER = com.shihui.babybook;
 \t\t\t\tPRODUCT_NAME = "$(TARGET_NAME)";
 \t\t\t\tSDKROOT = iphoneos;
 \t\t\t\tSWIFT_EMIT_LOC_STRINGS = YES;
 \t\t\t\tSWIFT_VERSION = 5.0;
 \t\t\t\tTARGETED_DEVICE_FAMILY = "1,2";
+\t\t\t\t// 隐私权限描述
+\t\t\t\tINFOPLIST_KEY_NSCameraUsageDescription = "需要访问相机以拍摄宝宝照片，用于生成专属绘本";
+\t\t\t\tINFOPLIST_KEY_NSPhotoLibraryUsageDescription = "需要访问相册以选择宝宝照片，用于生成专属绘本";
 \t\t\t}};
 \t\t\tname = Release;
 \t\t}};
@@ -433,3 +440,4 @@ with open(os.path.join(PROJECT_DIR, "BabyBook.xcodeproj", "project.pbxproj"), "w
     f.write(pbxproj)
 
 print(f"✅ 已生成 Xcode 项目，包含 {len(swift_files)} 个 Swift 文件和 {len(resource_dirs)} 个资源目录")
+print("✅ 已添加 NSCameraUsageDescription 和 NSPhotoLibraryUsageDescription 隐私权限描述")

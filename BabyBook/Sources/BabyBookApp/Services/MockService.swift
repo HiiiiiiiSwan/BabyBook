@@ -13,10 +13,10 @@ class MockService {
             description: "宝宝身体认知绘本，帮助宝宝认识自己的身体部位。包含头部、眼睛、耳朵、鼻子、嘴巴、脖子、手、肚子、脚9个部位的可爱认知。",
             pageCount: 9,
             price: 9.9,
-            coverImage: "/Users/wang/Documents/Vibe coding/【新】宝贝绘本/templates/self_intro/cover.png",
+            coverImage: "self_intro_cover",
             templatePath: "templates/self_intro",
             type: .bodyRecognition,
-            pageImages: ["0_cover", "1_head", "2_eye", "3_face", "4_nose", "5_mouth", "6_neck", "7_hand", "8_tummy", "9_foot"]
+            pageImages: ["0_cover", "1", "2", "3", "4", "5", "6", "7", "8", "9"]
         ),
         Book(
             id: "2",
@@ -25,10 +25,10 @@ class MockService {
             description: "职业认知绘本，让宝宝了解各种有趣的职业。医生、消防员、宇航员、老师...激发宝宝对未来的想象。",
             pageCount: 9,
             price: 9.9,
-            coverImage: "/Users/wang/Documents/Vibe coding/【新】宝贝绘本/templates/dream_job/cover.png",
+            coverImage: "dream_job_cover",
             templatePath: "templates/dream_job",
             type: .careerRecognition,
-            pageImages: ["0", "1", "2", "3", "4", "5", "6", "7", "8", "9"]
+            pageImages: ["0_cover", "1", "2", "3", "4", "5", "6", "7", "8", "9"]
         ),
         Book(
             id: "3",
@@ -37,7 +37,7 @@ class MockService {
             description: "颜色认知绘本，帮助宝宝认识红、橙、黄、绿、蓝、紫等基础颜色。通过可爱的插画和场景，让颜色学习变得有趣。",
             pageCount: 9,
             price: 9.9,
-            coverImage: "/Users/wang/Documents/Vibe coding/【新】宝贝绘本/templates/color_recognition/cover.png",
+            coverImage: "color_recognition_cover",
             templatePath: "templates/color_recognition",
             type: .colorRecognition,
             pageImages: ["0_cover", "1", "2", "3", "4", "5", "6", "7", "8", "9"]

@@ -36,6 +36,17 @@ export class PaymentService {
   }
 
   /**
+   * 获取订单信息（供控制器验证设备权限使用）
+   */
+  async getOrder(orderId: string): Promise<Order> {
+    const order = await this.orderRepository.findOne({ where: { id: orderId } });
+    if (!order) {
+      throw new NotFoundException('订单不存在');
+    }
+    return order;
+  }
+
+  /**
    * 验证 Apple IAP 支付
    * 支付成功后自动创建生成任务
    */
