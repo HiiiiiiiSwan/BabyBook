@@ -10,6 +10,13 @@
 
 ## [Unreleased]
 
+### 2026-06-29
+
+- `chore` 添加 App Store 加密合规声明 `ITSEncryptionExportComplianceCode`
+  - 在 `generate_xcode_proj.py` 的 Debug/Release 配置中添加 `INFOPLIST_KEY_ITSEncryptionExportComplianceCode = ""`
+  - 说明：BabyBook 使用标准 HTTPS（TLS）和 iOS 系统 Keychain，属于 Apple 加密豁免范围，无需上传加密文档
+  - 解决 App Store Connect 提交时 "App Encryption Documentation" 要求
+
 ### 2026-06-28
 
 - `feat` P2 模块：体验优化（人脸检测 + 拍照功能 + 取消退款提示）

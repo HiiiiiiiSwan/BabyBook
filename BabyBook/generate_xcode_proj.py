@@ -331,6 +331,8 @@ pbxproj = f"""// !$*UTF8*$!
 \t\t\t\t// 隐私权限描述
 \t\t\t\tINFOPLIST_KEY_NSCameraUsageDescription = "需要访问相机以拍摄宝宝照片，用于生成专属绘本";
 \t\t\t\tINFOPLIST_KEY_NSPhotoLibraryUsageDescription = "需要访问相册以选择宝宝照片，用于生成专属绘本";
+\t\t\t\t// 加密声明：使用标准 HTTPS 和系统 Keychain，属于豁免范围
+\t\t\t\tINFOPLIST_KEY_ITSEncryptionExportComplianceCode = "";  // 空值表示使用标准加密，无需文档
 \t\t\t}};
 \t\t\tname = Debug;
 \t\t}};
@@ -364,6 +366,8 @@ pbxproj = f"""// !$*UTF8*$!
 \t\t\t\t// 隐私权限描述
 \t\t\t\tINFOPLIST_KEY_NSCameraUsageDescription = "需要访问相机以拍摄宝宝照片，用于生成专属绘本";
 \t\t\t\tINFOPLIST_KEY_NSPhotoLibraryUsageDescription = "需要访问相册以选择宝宝照片，用于生成专属绘本";
+\t\t\t\t// 加密声明：使用标准 HTTPS 和系统 Keychain，属于豁免范围
+\t\t\t\tINFOPLIST_KEY_ITSEncryptionExportComplianceCode = "";  // 空值表示使用标准加密，无需文档
 \t\t\t}};
 \t\t\tname = Release;
 \t\t}};
@@ -441,3 +445,4 @@ with open(os.path.join(PROJECT_DIR, "BabyBook.xcodeproj", "project.pbxproj"), "w
 
 print(f"✅ 已生成 Xcode 项目，包含 {len(swift_files)} 个 Swift 文件和 {len(resource_dirs)} 个资源目录")
 print("✅ 已添加 NSCameraUsageDescription 和 NSPhotoLibraryUsageDescription 隐私权限描述")
+print("✅ 已添加 ITSEncryptionExportComplianceCode 加密合规声明")
