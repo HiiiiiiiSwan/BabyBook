@@ -28,7 +28,6 @@
 		2006C5EB1BB6482EB886600A /* HomeView.swift in Sources */ = {isa = PBXBuildFile; fileRef = FE11A7CC56B6405B8CBC5E3F /* HomeView.swift */; };
 		6C9F63556013475C97CB3182 /* LocalBookDetailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 75FC8B8CB1AF4F03B9BC0DE1 /* LocalBookDetailView.swift */; };
 		4E645BAA592F4257B8CE0B2B /* MyBooksView.swift in Sources */ = {isa = PBXBuildFile; fileRef = FDD56AA32BA74C41B5FE9B99 /* MyBooksView.swift */; };
-		1659E5EC0CFE4FD38A91DF32 /* OnboardingView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 38C3D9E6C8044A8CA52BD2F4 /* OnboardingView.swift */; };
 		26C7C8E2F6564EC88F2228B6 /* PaymentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = E845CAEC15AE494D8F43BDB8 /* PaymentView.swift */; };
 		1147596FF3024504B21FDAFF /* CameraView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2B49B809B5A94980A199B33D /* CameraView.swift */; };
 		145CCDE60A524800A8582CCB /* UploadPhotoView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B0BBC44807834475AA335B0A /* UploadPhotoView.swift */; };
@@ -63,7 +62,6 @@
 		FE11A7CC56B6405B8CBC5E3F /* HomeView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = "HomeView.swift"; path = "HomeView.swift"; sourceTree = "<group>"; };
 		75FC8B8CB1AF4F03B9BC0DE1 /* LocalBookDetailView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = "LocalBookDetailView.swift"; path = "LocalBookDetailView.swift"; sourceTree = "<group>"; };
 		FDD56AA32BA74C41B5FE9B99 /* MyBooksView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = "MyBooksView.swift"; path = "MyBooksView.swift"; sourceTree = "<group>"; };
-		38C3D9E6C8044A8CA52BD2F4 /* OnboardingView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = "OnboardingView.swift"; path = "OnboardingView.swift"; sourceTree = "<group>"; };
 		E845CAEC15AE494D8F43BDB8 /* PaymentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = "PaymentView.swift"; path = "PaymentView.swift"; sourceTree = "<group>"; };
 		2B49B809B5A94980A199B33D /* CameraView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = "CameraView.swift"; path = "CameraView.swift"; sourceTree = "<group>"; };
 		B0BBC44807834475AA335B0A /* UploadPhotoView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = "UploadPhotoView.swift"; path = "UploadPhotoView.swift"; sourceTree = "<group>"; };
@@ -214,7 +212,6 @@
 				650B04C7615B48EA82A60AA2 /* Generating */,
 				B29F2921EE014E978DFEA85E /* Home */,
 				4993EB68BC0947418DA2C8A4 /* MyBooks */,
-				71B5F9D8938E446E9FAD46AE /* Onboarding */,
 				C336FE0BA15C4F1795F70673 /* Payment */,
 				FA15906075AC48A1B2B74DE4 /* Upload */,
 			);
@@ -268,14 +265,6 @@
 				FDD56AA32BA74C41B5FE9B99 /* MyBooksView.swift */,
 			);
 			path = MyBooks;
-			sourceTree = "<group>";
-		};
-		71B5F9D8938E446E9FAD46AE /* Onboarding */ = {
-			isa = PBXGroup;
-			children = (
-				38C3D9E6C8044A8CA52BD2F4 /* OnboardingView.swift */,
-			);
-			path = Onboarding;
 			sourceTree = "<group>";
 		};
 		C336FE0BA15C4F1795F70673 /* Payment */ = {
@@ -381,7 +370,6 @@
 				2006C5EB1BB6482EB886600A /* HomeView.swift in Sources */,
 				6C9F63556013475C97CB3182 /* LocalBookDetailView.swift in Sources */,
 				4E645BAA592F4257B8CE0B2B /* MyBooksView.swift in Sources */,
-				1659E5EC0CFE4FD38A91DF32 /* OnboardingView.swift in Sources */,
 				26C7C8E2F6564EC88F2228B6 /* PaymentView.swift in Sources */,
 				1147596FF3024504B21FDAFF /* CameraView.swift in Sources */,
 				145CCDE60A524800A8582CCB /* UploadPhotoView.swift in Sources */,

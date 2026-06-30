@@ -120,10 +120,6 @@ struct CompleteView: View {
             Text("《\(book.name)》")
                 .font(.system(size: 18, weight: .bold))
                 .foregroundColor(Color(hex: "#222222"))
-
-            Text("\(book.pageCount)页 · 中英双语")
-                .font(.system(size: 14))
-                .foregroundColor(Color(hex: "#999999"))
         }
         .padding(.top, 16)
     }

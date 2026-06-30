@@ -58,20 +58,43 @@ struct BookDetailView: View {
     private let spineWidth: CGFloat = 2
     private let horizontalPadding: CGFloat = 32
 
+    /// 总页数（包含封面和封底，每页展示2个页面）
+    private var totalPreviewPages: Int {
+        // pageImages 已包含 0_cover, 1-8, 9（封底），共10张图
+        // 双页展示：封面单独一页，内容4页，封底单独一页，共6页
+        return (book.pageImages.count + 1) / 2 + 1
+    }
+
+    /// 将预览页索引映射到 pageImages 索引
+    private func pageImageIndex(for previewIndex: Int) -> Int {
+        return previewIndex
+    }
+
     private var bookPreviewSection: some View {
         VStack(spacing: 12) {
-            HStack {
-                Text("绘本示例")
-                    .font(.system(size: 12, weight: .medium))
-                    .foregroundColor(.white)
-                    .padding(.horizontal, 12)
-                    .padding(.vertical, 4)
-                    .background(Color(hex: "#F28C28"))
-                    .cornerRadius(12)
+            HStack(spacing: 12) {
+                Rectangle()
+                    .fill(DesignTokens.Colors.primary.opacity(0.4))
+                    .frame(width: 40, height: 1)
 
-                Spacer()
+                Image(systemName: "star.fill")
+                    .font(.system(size: 10))
+                    .foregroundColor(DesignTokens.Colors.primary.opacity(0.6))
+
+                Text("绘本示例")
+                    .font(.system(size: 18, weight: .bold))
+                    .foregroundColor(DesignTokens.Colors.primaryText)
+
+                Image(systemName: "star.fill")
+                    .font(.system(size: 10))
+                    .foregroundColor(DesignTokens.Colors.primary.opacity(0.6))
+
+                Rectangle()
+                    .fill(DesignTokens.Colors.primary.opacity(0.4))
+                    .frame(width: 40, height: 1)
             }
             .padding(.horizontal, 20)
+            .padding(.top, 8)
 
             // 双页翻书预览（带翻页动画 + 手势滑动）
             ZStack {
@@ -79,20 +102,26 @@ struct BookDetailView: View {
                 HStack(spacing: 0) {
                     // 左页（仅当不是第一页时显示）
                     if currentPageIndex > 0 {
-                        bookPageView(pageIndex: currentPageIndex * 2 - 1, isLeft: true)
-                            .frame(width: pageSize, height: pageSize)
-                            .zIndex(1)
+                        let leftImageIndex = pageImageIndex(for: currentPageIndex * 2 - 1)
+                        if leftImageIndex >= 0 && leftImageIndex < book.pageImages.count {
+                            bookPageView(pageIndex: leftImageIndex, isLeft: true)
+                                .frame(width: pageSize, height: pageSize)
+                                .zIndex(1)
 
-                        // 书脊
-                        Rectangle()
-                            .fill(Color(hex: "#E0D8CE"))
-                            .frame(width: spineWidth, height: pageSize)
+                            // 书脊
+                            Rectangle()
+                                .fill(Color(hex: "#E0D8CE"))
+                                .frame(width: spineWidth, height: pageSize)
+                        }
                     }
 
                     // 右页
-                    bookPageView(pageIndex: currentPageIndex * 2, isLeft: false)
-                        .frame(width: pageSize, height: pageSize)
-                        .zIndex(1)
+                    let rightImageIndex = pageImageIndex(for: currentPageIndex * 2)
+                    if rightImageIndex >= 0 && rightImageIndex < book.pageImages.count {
+                        bookPageView(pageIndex: rightImageIndex, isLeft: false)
+                            .frame(width: pageSize, height: pageSize)
+                            .zIndex(1)
+                    }
                 }
                 .padding(.horizontal, currentPageIndex > 0 ? horizontalPadding : (UIScreen.main.bounds.width - pageSize) / 2)
 
@@ -104,16 +133,19 @@ struct BookDetailView: View {
                             Spacer()
                                 .frame(width: currentPageIndex > 0 ? pageSize + spineWidth : 0)
 
-                            bookPageView(pageIndex: (currentPageIndex + 1) * 2 - 1, isLeft: true)
-                                .frame(width: pageSize, height: pageSize)
-                                .rotation3DEffect(
-                                    .degrees(-180 * flipProgress),
-                                    axis: (x: 0, y: 1, z: 0),
-                                    anchor: .leading,
-                                    perspective: 0.3
-                                )
-                                .opacity(flipProgress > 0.5 ? 0 : 1)
-                                .zIndex(2)
+                            let nextLeftImageIndex = pageImageIndex(for: (currentPageIndex + 1) * 2 - 1)
+                            if nextLeftImageIndex >= 0 && nextLeftImageIndex < book.pageImages.count {
+                                bookPageView(pageIndex: nextLeftImageIndex, isLeft: true)
+                                    .frame(width: pageSize, height: pageSize)
+                                    .rotation3DEffect(
+                                        .degrees(-180 * flipProgress),
+                                        axis: (x: 0, y: 1, z: 0),
+                                        anchor: .leading,
+                                        perspective: 0.3
+                                    )
+                                    .opacity(flipProgress > 0.5 ? 0 : 1)
+                                    .zIndex(2)
+                            }
                         }
                     }
                     .padding(.horizontal, currentPageIndex > 0 ? horizontalPadding : (UIScreen.main.bounds.width - pageSize) / 2)
@@ -123,16 +155,19 @@ struct BookDetailView: View {
                 if isFlipping && !flipDirection {
                     // 向后翻页：左页内容翻转覆盖右页
                     HStack(spacing: 0) {
-                        bookPageView(pageIndex: (currentPageIndex - 1) * 2, isLeft: false)
-                            .frame(width: pageSize, height: pageSize)
-                            .rotation3DEffect(
-                                .degrees(180 * flipProgress),
-                                axis: (x: 0, y: 1, z: 0),
-                                anchor: .trailing,
-                                perspective: 0.3
-                            )
-                            .opacity(flipProgress > 0.5 ? 0 : 1)
-                            .zIndex(2)
+                        let prevRightImageIndex = pageImageIndex(for: (currentPageIndex - 1) * 2)
+                        if prevRightImageIndex >= 0 && prevRightImageIndex < book.pageImages.count {
+                            bookPageView(pageIndex: prevRightImageIndex, isLeft: false)
+                                .frame(width: pageSize, height: pageSize)
+                                .rotation3DEffect(
+                                    .degrees(180 * flipProgress),
+                                    axis: (x: 0, y: 1, z: 0),
+                                    anchor: .trailing,
+                                    perspective: 0.3
+                                )
+                                .opacity(flipProgress > 0.5 ? 0 : 1)
+                                .zIndex(2)
+                        }
 
                         if currentPageIndex > 1 {
                             Spacer()
@@ -168,7 +203,7 @@ struct BookDetailView: View {
                 }
                 .disabled(currentPageIndex == 0 || isFlipping)
 
-                Text("第 \(currentPageIndex + 1) / \((book.pageImages.count + 1) / 2) 页")
+                Text("\(currentPageIndex + 1) / \(totalPreviewPages)")
                     .font(.system(size: 14))
                     .foregroundColor(Color(hex: "#666666"))
 
@@ -176,10 +211,10 @@ struct BookDetailView: View {
                     flipPage(forward: true)
                 }) {
                     Image(systemName: "chevron.right")
-                        .foregroundColor(currentPageIndex < (book.pageImages.count + 1) / 2 - 1 ? Color(hex: "#F28C28") : Color(hex: "#999999"))
+                        .foregroundColor(currentPageIndex < totalPreviewPages - 1 ? Color(hex: "#F28C28") : Color(hex: "#999999"))
                         .font(.system(size: 16, weight: .medium))
                 }
-                .disabled(currentPageIndex == (book.pageImages.count + 1) / 2 - 1 || isFlipping)
+                .disabled(currentPageIndex == totalPreviewPages - 1 || isFlipping)
             }
             .padding(.top, 8)
         }
@@ -190,7 +225,7 @@ struct BookDetailView: View {
     private func flipPage(forward: Bool) {
         guard !isFlipping else { return }
 
-        if forward && currentPageIndex >= (book.pageImages.count + 1) / 2 - 1 { return }
+        if forward && currentPageIndex >= totalPreviewPages - 1 { return }
         if !forward && currentPageIndex <= 0 { return }
 
         flipDirection = forward
@@ -392,30 +427,53 @@ struct BookDetailView: View {
         #endif
     }
 
-    // 加载绘本页面图片
+    // 加载绘本页面图片（优先从 Bundle 读取，回退到绝对路径）
     private func loadPageImage(named: String) -> Image? {
         #if os(iOS)
-        let imageName: String
-        switch book.bookId {
-        case "Book001":
-            imageName = "self_intro_\(named)"
-        case "Book002":
-            imageName = "dream_job_\(named)"
-        case "Book003":
-            imageName = "color_recognition_\(named)"
-        default:
-            imageName = "self_intro_\(named)"
+        let bundlePath = pageBundlePath(for: named)
+        if let uiImage = UIImage(named: bundlePath, in: Bundle.main, compatibleWith: nil) {
+            return Image(uiImage: uiImage)
         }
 
-        if let uiImage = UIImage(named: imageName) {
+        let filePath = pageFilePath(for: named)
+        if let uiImage = UIImage(contentsOfFile: filePath) {
             return Image(uiImage: uiImage)
         }
         #else
-        if let nsImage = NSImage(named: "\(book.bookId)_\(named)") {
+        let filePath = pageFilePath(for: named)
+        if let nsImage = NSImage(contentsOfFile: filePath) {
             return Image(nsImage: nsImage)
         }
         #endif
         return nil
+    }
+
+    private func pageBundlePath(for named: String) -> String {
+        switch book.bookId {
+        case "Book001":
+            return "self_intro/\(named)"
+        case "Book002":
+            return "dream_job/\(named)"
+        case "Book003":
+            return "color_recognition/\(named)"
+        default:
+            return "self_intro/\(named)"
+        }
+    }
+
+    private func pageFilePath(for named: String) -> String {
+        let basePath: String
+        switch book.bookId {
+        case "Book001":
+            basePath = "/Users/wang/Documents/Vibe coding/【新】宝贝绘本/templates/self_intro/pages"
+        case "Book002":
+            basePath = "/Users/wang/Documents/Vibe coding/【新】宝贝绘本/templates/dream_job/page"
+        case "Book003":
+            basePath = "/Users/wang/Documents/Vibe coding/【新】宝贝绘本/templates/color_recognition/page"
+        default:
+            basePath = "/Users/wang/Documents/Vibe coding/【新】宝贝绘本/templates/self_intro/pages"
+        }
+        return "\(basePath)/\(named).png"
     }
 }
 

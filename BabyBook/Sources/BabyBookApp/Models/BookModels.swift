@@ -13,6 +13,20 @@ struct Book: Identifiable, Codable, Hashable {
     let type: BookType
     let pageImages: [String]  // 绘本内容页图片文件名数组
 
+    /// Bundle 中资源文件夹名称（与 Resources 下目录名一致）
+    var bundleFolder: String {
+        switch bookId {
+        case "Book001":
+            return "self_intro"
+        case "Book002":
+            return "dream_job"
+        case "Book003":
+            return "color_recognition"
+        default:
+            return templatePath
+        }
+    }
+
     enum BookType: String, Codable {
         case bodyRecognition = "body_recognition"      // 身体认知
         case careerRecognition = "career_recognition"  // 职业认知

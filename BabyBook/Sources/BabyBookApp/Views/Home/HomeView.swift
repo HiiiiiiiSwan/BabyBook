@@ -123,7 +123,7 @@ struct HomeView: View {
 
     // MARK: - 绘本左右滑动选中
     private var bookCarouselSection: some View {
-        VStack(spacing: 16) {
+        VStack(spacing: 0) {
             TabView(selection: $selectedBook) {
                 ForEach(MockService.shared.mockBooks) { book in
                     BookCarouselCard(book: book)
@@ -142,19 +142,18 @@ struct HomeView: View {
                 }
             }
         }
-        .padding(.top, DesignTokens.Spacing.xl)
+        .padding(.top, 4)
     }
 
     // MARK: - 底部操作区
     private var bottomActionSection: some View {
         ZStack(alignment: .bottom) {
-            // 底部插画（作为背景，贴底对齐）
+            // 底部插画（与一键定制按钮底部间距 55px，宽度与页面一致）
             Image("homeBG")
                 .resizable()
                 .scaledToFit()
                 .frame(maxWidth: .infinity)
-                .padding(.horizontal, 45)
-                .padding(.bottom, 110)
+                .padding(.bottom, 55)
 
             // 按钮内容
             VStack(spacing: 0) {
@@ -178,7 +177,7 @@ struct HomeView: View {
                         }
                         .padding(.horizontal, 32)
 
-                        Text("仅需¥\(String(format: "%.1f", selectedBook?.price ?? 9.9))")
+                        Text("仅需¥\(String(format: "%.1f", selectedBook?.price ?? 1.0))")
                             .font(.system(size: 12, weight: .bold))
                             .foregroundColor(.white)
                             .padding(.horizontal, 10)
@@ -238,7 +237,7 @@ struct HomeView: View {
                     .cornerRadius(22)
             }
 
-            NavigationLink(destination: PaymentView(book: MockService.shared.mockBooks[0], order: BackendOrder(id: "test-order", deviceId: "test", bookId: "Book001", bookName: "《这是我》", amount: 9.9, status: "UNPAID", createdAt: "2026-06-24T10:00:00Z", updatedAt: nil), babyImage: nil, babyImageUrl: nil)) {
+            NavigationLink(destination: PaymentView(book: MockService.shared.mockBooks[0], order: BackendOrder(id: "test-order", deviceId: "test", bookId: "Book001", bookName: "《这是我》", amount: 1.0, status: "UNPAID", createdAt: "2026-06-24T10:00:00Z", updatedAt: nil), babyImage: nil, babyImageUrl: nil)) {
                 Text("查看支付页")
                     .font(.system(size: 14, weight: .semibold))
                     .foregroundColor(.white)
@@ -248,7 +247,7 @@ struct HomeView: View {
                     .cornerRadius(22)
             }
 
-            NavigationLink(destination: GeneratingView(book: MockService.shared.mockBooks[0], order: BackendOrder(id: "test-order", deviceId: "test", bookId: "Book001", bookName: "《这是我》", amount: 9.9, status: "GENERATING", createdAt: "2026-06-24T10:00:00Z", updatedAt: nil))) {
+            NavigationLink(destination: GeneratingView(book: MockService.shared.mockBooks[0], order: BackendOrder(id: "test-order", deviceId: "test", bookId: "Book001", bookName: "《这是我》", amount: 1.0, status: "GENERATING", createdAt: "2026-06-24T10:00:00Z", updatedAt: nil))) {
                 Text("查看生成中页")
                     .font(.system(size: 14, weight: .semibold))
                     .foregroundColor(.white)
@@ -258,7 +257,7 @@ struct HomeView: View {
                     .cornerRadius(22)
             }
 
-            NavigationLink(destination: CompleteView(book: MockService.shared.mockBooks[0], order: BackendOrder(id: "test-order", deviceId: "test", bookId: "Book001", bookName: "《这是我》", amount: 9.9, status: "SUCCESS", createdAt: "2026-06-24T10:00:00Z", updatedAt: nil), task: BackendTask(id: "test-task", orderId: "test-order", status: "COMPLETED", progress: 100, resultUrl: "https://example.com/generated.png", errorMessage: nil, createdAt: "2026-06-24T10:01:00Z", updatedAt: "2026-06-24T10:02:00Z"))) {
+            NavigationLink(destination: CompleteView(book: MockService.shared.mockBooks[0], order: BackendOrder(id: "test-order", deviceId: "test", bookId: "Book001", bookName: "《这是我》", amount: 1.0, status: "SUCCESS", createdAt: "2026-06-24T10:00:00Z", updatedAt: nil), task: BackendTask(id: "test-task", orderId: "test-order", status: "COMPLETED", progress: 100, resultUrl: "https://example.com/generated.png", errorMessage: nil, createdAt: "2026-06-24T10:01:00Z", updatedAt: "2026-06-24T10:02:00Z"))) {
                 Text("查看完成页")
                     .font(.system(size: 14, weight: .semibold))
                     .foregroundColor(.white)
@@ -318,14 +317,19 @@ struct BookCarouselCard: View {
                 }
 
                 // 绘本信息
-                VStack(spacing: 4) {
+                HStack(spacing: 4) {
+                    Image(systemName: "chevron.left")
+                        .font(.system(size: 12, weight: .semibold))
+                        .foregroundColor(DesignTokens.Colors.background)
+
                     Text("《\(book.name)》")
                         .font(.system(size: 18, weight: .semibold))
                         .foregroundColor(DesignTokens.Colors.primaryText)
 
-                    Text("\(book.pageCount)页")
-                        .font(.system(size: 14))
-                        .foregroundColor(DesignTokens.Colors.tertiaryText)
+                    Image("arrow")
+                        .resizable()
+                        .scaledToFit()
+                        .frame(width: 12, height: 12)
                 }
             }
             .padding(.horizontal, DesignTokens.Layout.pagePadding)
@@ -336,9 +340,13 @@ struct BookCarouselCard: View {
         }
     }
 
-    // 加载封面图片
+    // 加载封面图片（优先从 Bundle 读取，回退到绝对路径）
     private func loadCoverImage() -> Image? {
         #if os(iOS)
+        let bundlePath = "\(book.bundleFolder)/cover"
+        if let uiImage = UIImage(named: bundlePath, in: Bundle.main, compatibleWith: nil) {
+            return Image(uiImage: uiImage)
+        }
         if let uiImage = UIImage(contentsOfFile: book.coverImage) {
             return Image(uiImage: uiImage)
         }
@@ -453,10 +461,16 @@ struct UploadPhotoSheet: View {
                 .padding(.top, 16)
 
             // 关闭按钮 + 标题
-            HStack {
-                Text("请上传1张宝宝照片")
-                    .font(.system(size: 22, weight: .bold))
-                    .foregroundColor(DesignTokens.Colors.primaryText)
+            HStack(alignment: .top) {
+                VStack(alignment: .leading, spacing: 8) {
+                    Text("请上传照片并完成支付")
+                        .font(.system(size: 24, weight: .bold))
+                        .foregroundColor(DesignTokens.Colors.primaryText)
+
+                    Text("定制专属《\(book.name)》，仅需\(Text("1张").foregroundColor(DesignTokens.Colors.primary))宝宝照片并支付\(Text("￥\(String(format: "%.1f", book.price))").foregroundColor(DesignTokens.Colors.primary))")
+                        .font(.system(size: 14, weight: .medium))
+                        .foregroundColor(DesignTokens.Colors.secondaryText)
+                }
                 Spacer()
                 Button(action: {
                     withAnimation(.easeInOut(duration: 0.25)) {
@@ -475,53 +489,58 @@ struct UploadPhotoSheet: View {
             HStack(spacing: 24) {
                 // 建议照片
                 VStack(alignment: .leading, spacing: 12) {
-                    Text("建议照片")
+                    Text("上传照片建议：")
                         .font(.system(size: 16, weight: .semibold))
                         .foregroundColor(DesignTokens.Colors.primaryText)
 
                     VStack(alignment: .leading, spacing: 10) {
                         CheckItem(text: "正脸清晰")
                         CheckItem(text: "光线充足")
-                        CheckItem(text: "无滤镜遮挡")
+                        CheckItem(text: "背景干净")
                     }
                 }
+                .padding(.leading, 24)
+
+                Spacer()
 
                 // 示例照片
-                ZStack {
-                    RoundedRectangle(cornerRadius: 16)
+                ZStack(alignment: .topLeading) {
+                    RoundedRectangle(cornerRadius: 20)
                         .fill(DesignTokens.Colors.secondary.opacity(0.3))
-                        .frame(width: 100, height: 100)
+                        .frame(width: 120, height: 120)
 
                     Image("photocase")
                         .resizable()
                         .scaledToFill()
-                        .frame(width: 100, height: 100)
-                        .clipShape(RoundedRectangle(cornerRadius: 16))
-                }
-                .overlay(
+                        .frame(width: 120, height: 120)
+                        .clipShape(RoundedRectangle(cornerRadius: 20))
+
                     Text("示例")
-                        .font(.system(size: 11, weight: .medium))
+                        .font(.system(size: 12, weight: .medium))
                         .foregroundColor(.white)
-                        .padding(.horizontal, 8)
-                        .padding(.vertical, 3)
+                        .padding(.horizontal, 10)
+                        .padding(.vertical, 4)
                         .background(DesignTokens.Colors.primary)
-                        .cornerRadius(10)
-                        .offset(x: 0, y: -42)
-                )
+                        .clipShape(PartialRoundedRectangle(cornerRadius: 10, corners: [.topLeft, .bottomRight]))
+                }
+                .padding(.trailing, 24)
             }
-            .padding(.horizontal, DesignTokens.Layout.pagePadding)
-            .padding(.top, 36)
+            .padding(.vertical, 20)
+            .background(Color(hex: "#F5F5F5"))
+            .cornerRadius(16)
+            .padding(.top, 16)
+            .padding(.horizontal, 24)
 
             // 按钮：拍照（次按钮）+ 从相册选择（主按钮）
             HStack(spacing: 12) {
-                // 拍照按钮（次按钮样式：浅色底黑字）
+                // 拍照按钮（次按钮样式：浅色底主色字）
                 Button(action: { checkCameraPermission() }) {
                     HStack {
                         Image(systemName: "camera.fill")
                         Text("拍照")
                     }
                     .font(.system(size: 16, weight: .semibold))
-                    .foregroundColor(DesignTokens.Colors.primaryText)
+                    .foregroundColor(DesignTokens.Colors.primary)
                     .frame(maxWidth: .infinity)
                     .frame(height: 56)
                     .background(DesignTokens.Colors.secondary.opacity(0.3))
@@ -870,6 +889,21 @@ private func openPhysicalBookStore() {
         UIApplication.shared.open(fallbackURL)
     }
     #endif
+}
+
+// MARK: - 部分圆角形状（用于示例标签）
+struct PartialRoundedRectangle: Shape {
+    let cornerRadius: CGFloat
+    let corners: UIRectCorner
+
+    func path(in rect: CGRect) -> Path {
+        let path = UIBezierPath(
+            roundedRect: rect,
+            byRoundingCorners: corners,
+            cornerRadii: CGSize(width: cornerRadius, height: cornerRadius)
+        )
+        return Path(path.cgPath)
+    }
 }
 
 // MARK: - Preview

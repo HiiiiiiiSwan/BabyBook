@@ -156,7 +156,6 @@ struct BabyBookApp: App {
 }
 
 struct ContentView: View {
-    @ObservedObject private var onboardingManager = OnboardingManager.shared
     @StateObject private var orderStatusManager = OrderStatusManager.shared
     let debugMode: String?
     @State private var navigationPath = NavigationPath()
@@ -164,33 +163,17 @@ struct ContentView: View {
     @State private var showRestoredAlert = false
 
     var body: some View {
-        ZStack {
-            NavigationStack(path: $navigationPath) {
-                if let mode = debugMode {
-                    debugDestination(mode: mode)
-                } else {
-                    HomeView()
-                }
-            }
-            .environment(\.navPath, $navigationPath)
-            .onReceive(NotificationCenter.default.publisher(for: .resetNavigation)) { _ in
-                navigationPath.removeLast(navigationPath.count)
-            }
-
-            if onboardingManager.showOnboarding {
-                OnboardingView()
-                    .transition(.opacity)
-                    .zIndex(1)
-            }
-
-            if onboardingManager.showPrivacyNotice {
-                PrivacyNoticeView()
-                    .transition(.opacity)
-                    .zIndex(2)
+        NavigationStack(path: $navigationPath) {
+            if let mode = debugMode {
+                debugDestination(mode: mode)
+            } else {
+                HomeView()
             }
         }
-        .animation(.easeInOut(duration: 0.3), value: onboardingManager.showOnboarding)
-        .animation(.easeInOut(duration: 0.3), value: onboardingManager.showPrivacyNotice)
+        .environment(\.navPath, $navigationPath)
+        .onReceive(NotificationCenter.default.publisher(for: .resetNavigation)) { _ in
+            navigationPath.removeLast(navigationPath.count)
+        }
         .onAppear {
             // App 启动时检查是否有未完成的订单
             restoreOrderIfNeeded()
@@ -267,7 +250,7 @@ struct ContentView: View {
                     deviceId: "test-device",
                     bookId: "Book001",
                     bookName: "《这是我》",
-                    amount: 9.9,
+                    amount: 1.0,
                     status: "UNPAID",
                     createdAt: "2026-06-24T10:00:00Z",
                     updatedAt: nil
@@ -283,7 +266,7 @@ struct ContentView: View {
                     deviceId: "test-device",
                     bookId: "Book001",
                     bookName: "《这是我》",
-                    amount: 9.9,
+                    amount: 1.0,
                     status: "GENERATING",
                     createdAt: "2026-06-24T10:00:00Z",
                     updatedAt: nil
@@ -297,7 +280,7 @@ struct ContentView: View {
                     deviceId: "test-device",
                     bookId: "Book001",
                     bookName: "《这是我》",
-                    amount: 9.9,
+                    amount: 1.0,
                     status: "SUCCESS",
                     createdAt: "2026-06-24T10:00:00Z",
                     updatedAt: nil
