@@ -349,7 +349,7 @@ struct PaymentView: View {
                 deviceId: "test-device",
                 bookId: "Book001",
                 bookName: "《这是我》",
-                amount: 12.99,
+                amount: 3.0,
                 status: "UNPAID",
                 createdAt: "2026-06-23T10:00:00Z",
                 updatedAt: nil

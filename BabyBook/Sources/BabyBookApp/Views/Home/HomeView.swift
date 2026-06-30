@@ -177,7 +177,7 @@ struct HomeView: View {
                         }
                         .padding(.horizontal, 32)
 
-                        Text("仅需¥\(String(format: "%.1f", selectedBook?.price ?? 1.0))")
+                        Text("仅需¥\(String(format: "%.1f", selectedBook?.price ?? 3.0))")
                             .font(.system(size: 12, weight: .bold))
                             .foregroundColor(.white)
                             .padding(.horizontal, 10)
@@ -237,7 +237,7 @@ struct HomeView: View {
                     .cornerRadius(22)
             }
 
-            NavigationLink(destination: PaymentView(book: MockService.shared.mockBooks[0], order: BackendOrder(id: "test-order", deviceId: "test", bookId: "Book001", bookName: "《这是我》", amount: 1.0, status: "UNPAID", createdAt: "2026-06-24T10:00:00Z", updatedAt: nil), babyImage: nil, babyImageUrl: nil)) {
+            NavigationLink(destination: PaymentView(book: MockService.shared.mockBooks[0], order: BackendOrder(id: "test-order", deviceId: "test", bookId: "Book001", bookName: "《这是我》", amount: 3.0, status: "UNPAID", createdAt: "2026-06-24T10:00:00Z", updatedAt: nil), babyImage: nil, babyImageUrl: nil)) {
                 Text("查看支付页")
                     .font(.system(size: 14, weight: .semibold))
                     .foregroundColor(.white)
@@ -247,7 +247,7 @@ struct HomeView: View {
                     .cornerRadius(22)
             }
 
-            NavigationLink(destination: GeneratingView(book: MockService.shared.mockBooks[0], order: BackendOrder(id: "test-order", deviceId: "test", bookId: "Book001", bookName: "《这是我》", amount: 1.0, status: "GENERATING", createdAt: "2026-06-24T10:00:00Z", updatedAt: nil))) {
+            NavigationLink(destination: GeneratingView(book: MockService.shared.mockBooks[0], order: BackendOrder(id: "test-order", deviceId: "test", bookId: "Book001", bookName: "《这是我》", amount: 3.0, status: "GENERATING", createdAt: "2026-06-24T10:00:00Z", updatedAt: nil))) {
                 Text("查看生成中页")
                     .font(.system(size: 14, weight: .semibold))
                     .foregroundColor(.white)
@@ -257,7 +257,7 @@ struct HomeView: View {
                     .cornerRadius(22)
             }
 
-            NavigationLink(destination: CompleteView(book: MockService.shared.mockBooks[0], order: BackendOrder(id: "test-order", deviceId: "test", bookId: "Book001", bookName: "《这是我》", amount: 1.0, status: "SUCCESS", createdAt: "2026-06-24T10:00:00Z", updatedAt: nil), task: BackendTask(id: "test-task", orderId: "test-order", status: "COMPLETED", progress: 100, resultUrl: "https://example.com/generated.png", errorMessage: nil, createdAt: "2026-06-24T10:01:00Z", updatedAt: "2026-06-24T10:02:00Z"))) {
+            NavigationLink(destination: CompleteView(book: MockService.shared.mockBooks[0], order: BackendOrder(id: "test-order", deviceId: "test", bookId: "Book001", bookName: "《这是我》", amount: 3.0, status: "SUCCESS", createdAt: "2026-06-24T10:00:00Z", updatedAt: nil), task: BackendTask(id: "test-task", orderId: "test-order", status: "COMPLETED", progress: 100, resultUrl: "https://example.com/generated.png", errorMessage: nil, createdAt: "2026-06-24T10:01:00Z", updatedAt: "2026-06-24T10:02:00Z"))) {
                 Text("查看完成页")
                     .font(.system(size: 14, weight: .semibold))
                     .foregroundColor(.white)
@@ -879,15 +879,10 @@ private func createPlaceholderImage() -> UIImage {
 
 // MARK: - 打开实体书微店
 private func openPhysicalBookStore() {
-    let wechatURL = URL(string: "weixin://")!
-    let fallbackURL = URL(string: "https://weixin.qq.com")!
+    let storeURL = URL(string: "https://weidian.com/?userid=1868613735")!
 
     #if os(iOS)
-    if UIApplication.shared.canOpenURL(wechatURL) {
-        UIApplication.shared.open(wechatURL)
-    } else {
-        UIApplication.shared.open(fallbackURL)
-    }
+    UIApplication.shared.open(storeURL)
     #endif
 }
 
