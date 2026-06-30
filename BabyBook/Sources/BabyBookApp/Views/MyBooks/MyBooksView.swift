@@ -15,10 +15,6 @@ struct MyBooksView: View {
     @State private var navigateToDetail = false
     @Environment(\.dismiss) private var dismiss
 
-    @State private var showRestoreAlert = false
-    @State private var restoreMessage = ""
-    @State private var isRestoring = false
-
     var body: some View {
         ZStack {
             Color(hex: "#FFF9F2")
@@ -60,21 +56,6 @@ struct MyBooksView: View {
                     .font(.system(size: 18, weight: .bold))
                     .foregroundColor(Color(hex: "#222222"))
             }
-            ToolbarItem(placement: .topBarTrailing) {
-                Button(action: {
-                    restorePurchases()
-                }) {
-                    if isRestoring {
-                        ProgressView()
-                            .scaleEffect(0.8)
-                    } else {
-                        Text("恢复购买")
-                            .font(.system(size: 14, weight: .medium))
-                            .foregroundColor(Color(hex: "#F28C28"))
-                    }
-                }
-                .disabled(isRestoring)
-            }
         }
         #endif
         .onAppear { loadLocalBooks() }
@@ -87,11 +68,6 @@ struct MyBooksView: View {
             }
         } message: {
             Text("确定要删除这本绘本吗？删除后将无法恢复。")
-        }
-        .alert("恢复购买", isPresented: $showRestoreAlert) {
-            Button("确定", role: .cancel) {}
-        } message: {
-            Text(restoreMessage)
         }
         .sheet(isPresented: $showShareSheet) {
             #if canImport(UIKit)
@@ -108,13 +84,6 @@ struct MyBooksView: View {
     // MARK: - Header（非空状态显示计数）
     private var headerSection: some View {
         VStack(alignment: .leading, spacing: 8) {
-            if !localBooks.isEmpty {
-                Text("共 \(localBooks.count) 本")
-                    .font(.system(size: 14))
-                    .foregroundColor(Color(hex: "#999999"))
-                    .padding(.horizontal, 24)
-                    .padding(.top, 20)
-            }
         }
         .padding(.bottom, 16)
     }
@@ -139,7 +108,7 @@ struct MyBooksView: View {
                 .font(.system(size: 20, weight: .bold))
                 .foregroundColor(Color(hex: "#222222"))
 
-            Text("定制绘本后，PDF文件将保存在这里\n您可以随时查看、分享和管理")
+            Text("绘本生成成功后，会自动保存在这里\n您可以随时查看、分享和管理")
                 .font(.system(size: 14, weight: .medium))
                 .foregroundColor(Color(hex: "#666666"))
                 .multilineTextAlignment(.center)
@@ -163,41 +132,33 @@ struct MyBooksView: View {
 
     // MARK: - 绘本列表
     private var bookList: some View {
-        List {
-            ForEach(localBooks) { book in
-                Button(action: {
-                    selectedBook = book
-                    navigateToDetail = true
-                }) {
-                    LocalBookRow(book: book)
-                }
-                .buttonStyle(PlainButtonStyle())
-                .swipeActions(edge: .trailing, allowsFullSwipe: false) {
-                    Button(role: .destructive) {
-                        bookToDelete = book
-                        showDeleteAlert = true
-                    } label: {
-                        Label("删除", systemImage: "trash")
+        ScrollView(showsIndicators: false) {
+            LazyVStack(spacing: 0) {
+                ForEach(localBooks) { book in
+                    Button(action: {
+                        selectedBook = book
+                        navigateToDetail = true
+                    }) {
+                        LocalBookRow(book: book)
                     }
-
-                    Button {
-                        shareBook(book)
-                    } label: {
-                        Label("分享", systemImage: "square.and.arrow.up")
-                    }
-                    .tint(Color(hex: "#F28C28"))
+                    .buttonStyle(PlainButtonStyle())
+                    .padding(.horizontal, 24)
+                    .padding(.vertical, 8)
                 }
-                .listRowBackground(Color(hex: "#FFF9F2"))
-                .listRowSeparator(.hidden)
-                .listRowInsets(EdgeInsets(
-                    top: 8,
-                    leading: 24,
-                    bottom: 8,
-                    trailing: 24
-                ))
             }
+            .padding(.top, 8)
+
+            VStack(spacing: 4) {
+                Text("请及时下载保存")
+                    .font(.system(size: 12))
+                    .foregroundColor(Color(hex: "#999999"))
+                Text("卸载 App 后将无法恢复哦~")
+                    .font(.system(size: 12))
+                    .foregroundColor(Color(hex: "#CCCCCC"))
+            }
+            .padding(.top, 16)
+            .padding(.bottom, 24)
         }
-        .listStyle(.plain)
         .background(Color(hex: "#FFF9F2"))
     }
 
@@ -239,28 +200,6 @@ struct MyBooksView: View {
         showShareSheet = true
     }
 
-    // MARK: - 恢复购买
-    private func restorePurchases() {
-        isRestoring = true
-
-        Task {
-            do {
-                try await PaymentService.shared.restorePurchases()
-                await MainActor.run {
-                    isRestoring = false
-                    restoreMessage = "购买恢复成功！已购买的绘本将自动显示。"
-                    showRestoreAlert = true
-                }
-            } catch {
-                await MainActor.run {
-                    isRestoring = false
-                    restoreMessage = "恢复购买失败：\(error.localizedDescription)"
-                    showRestoreAlert = true
-                }
-            }
-        }
-    }
-
     // MARK: - 返回首页（已改为 dismiss，因为移除了 TabBar）
     private func goToHome() {
         dismiss()
@@ -299,14 +238,14 @@ struct LocalBookRow: View {
                             endPoint: .bottomTrailing
                         )
                     )
-                    .frame(width: 64, height: 80)
+                    .frame(width: 80, height: 80)
 
                 #if canImport(UIKit)
                 if let uiImage = loadThumbnail() {
                     Image(uiImage: uiImage)
                         .resizable()
-                        .scaledToFill()
-                        .frame(width: 64, height: 80)
+                        .scaledToFit()
+                        .frame(width: 80, height: 80)
                         .clipShape(RoundedRectangle(cornerRadius: 12))
                 } else {
                     Image(systemName: "book.fill")
@@ -319,6 +258,7 @@ struct LocalBookRow: View {
                     .foregroundColor(Color(hex: "#F28C28").opacity(0.5))
                 #endif
             }
+            .frame(width: 80, height: 80)
 
             // 信息
             VStack(alignment: .leading, spacing: 4) {

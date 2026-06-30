@@ -114,6 +114,7 @@ struct LocalBookDetailView: View {
     // MARK: - 绘本预览
     private var bookPreviewSection: some View {
         VStack(spacing: 12) {
+            // 正方形绘本封面（屏幕宽度 - 64px 边距），与完成页保持一致
             ZStack {
                 RoundedRectangle(cornerRadius: 16)
                     .fill(Color.white)
@@ -124,8 +125,10 @@ struct LocalBookDetailView: View {
                     Image(uiImage: uiImage)
                         .resizable()
                         .scaledToFit()
-                        .frame(width: 220, height: 220)
+                        .frame(maxWidth: .infinity)
+                        .aspectRatio(1, contentMode: .fit)
                         .clipShape(RoundedRectangle(cornerRadius: 12))
+                        .padding(12)
                 } else {
                     bookPreviewPlaceholder
                 }
@@ -133,7 +136,8 @@ struct LocalBookDetailView: View {
                 bookPreviewPlaceholder
                 #endif
             }
-            .frame(width: 240, height: 240)
+            .aspectRatio(1, contentMode: .fit)
+            .padding(.horizontal, 32)
 
             Text(book.bookName)
                 .font(.system(size: 18, weight: .bold))
@@ -150,12 +154,41 @@ struct LocalBookDetailView: View {
 
     private var bookPreviewPlaceholder: some View {
         VStack(spacing: 8) {
-            Image(systemName: "book.fill")
+            HStack {
+                VStack(alignment: .leading, spacing: 2) {
+                    Text("My First Book")
+                        .font(.system(size: 12, weight: .medium))
+                        .foregroundColor(Color(hex: "#666666"))
+                    Text(book.bookName)
+                        .font(.system(size: 10))
+                        .foregroundColor(Color(hex: "#999999"))
+                }
+                Spacer()
+                Image(systemName: "face.smiling")
+                    .font(.system(size: 20))
+                    .foregroundColor(Color(hex: "#F28C28"))
+            }
+            .padding(.horizontal, 12)
+            .padding(.top, 12)
+
+            Image(systemName: "person.crop.square.fill")
                 .font(.system(size: 80))
                 .foregroundColor(Color(hex: "#F28C28").opacity(0.15))
-            Text("绘本预览")
-                .font(.system(size: 14))
+
+            HStack {
+                VStack(alignment: .leading, spacing: 2) {
+                    Label("Head", systemImage: "circle.fill")
+                        .font(.system(size: 10))
+                    Label("Hand", systemImage: "hand.fill")
+                        .font(.system(size: 10))
+                    Label("Foot", systemImage: "footprint.fill")
+                        .font(.system(size: 10))
+                }
                 .foregroundColor(Color(hex: "#999999"))
+                Spacer()
+            }
+            .padding(.horizontal, 12)
+            .padding(.bottom, 12)
         }
     }
 

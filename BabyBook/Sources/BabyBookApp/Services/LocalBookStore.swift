@@ -24,19 +24,27 @@ class LocalBookStore {
     }
 
     // MARK: - 保存绘本元数据
-    func save(orderId: String, bookId: String, bookName: String, filePath: String) {
+    /// - Parameter createTime: 绘本生成时间，默认当前时间；更新已存在记录时保留原生成时间
+    func save(orderId: String, bookId: String, bookName: String, filePath: String, createTime: Date? = nil) {
         guard let url = metadataURL else { return }
 
         var books = loadAll()
 
         // 如果已存在则更新，否则新增
+        let finalCreateTime: Date
+        if let index = books.firstIndex(where: { $0.orderId == orderId }) {
+            finalCreateTime = createTime ?? books[index].createTime
+        } else {
+            finalCreateTime = createTime ?? Date()
+        }
+
         let metadata = LocalBookMetadata(
             id: orderId,
             orderId: orderId,
             bookId: bookId,
             bookName: bookName,
             filePath: filePath,
-            createTime: Date()
+            createTime: finalCreateTime
         )
 
         if let index = books.firstIndex(where: { $0.orderId == orderId }) {

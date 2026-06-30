@@ -156,11 +156,14 @@ struct GeneratingView: View {
             }
         }
 
-        // 模拟器环境：模拟生成过程，5秒后自动完成
+        // 模拟器环境：模拟生成过程，5秒后自动完成并保存绘本
         #if targetEnvironment(simulator)
         DispatchQueue.main.asyncAfter(deadline: .now() + 5) {
             statusText = "生成完成！"
             timer?.invalidate()
+            Task {
+                await self.saveSimulatedGeneratedBook()
+            }
             DispatchQueue.main.asyncAfter(deadline: .now() + 0.8) {
                 navigateToComplete = true
             }
@@ -206,6 +209,10 @@ struct GeneratingView: View {
             statusText = "生成完成！"
             timer?.invalidate()
             statusManager.stopPolling()
+            // 生成完成，自动保存绘本到本地
+            Task {
+                await saveGeneratedBook()
+            }
             // 生成完成，清除本地保存的订单
             OrderStatusManager.shared.clearSavedOrder()
             DispatchQueue.main.asyncAfter(deadline: .now() + 0.8) {
@@ -241,6 +248,86 @@ struct GeneratingView: View {
 
     private func goBackToHome() {
         navPath.wrappedValue = NavigationPath()
+    }
+
+    // MARK: - 生成完成后自动保存绘本到本地
+    private func saveGeneratedBook() async {
+        guard let task = statusManager.currentTask,
+              let resultUrl = task.resultUrl else {
+            print("自动生成绘本保存失败：任务结果为空")
+            return
+        }
+
+        do {
+            let imageData = try await NetworkService.shared.downloadFile(from: resultUrl)
+            try writeGeneratedBook(imageData: imageData, createTime: parseISODate(task.updatedAt))
+            print("自动生成绘本保存成功")
+        } catch {
+            print("自动生成绘本保存失败: \(error)")
+        }
+    }
+
+    // MARK: - 模拟器环境：生成模拟绘本到本地
+    private func saveSimulatedGeneratedBook() async {
+        guard let documentsPath = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask).first else {
+            print("模拟器保存绘本失败：无法获取 Documents 目录")
+            return
+        }
+
+        // 使用 cover 资源生成模拟绘本图片
+        #if canImport(UIKit)
+        let coverName: String
+        switch book.bookId {
+        case "Book002":
+            coverName = "cover2"
+        case "Book003":
+            coverName = "cover3"
+        default:
+            coverName = "cover1"
+        }
+
+        guard let uiImage = UIImage(named: coverName) else {
+            print("模拟器保存绘本失败：找不到 cover 图片")
+            return
+        }
+
+        guard let imageData = uiImage.pngData() else {
+            print("模拟器保存绘本失败：无法转换图片数据")
+            return
+        }
+
+        do {
+            try writeGeneratedBook(imageData: imageData, createTime: nil)
+            print("模拟器自动生成绘本保存成功")
+        } catch {
+            print("模拟器保存绘本失败: \(error)")
+        }
+        #endif
+    }
+
+    // MARK: - 写入绘本文件和元数据
+    private func writeGeneratedBook(imageData: Data, createTime: Date?) throws {
+        guard let documentsPath = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask).first else {
+            throw NSError(domain: "BabyBook", code: -1, userInfo: [NSLocalizedDescriptionKey: "无法获取 Documents 目录"])
+        }
+
+        let fileName = "book_\(order.id).png"
+        let filePath = documentsPath.appendingPathComponent(fileName)
+        try imageData.write(to: filePath)
+
+        LocalBookStore.shared.save(
+            orderId: order.id,
+            bookId: order.bookId,
+            bookName: book.name,
+            filePath: filePath.path,
+            createTime: createTime ?? Date()
+        )
+    }
+
+    private func parseISODate(_ dateString: String?) -> Date? {
+        guard let dateString = dateString else { return nil }
+        let formatter = ISO8601DateFormatter()
+        return formatter.date(from: dateString)
     }
 }
 

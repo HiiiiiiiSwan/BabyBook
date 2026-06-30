@@ -400,8 +400,15 @@ struct CompleteView: View {
             orderId: order.id,
             bookId: order.bookId,
             bookName: book.name,
-            filePath: filePath.path
+            filePath: filePath.path,
+            createTime: parseISODate(task?.updatedAt) ?? Date()
         )
+    }
+
+    private func parseISODate(_ dateString: String?) -> Date? {
+        guard let dateString = dateString else { return nil }
+        let formatter = ISO8601DateFormatter()
+        return formatter.date(from: dateString)
     }
 
     // MARK: - 返回首页（直接清空导航栈）
