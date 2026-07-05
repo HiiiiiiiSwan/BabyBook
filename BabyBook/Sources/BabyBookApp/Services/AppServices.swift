@@ -278,11 +278,23 @@ class OrderStatusManager: ObservableObject {
                             }
                             break
                         }
+                    } else {
+                        // 任务尚未创建（404），属于正常等待阶段，不计入网络失败
+                        await MainActor.run {
+                            self.pollingFailureCount = 0
+                        }
                     }
                 } catch {
                     print("轮询任务状态失败: \(error.localizedDescription)")
-                    await MainActor.run {
-                        self.pollingFailureCount += 1
+                    // 只有真正的网络错误才累计失败次数，业务错误（5xx等）不视为本地断网
+                    if shouldTreatAsNetworkFailure(error) {
+                        await MainActor.run {
+                            self.pollingFailureCount += 1
+                        }
+                    } else {
+                        await MainActor.run {
+                            self.pollingFailureCount = 0
+                        }
                     }
                 }
 
@@ -290,6 +302,33 @@ class OrderStatusManager: ObservableObject {
                 try? await Task.sleep(nanoseconds: pollingInterval)
             }
         }
+    }
+
+    /// 判断错误是否应被视为网络异常（用于弹网络 Toast）
+    private func shouldTreatAsNetworkFailure(_ error: Error) -> Bool {
+        let nsError = error as NSError
+        // NSURLError 网络相关错误码
+        if nsError.domain == NSURLErrorDomain {
+            switch nsError.code {
+            case NSURLErrorNotConnectedToInternet,
+                 NSURLErrorNetworkConnectionLost,
+                 NSURLErrorTimedOut,
+                 NSURLErrorCannotConnectToHost,
+                 NSURLErrorCannotFindHost,
+                 NSURLErrorDNSLookupFailed,
+                 NSURLErrorInternationalRoamingOff,
+                 NSURLErrorCallIsActive,
+                 NSURLErrorDataNotAllowed:
+                return true
+            default:
+                return false
+            }
+        }
+        // 自定义网络错误
+        if let apiError = error as? APIError, case .networkError = apiError {
+            return true
+        }
+        return false
     }
 
     /// 停止轮询
