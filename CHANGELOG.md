@@ -10,6 +10,22 @@
 
 ## [Unreleased]
 
+### 2026-07-05
+
+- `chore` 上线前安全与审核修复
+  - 清理后端 `dist` 构建产物，避免源码/密钥随编译输出提交
+  - 后端接入 `@nestjs/throttler` 全局限流：默认 60 秒 60 次请求，保护豆包生图接口不被高频滥用
+  - 新增 `generate:books` / `generate:color` npm 脚本，用于绘本模板批量生成
+  - 新增 `backend/babybook-backend/.dockerignore`，避免 Docker 构建时打包 dist / node_modules / 环境变量文件
+  - 新增 `FailureResultView.swift`：AI 最终生成失败后展示失败原因与客服二维码，引导用户返回首页
+  - 移除 `GeneratingView` 的「取消生成」按钮及相关 Alert，避免消耗型商品误操作导致不可退款的审核风险
+  - 新增 `BabyBook/Sources/BabyBookApp/Info.plist` 与 `zh-Hans.lproj/InfoPlist.strings`，完善权限说明本地化
+  - 新增 `BabyBookProducts.storekit` StoreKit 配置文件，便于 IAP 审核与本地测试
+  - 新增 `support.png` 客服二维码资源，用于失败结果页与完成页
+  - 更新 `PRIVACY_POLICY.md`：补充照片临时 URL、生成结果图片 URL、Apple 支付收据、失败错误信息的收集与保留说明
+  - 更新 `design/directions.png` 流程图，删除/重命名旧版 photocase 资源，新增 IAP 审核用绘本示例图
+  - 多处 App UI 与资源微调：完成页、我的绘本列表/详情、首页、支付页、上传照片弹窗等
+
 ### 2026-06-30
 
 - `feat` 我的绘本自动生成与列表 UI 优化
