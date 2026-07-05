@@ -28,7 +28,7 @@ struct HomeView: View {
         }
         .navigationDestination(isPresented: $showGenerating) {
             if let book = restoredBook, let order = restoredOrder {
-                GeneratingView(book: book, order: order)
+                GeneratingView(book: book, order: order, isRestored: true)
             }
         }
         .navigationDestination(isPresented: $showFailureResult) {

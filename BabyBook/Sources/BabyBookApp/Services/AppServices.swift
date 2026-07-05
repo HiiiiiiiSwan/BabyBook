@@ -140,19 +140,50 @@ class OrderStatusManager: ObservableObject {
     // MARK: - 本地持久化
     private let orderKey = "com.babybook.lastOrder"
     private let orderStatusKey = "com.babybook.lastOrderStatus"
+    private let orderSavedAtKey = "com.babybook.lastOrderSavedAt"
+    /// 本地订单最长有效期：30 分钟（AI 生成最长约 10 分钟，留充足余量）
+    /// 超过此时间的本地记录视为过期，自动清除，避免历史失败记录反复弹窗
+    private let orderMaxAge: TimeInterval = 30 * 60
 
     /// 保存当前订单到本地（用于崩溃/杀后台后恢复）
     func saveCurrentOrder(_ order: BackendOrder) {
         if let data = try? JSONEncoder().encode(order) {
             UserDefaults.standard.set(data, forKey: orderKey)
             UserDefaults.standard.set(order.status, forKey: orderStatusKey)
+            // 记录保存时间，用于过期检查
+            UserDefaults.standard.set(Date().timeIntervalSince1970, forKey: orderSavedAtKey)
         }
     }
 
-    /// 加载本地保存的订单
+    /// 加载本地保存的订单（超过 30 分钟的记录自动清除）
     func loadLastOrder() -> BackendOrder? {
         guard let data = UserDefaults.standard.data(forKey: orderKey) else { return nil }
-        return try? JSONDecoder().decode(BackendOrder.self, from: data)
+        guard let order = try? JSONDecoder().decode(BackendOrder.self, from: data) else { return nil }
+
+        // 1. 优先用保存时间戳判断是否过期
+        let savedAt = UserDefaults.standard.double(forKey: orderSavedAtKey)
+        if savedAt > 0 {
+            let age = Date().timeIntervalSince1970 - savedAt
+            if age > orderMaxAge {
+                print("[订单恢复] 本地订单已过期（保存于\(Int(age/60))分钟前），自动清除")
+                clearSavedOrder()
+                return nil
+            }
+            return order
+        }
+
+        // 2. 旧版本没有时间戳，用订单的 createdAt 字段兜底
+        let formatter = ISO8601DateFormatter()
+        if let createdDate = formatter.date(from: order.createdAt) {
+            let age = Date().timeIntervalSince(createdDate)
+            if age > orderMaxAge {
+                print("[订单恢复] 本地订单已过期（创建于\(Int(age/60))分钟前），自动清除")
+                clearSavedOrder()
+                return nil
+            }
+        }
+
+        return order
     }
 
     /// 加载待验证的订单 ID（用于交易恢复）
@@ -169,9 +200,14 @@ class OrderStatusManager: ObservableObject {
     func clearSavedOrder() {
         UserDefaults.standard.removeObject(forKey: orderKey)
         UserDefaults.standard.removeObject(forKey: orderStatusKey)
+        UserDefaults.standard.removeObject(forKey: orderSavedAtKey)
     }
 
     /// 恢复订单：App 启动或回到前台时调用，检查是否有未完成的订单
+    /// 注意：此函数只负责「查询+返回订单」，不在这里启动轮询。
+    /// 轮询由 GeneratingView.onAppear 统一调用 startPolling，避免弹窗等待期间
+    /// 后台 timeoutTask 提前启动、与 GeneratingView 产生竞态（旧 timeoutTask 的
+    /// isTimeout=true 可能在新监听器建立后才被 emit，误触发失败页跳转）。
     func restoreOrderIfNeeded() async -> BackendOrder? {
         guard let localOrder = loadLastOrder() else { return nil }
 
@@ -183,17 +219,13 @@ class OrderStatusManager: ObservableObject {
                 self.currentOrder = latestOrder
             }
 
-            // 根据状态决定是否需要恢复
+            // 根据状态决定是否需要恢复（不在此处 startPolling，由 GeneratingView 统一负责）
             switch latestOrder.status {
             case "PAID":
-                // 已支付但未开始生成，需要跳转到生成页
                 return latestOrder
             case "GENERATING":
-                // 生成中，需要恢复轮询
-                startPolling(orderId: latestOrder.id)
                 return latestOrder
             case "FAILED":
-                // 生成失败，需要弹窗提醒并进入失败结果页
                 return latestOrder
             case "UNPAID":
                 // 如果后端仍是 UNPAID，但本地已经走到 PAID/GENERATING/FAILED，
@@ -202,18 +234,12 @@ class OrderStatusManager: ObservableObject {
                     await MainActor.run {
                         self.currentOrder = localOrder
                     }
-                    if localOrder.status == "GENERATING" {
-                        startPolling(orderId: localOrder.id)
-                    }
                     return localOrder
                 }
-                // 本地也是 UNPAID，说明订单确实未支付，不弹窗
                 return nil
             case "SUCCESS":
-                // 已完成，允许弹窗引导到生成中页，再内跳完成页
                 return latestOrder
             case "CANCELLED":
-                // 已取消，清除本地记录，不再弹窗
                 clearSavedOrder()
                 return nil
             default:
@@ -221,14 +247,11 @@ class OrderStatusManager: ObservableObject {
             }
         } catch {
             print("恢复订单网络请求失败，尝试使用本地订单: \(error)")
-            // 网络异常时回退到本地保存的订单，只要尚未完成就允许恢复
+            // 网络异常时回退到本地保存的订单，只要尚未完成就允许恢复（不 startPolling）
             switch localOrder.status {
             case "PAID", "GENERATING", "UNPAID", "FAILED", "SUCCESS":
                 await MainActor.run {
                     self.currentOrder = localOrder
-                }
-                if localOrder.status == "GENERATING" {
-                    startPolling(orderId: localOrder.id)
                 }
                 return localOrder
             default:
@@ -244,6 +267,8 @@ class OrderStatusManager: ObservableObject {
         isPolling = true
         isTimeout = false
         pollingFailureCount = 0
+        // 清空旧 task，避免新的监听器/立即检查读到上次遗留的 FAILED/COMPLETED 状态
+        currentTask = nil
 
         // 保存当前订单到本地（用于崩溃恢复）
         if let order = currentOrder {

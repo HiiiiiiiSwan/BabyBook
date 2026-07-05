@@ -152,6 +152,9 @@ struct BabyBookApp: App {
         Task {
             await PaymentService.shared.loadProducts()
         }
+        // 清除超过 30 分钟的过期本地订单记录（防止历史失败记录反复弹窗）
+        // loadLastOrder() 内部已有过期检查，这里调用一次触发清理
+        let _ = OrderStatusManager.shared.loadLastOrder()
     }
 
     var body: some Scene {
@@ -169,6 +172,23 @@ struct ContentView: View {
     @State private var showRestoredAlert = false
     @Environment(\.scenePhase) private var scenePhase
     @State private var previousScenePhase: ScenePhase = .active
+
+    // MARK: - 恢复弹窗状态（根据订单状态动态调整文案和路由）
+    private var restoredAlertTitle: String {
+        switch restoredOrder?.status {
+        case "FAILED": return "绘本生成失败"
+        case "SUCCESS": return "绘本已生成"
+        default: return "绘本生成中"
+        }
+    }
+
+    private var restoredAlertMessage: String {
+        switch restoredOrder?.status {
+        case "FAILED": return "您的绘本生成失败，点击查看详情并联系客服"
+        case "SUCCESS": return "您的绘本已生成完成，点击查看"
+        default: return "检测到有未完成的绘本，点击可查看最新进展"
+        }
+    }
 
     var body: some View {
         NavigationStack(path: $navigationPath) {
@@ -198,14 +218,15 @@ struct ContentView: View {
                 handlePaymentRestored(orderId: orderId)
             }
         }
-        .alert("绘本生成中", isPresented: $showRestoredAlert) {
+        .alert(restoredAlertTitle, isPresented: $showRestoredAlert) {
             Button("查看") {
                 if let order = restoredOrder {
-                    navigateToGenerating(order: order)
+                    routeRestoredOrder(order: order)
                 }
             }
+            Button("忽略", role: .cancel) {}
         } message: {
-            Text("检测到有未完成的绘本，点击可查看最新进展")
+            Text(restoredAlertMessage)
         }
     }
 
@@ -241,14 +262,27 @@ struct ContentView: View {
         }
     }
 
-    private func navigateToGenerating(order: BackendOrder) {
-        // 恢复弹窗统一进入生成中页，再由生成中页根据状态内跳完成页/失败页
+    // MARK: - 根据订单状态智能路由
+    /// - GENERATING / PAID：进入生成中页面，继续轮询
+    /// - FAILED：直接跳失败结果页，不经过生成中页
+    /// - SUCCESS：直接跳生成中页（GeneratingView 会识别已完成并内跳完成页）
+    private func routeRestoredOrder(order: BackendOrder) {
         guard let book = MockService.shared.mockBooks.first(where: { $0.bookId == order.bookId }) else { return }
 
-        NotificationCenter.default.post(
-            name: .navigateToGenerating,
-            object: ["book": book, "order": order]
-        )
+        switch order.status {
+        case "FAILED":
+            // 直接跳失败页，避免经过生成中页再立刻闪跳到失败页
+            NotificationCenter.default.post(
+                name: .navigateToFailureResult,
+                object: ["book": book, "order": order]
+            )
+        default:
+            // GENERATING / PAID / SUCCESS → 进入生成中页，由 GeneratingView 内部根据实时状态处理
+            NotificationCenter.default.post(
+                name: .navigateToGenerating,
+                object: ["book": book, "order": order]
+            )
+        }
     }
 
     @ViewBuilder

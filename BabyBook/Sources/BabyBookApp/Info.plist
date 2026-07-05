@@ -20,10 +20,14 @@
 	<string>1</string>
 	<key>NSAppTransportSecurity</key>
 	<dict>
-		<!-- 生产环境必须关闭任意加载，仅允许 HTTPS；开发测试时可临时开启 -->
+		<!-- 开发阶段：允许局域网 HTTP（192.168.x.x 测试后端）；上线前替换为生产 HTTPS 域名后删除此例外 -->
 		<key>NSAllowsArbitraryLoads</key>
 		<false/>
+		<key>NSAllowsLocalNetworking</key>
+		<true/>
 	</dict>
+	<key>NSLocalNetworkUsageDescription</key>
+	<string>需要访问局域网以连接开发测试服务器</string>
 	<key>UIApplicationSceneManifest</key>
 	<dict>
 		<key>UIApplicationSupportsMultipleScenes</key>

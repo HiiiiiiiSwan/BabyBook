@@ -10,6 +10,8 @@ import Network
 struct GeneratingView: View {
     let book: Book
     let order: BackendOrder
+    /// 是否为恢复场景（杀端后重启进入）。true 时进度从合理基准值开始，避免视觉倒退
+    var isRestored: Bool = false
 
     @StateObject private var statusManager = OrderStatusManager.shared
     @State private var navigateToComplete = false
@@ -25,6 +27,9 @@ struct GeneratingView: View {
     @State private var finalizingProgress = 0
     @State private var finalizingTimer: Timer?
     @State private var isDownloadPaused = false
+    @State private var pollingProgress: Double = 0           // AI 生图阶段前端匀速展示进度（0~89）
+    @State private var pollingProgressTimer: Timer?
+    @State private var isPollingPaused = false               // AI 生图阶段是否因网络异常暂停
     @State private var isWaitingRetry = false          // 是否处于重试等待中
     @State private var isVerifyingFailure = false       // 是否正在核实失败（查订单状态，防重复触发）
     @State private var failureVerifyTask: Task<Void, Never>?  // 核实失败状态的任务句柄，用于页面消失时取消
@@ -78,13 +83,19 @@ struct GeneratingView: View {
             FailureResultView(book: book, order: order.updatingStatus(to: "FAILED"), taskErrorMessage: failureErrorMessage)
         }
         .onAppear {
+            // 进入生成页时强制重置超时和失败状态，防止上次残留的状态立即触发错误路径
+            statusManager.isTimeout = false
+            statusManager.pollingFailureCount = 0
             persistOrderAsGenerating()
             startGeneration()
         }
         .onDisappear {
             timer?.invalidate()
             finalizingTimer?.invalidate()
+            pollingProgressTimer?.invalidate()
             statusManager.stopPolling()
+            statusManager.isTimeout = false          // 清除超时状态，防止下次进入时立即触发
+            statusManager.pollingFailureCount = 0    // 清除网络失败计数
             downloadTask?.cancel()
             failureVerifyTask?.cancel()
             isVerifyingFailure = false
@@ -211,12 +222,16 @@ struct GeneratingView: View {
             return 1.0
         }
         if isFinalizing {
-            // 整理阶段：finalizingProgress 0→100 线性映射到 80%→100%
+            // 整理阶段：finalizingProgress 0→100 线性映射到 90%→100%
             // 下载进行中定时器最多走到 99，下载成功后再平滑补到 100
-            return 0.8 + Double(finalizingProgress) / 100.0 * 0.2
+            return 0.9 + Double(finalizingProgress) / 100.0 * 0.1
         }
-        if let task = statusManager.currentTask {
-            return min(0.8, Double(task.progress) / 100.0)
+        if statusManager.currentTask != nil {
+            // AI 生图阶段：展示进度统一以 pollingProgress 为准（封顶 89%）。
+            // 后端真实进度只作为「地板」抬升 pollingProgress（见 liftPollingProgressFloor），
+            // 定时器则在此基础上持续匀速往上爬，避免死卡在后端返回的 30%。
+            // 剩余 90%→100% 留给整理/下载阶段。
+            return min(0.89, pollingProgress / 100.0)
         }
         return 0.0
     }
@@ -256,6 +271,55 @@ struct GeneratingView: View {
         finalizingTimer = nil
     }
 
+    // MARK: - 启动 AI 生图阶段进度动画（匀速缓慢爬升到 89%）
+    /// 真实 AI 生图较慢，后端进度会长时间停在 30% 左右，这里让前端进度匀速自增，
+    /// 避免进度条死卡。逻辑与整理阶段一致：网络异常时暂停，网络恢复后继续。
+    private func startPollingProgressAnimation() {
+        pollingProgressTimer?.invalidate()
+
+        // 真实 AI 生图实测约 75~88 秒（均值 ~82 秒）。这里把匀速爬升拉长到 135 秒，
+        // 使「后端起始进度 30% → 89% 封顶」这段耗时（约 88 秒）略长于平均生图时间，
+        // 让生图完成时进度通常还在爬升途中，直接切入整理阶段，避免过早卡在 89%。
+        let totalDuration: TimeInterval = 135
+        let interval: TimeInterval = 0.5
+        let stepCount = Int(totalDuration / interval)
+        let stepValue = 90 / Double(stepCount)
+
+        pollingProgressTimer = Timer.scheduledTimer(withTimeInterval: interval, repeats: true) { _ in
+            // 进入整理阶段/已完成/暂停时不推进
+            guard !self.isFinalizing, !self.navigateToComplete, !self.isPollingPaused else { return }
+            if self.pollingProgress < 89 {
+                self.pollingProgress = min(89, self.pollingProgress + stepValue)
+            }
+        }
+    }
+
+    // MARK: - 暂停 AI 生图阶段进度动画（网络异常时，进度停在当前位置）
+    private func pausePollingProgressAnimation() {
+        isPollingPaused = true
+    }
+
+    // MARK: - 恢复 AI 生图阶段进度动画（网络恢复后从当前进度继续）
+    private func resumePollingProgressAnimation() {
+        isPollingPaused = false
+    }
+
+    // MARK: - 停止 AI 生图阶段进度动画
+    private func stopPollingProgressAnimation() {
+        pollingProgressTimer?.invalidate()
+        pollingProgressTimer = nil
+    }
+
+    // MARK: - 用后端真实进度抬升前端展示进度地板
+    /// 前端展示进度（pollingProgress）只增不减：后端进度更高时把它抬到后端值，
+    /// 使定时器从后端进度继续往上爬，避免死卡；封顶 89%，剩余留给整理阶段。
+    private func liftPollingProgressFloor(to backendProgress: Int) {
+        let floor = min(89, Double(backendProgress))
+        if pollingProgress < floor {
+            pollingProgress = floor
+        }
+    }
+
     // MARK: - 进入生成页时持久化订单为 GENERATING
     private func persistOrderAsGenerating() {
         let generatingOrder = order.updatingStatus(to: "GENERATING")
@@ -284,11 +348,20 @@ struct GeneratingView: View {
         #else
         // 真机环境：开始轮询任务状态
         statusManager.startPolling(orderId: order.id)
+        // 恢复场景：进度从后端已知进度或合理基准值（30%）开始，避免视觉倒退
+        if isRestored {
+            let backendProgress = statusManager.currentTask?.progress ?? 30
+            pollingProgress = Double(min(89, backendProgress))
+        }
+        // 启动 AI 生图阶段进度动画（匀速爬升到 89%，避免进度条死卡在后端 30%）
+        startPollingProgressAnimation()
         #if canImport(Network)
         startNetworkMonitoring()
         #endif
 
-        // 监听任务状态变化
+        // 监听任务状态变化：每次 currentTask 更新时触发检查
+        // 注意：startPolling 会把 currentTask 清空，不需要也不应该在此处立即调用 checkTaskStatus()，
+        // 避免读到上次遗留的旧 task 状态误触发失败/完成流程。
         Task {
             for await _ in statusManager.$currentTask.values {
                 await MainActor.run {
@@ -307,9 +380,11 @@ struct GeneratingView: View {
         }
 
         // 监听超时状态
+        // 保护条件：isPolling == false 说明是 timeoutTask 真实触发的超时（timeoutTask 触发时会先把 isPolling 设为 false）；
+        // isPolling == true 说明是监听器建立前的残留值 emit，或其他路径误触发，直接忽略，避免竞态跳失败页。
         Task {
             for await isTimeout in statusManager.$isTimeout.values {
-                if isTimeout {
+                if isTimeout && !statusManager.isPolling {
                     await MainActor.run {
                         handleTimeout()
                     }
@@ -333,10 +408,15 @@ struct GeneratingView: View {
 
         if statusManager.pollingFailureCount >= 3 {
             showNetworkToast("网络连接异常，请检查网络后重试")
+            // 网络异常：暂停 AI 生图阶段进度，停在当前位置
+            pausePollingProgressAnimation()
         } else if statusManager.pollingFailureCount > 0 {
             showNetworkToast("网络开小差了，正在重试…")
+            pausePollingProgressAnimation()
         } else {
             hideNetworkToast()
+            // 网络恢复/轮询正常：继续推进 AI 生图阶段进度
+            resumePollingProgressAnimation()
         }
     }
 
@@ -378,8 +458,11 @@ struct GeneratingView: View {
     #endif
 
     private func handleTimeout() {
+        // 双重保护：整理阶段或已跳转完成页时，超时事件属于过期信号，直接忽略
+        guard !isFinalizing, !navigateToComplete, !navigateToFailureResult else { return }
         timer?.invalidate()
         statusManager.stopPolling()
+        stopPollingProgressAnimation()
         showToast = false
         failureErrorMessage = "生成超时，请检查网络后重试"
         navigateToFailureResult = true
@@ -396,6 +479,8 @@ struct GeneratingView: View {
             statusManager.stopPolling()
             hideNetworkToast()
             resetPollingFailureState()
+            // 停止 AI 生图阶段动画，切换到整理/下载阶段（90%→100%）
+            stopPollingProgressAnimation()
             isFinalizing = true
             finalizingProgress = 0
             isDownloadPaused = false
@@ -412,8 +497,11 @@ struct GeneratingView: View {
             handleTaskFailed(task: task)
         case "RUNNING":
             statusText = "绘本创作中..."
+            // 用后端真实进度抬升前端进度地板（前端只会更高，不会被拉低）
+            liftPollingProgressFloor(to: task.progress)
         case "PENDING":
             statusText = "排队中，即将开始..."
+            liftPollingProgressFloor(to: task.progress)
         default:
             break
         }
@@ -449,6 +537,7 @@ struct GeneratingView: View {
                     statusText = "生成失败"
                     timer?.invalidate()
                     statusManager.stopPolling()
+                    stopPollingProgressAnimation()
                     hideNetworkToast()
                     failureErrorMessage = task.errorMessage
                     navigateToFailureResult = true

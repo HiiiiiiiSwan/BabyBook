@@ -116,7 +116,7 @@ export class AiService {
             'Content-Type': 'application/json',
             'Authorization': `Bearer ${this.apiKey}`,
           },
-          timeout: 300000, // 300 秒超时（九宫格生成较慢）
+          timeout: 600000, // 600 秒（10 分钟）超时：AI 生成九宫格实测需 1~5 分钟，预留充足余量
         },
       );
 

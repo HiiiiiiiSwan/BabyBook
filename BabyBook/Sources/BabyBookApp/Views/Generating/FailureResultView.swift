@@ -70,12 +70,13 @@ struct FailureResultView: View {
                     .foregroundColor(DesignTokens.Colors.primaryText)
             }
         }
+        .onAppear {
+            // 进入失败页时立即清除本地订单记录（失败是终态，无需等用户离开才清）
+            // 关键：避免用户在失败页直接杀端后，下次启动仍读到旧的失败记录反复弹窗
+            OrderStatusManager.shared.clearSavedOrder()
+        }
         .task {
             await loadTaskErrorMessage()
-        }
-        .onDisappear {
-            // 离开失败结果页后清除本地未完成订单记录
-            OrderStatusManager.shared.clearSavedOrder()
         }
     }
 

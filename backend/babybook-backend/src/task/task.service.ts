@@ -273,11 +273,13 @@ export class TaskService {
 
   /**
    * 定时任务：处理超时任务（每 5 分钟执行一次）
-   * 超过 300 秒（5 分钟）仍在 RUNNING 状态的任务，视为超时
+   * 超过 900 秒（15 分钟）仍在 RUNNING 状态的任务，视为超时
+   * 注意：AI 生图（axios）超时为 300 秒，正常情况下 axios 会先抛出异常走 FAILED 流程；
+   * 此 Cron 作为兜底，防止 axios 异常未被正确捕获时任务永久卡在 RUNNING 状态
    */
   @Cron('0 */5 * * * *')
   async handleTimeoutTasks(): Promise<void> {
-    const timeoutThreshold = new Date(Date.now() - 300 * 1000); // 5 分钟前
+    const timeoutThreshold = new Date(Date.now() - 900 * 1000); // 15 分钟前
 
     const timeoutTasks = await this.taskRepository.find({
       where: {
