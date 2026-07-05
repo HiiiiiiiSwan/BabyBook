@@ -10,6 +10,23 @@
 
 ## [Unreleased]
 
+### 2026-07-06
+
+- `fix` 修复杀端恢复后失败页误触发与历史订单反复弹窗
+  - `BabyBookApp.swift`：启动时调用 `loadLastOrder()` 清理超过 30 分钟的过期本地订单，防止历史失败记录反复弹窗
+  - 恢复弹窗根据订单状态（`FAILED` / `SUCCESS` / `GENERATING`）动态调整标题、文案与路由
+  - `FAILED` 订单直接跳转 `FailureResultView`，不再经过 `GeneratingView` 再闪跳失败页
+  - `OrderStatusManager.restoreOrderIfNeeded()` 不再启动轮询，统一由 `GeneratingView.onAppear` 调用 `startPolling`，避免旧 `timeoutTask` 残留 `isTimeout=true` 与新的状态监听器产生竞态
+  - `FailureResultView` 进入 `onAppear` 时立即清除本地订单记录，避免用户在失败页杀端后下次启动再次弹窗
+  - `GeneratingView` 进入时重置 `isTimeout` 与 `pollingFailureCount`，消除上次残留状态
+  - 新增 AI 生图阶段匀速进度动画（0~89%），以真实后端进度为地板持续爬升，避免进度条长时间死卡在 30%
+  - 网络异常时暂停进度动画，网络恢复后继续，避免视觉倒退
+  - 超时监听增加 `!statusManager.isPolling` 保护，过滤残留超时信号误触发失败页
+
+- `chore` 后端 AI 调用超时调整
+  - `ai.service.ts`：`axios` 超时从 300 秒延长至 600 秒，匹配实测 1~5 分钟生图耗时
+  - `task.service.ts`：兜底超时 Cron 阈值从 5 分钟延长至 15 分钟，仅作为 axios 异常未被捕获时的兜底
+
 ### 2026-07-05
 
 - `fix` 生成中页断网恢复与失败状态判定优化
