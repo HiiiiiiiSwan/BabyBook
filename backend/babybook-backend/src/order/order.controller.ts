@@ -1,9 +1,10 @@
 import { Controller, Post, Get, Body, Param, Query, Patch, UseGuards, Req, UnauthorizedException } from '@nestjs/common';
+import { Throttle } from '@nestjs/throttler';
 import { ApiTags, ApiOperation, ApiResponse } from '@nestjs/swagger';
 import { OrderService } from './order.service';
 import { CreateOrderDto, OrderResponseDto, QueryOrdersDto, UpdateOrderImageDto } from './dto/order.dto';
 import { DeviceAuthGuard } from '../common/guards/device-auth.guard';
-import { Request } from 'express';
+import type { Request } from 'express';
 
 @ApiTags('订单')
 @Controller('api/order')
@@ -12,6 +13,8 @@ export class OrderController {
 
   @Post('create')
   @UseGuards(DeviceAuthGuard)
+  // 创建订单会触发后续付费生图，严格限流：每 60 秒最多 5 次
+  @Throttle({ default: { ttl: 60000, limit: 5 } })
   @ApiOperation({ summary: '创建订单' })
   @ApiResponse({ status: 201, description: '订单创建成功', type: OrderResponseDto })
   @ApiResponse({ status: 400, description: '参数错误' })

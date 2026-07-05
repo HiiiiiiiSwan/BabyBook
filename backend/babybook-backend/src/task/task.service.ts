@@ -7,6 +7,8 @@ import { Order } from '../order/entities/order.entity';
 import { TaskStatus, OrderStatus } from '../common/enums';
 import { TaskResponseDto, CreateTaskDto, UpdateTaskStatusDto } from './dto/task.dto';
 import { AiService } from '../ai/ai.service';
+import * as fs from 'fs';
+import * as path from 'path';
 
 @Injectable()
 export class TaskService {
@@ -129,13 +131,21 @@ export class TaskService {
    * 取消任务
    */
   async cancelTask(id: string): Promise<Task> {
-    const task = await this.taskRepository.findOne({ where: { id } });
+    const task = await this.taskRepository.findOne({
+      where: { id },
+      relations: ['order'],
+    });
     if (!task) {
       throw new NotFoundException('任务不存在');
     }
 
     if (task.status === TaskStatus.COMPLETED) {
       throw new Error('任务已完成，无法取消');
+    }
+
+    // 用户主动取消时清理已上传的宝宝照片，符合数据最小化原则
+    if (task.order) {
+      await this.cleanupTempFiles(task.order);
     }
 
     task.status = TaskStatus.CANCELLED;
@@ -174,7 +184,7 @@ export class TaskService {
       await this.taskRepository.save(task);
 
       // 调用 AI 生成九宫格图片
-      const resultUrl = await this.aiService.generateBookImage({
+      const { resultUrl, localPath } = await this.aiService.generateBookImage({
         bookId: order.bookId,
         imageUrl: order.imageUrl,
       });
@@ -196,6 +206,9 @@ export class TaskService {
       order.completedAt = new Date();
       await this.orderRepository.save(order);
 
+      // 清理临时文件：宝宝照片 + 本地生成的图片
+      await this.cleanupTempFiles(order, localPath);
+
       this.logger.log(`任务完成: ${taskId}, 结果: ${resultUrl}`);
     } catch (error) {
       this.logger.error(`任务执行失败: ${taskId}, 错误: ${error.message}`);
@@ -215,6 +228,8 @@ export class TaskService {
       if (task.retryCount >= this.maxRetries) {
         order.status = OrderStatus.FAILED;
         this.logger.error(`任务 ${taskId} 重试次数已达上限，标记为失败`);
+        // 最终失败时清理宝宝照片（本地生成的图片此时不存在）
+        await this.cleanupTempFiles(order);
       }
       await this.orderRepository.save(order);
     }
@@ -283,8 +298,44 @@ export class TaskService {
       order.errorMessage = '任务执行超时';
       if (task.retryCount >= this.maxRetries) {
         order.status = OrderStatus.FAILED;
+        // 最终失败时清理宝宝照片
+        await this.cleanupTempFiles(order);
       }
       await this.orderRepository.save(order);
+    }
+  }
+
+  /**
+   * 清理临时文件
+   * - 删除上传的宝宝照片（uploads/temp）
+   * - 删除本地生成的九宫格图片（uploads/generated）
+   * 符合数据最小化原则：生成完成后立即删除，不持久保存
+   */
+  private async cleanupTempFiles(order: Order, generatedLocalPath?: string): Promise<void> {
+    // 1. 删除宝宝照片
+    if (order.imageUrl) {
+      try {
+        const filename = order.imageUrl.split('/').pop();
+        if (filename) {
+          const filePath = path.join(process.cwd(), 'uploads', 'temp', filename);
+          if (fs.existsSync(filePath)) {
+            fs.unlinkSync(filePath);
+            this.logger.log(`已删除宝宝照片: ${filePath}`);
+          }
+        }
+      } catch (error) {
+        this.logger.error(`删除宝宝照片失败: ${error.message}`);
+      }
+    }
+
+    // 2. 删除本地生成的九宫格图片
+    if (generatedLocalPath && fs.existsSync(generatedLocalPath)) {
+      try {
+        fs.unlinkSync(generatedLocalPath);
+        this.logger.log(`已删除本地生成图片: ${generatedLocalPath}`);
+      } catch (error) {
+        this.logger.error(`删除本地生成图片失败: ${error.message}`);
+      }
     }
   }
 

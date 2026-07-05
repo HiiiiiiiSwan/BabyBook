@@ -7,11 +7,13 @@ import UIKit
 // MARK: - 首页（截图布局版本）
 struct HomeView: View {
     @State private var showGenerating = false
+    @State private var showFailureResult = false
     @State private var restoredOrder: BackendOrder?
     @State private var restoredBook: Book?
     @State private var selectedBook: Book? = MockService.shared.mockBooks.first
     @State private var showDetail = false
     @State private var showUploadSheet = false
+    @State private var showLeaveAppAlert = false
 
     var body: some View {
         ZStack {
@@ -29,6 +31,11 @@ struct HomeView: View {
                 GeneratingView(book: book, order: order)
             }
         }
+        .navigationDestination(isPresented: $showFailureResult) {
+            if let book = restoredBook, let order = restoredOrder {
+                FailureResultView(book: book, order: order, taskErrorMessage: nil)
+            }
+        }
         .overlay {
             if showUploadSheet {
                 UploadPhotoSheet(book: selectedBook!, isPresented: $showUploadSheet)
@@ -36,14 +43,38 @@ struct HomeView: View {
                     .zIndex(100)
             }
         }
+        .onReceive(NotificationCenter.default.publisher(for: .resetNavigation)) { _ in
+            showUploadSheet = false
+            showGenerating = false
+            showFailureResult = false
+        }
         .onReceive(NotificationCenter.default.publisher(for: .navigateToGenerating)) { notification in
             if let userInfo = notification.object as? [String: Any],
                let book = userInfo["book"] as? Book,
                let order = userInfo["order"] as? BackendOrder {
                 self.restoredBook = book
                 self.restoredOrder = order
+                self.showFailureResult = false
                 self.showGenerating = true
             }
+        }
+        .onReceive(NotificationCenter.default.publisher(for: .navigateToFailureResult)) { notification in
+            if let userInfo = notification.object as? [String: Any],
+               let book = userInfo["book"] as? Book,
+               let order = userInfo["order"] as? BackendOrder {
+                self.restoredBook = book
+                self.restoredOrder = order
+                self.showGenerating = false
+                self.showFailureResult = true
+            }
+        }
+        .alert("即将离开 App", isPresented: $showLeaveAppAlert) {
+            Button("取消", role: .cancel) {}
+            Button("继续") {
+                openPhysicalBookStore()
+            }
+        } message: {
+            Text("将打开 Safari 访问外部页面，是否继续？")
         }
     }
 
@@ -55,17 +86,32 @@ struct HomeView: View {
                 guideSection
                 bookCarouselSection
                 bottomActionSection
-                // 调试入口（仅在 DEBUG 模式下显示）
-                #if DEBUG
-                debugSection
-                #endif
                 Spacer().frame(height: 40)
             }
+        }
+        .onAppear {
+            // 首页出现时触发一次健康检查，提前弹出网络和本地网络权限弹窗
+            // 避免用户在上传照片流程中被打断
+            triggerNetworkPermissionCheck()
         }
     }
 
     // MARK: - 自定义 TabBar（已移除）
     // 我的绘本入口已移至底部操作区，作为文字按钮展示
+
+    // MARK: - 网络权限预触发
+    /// 在首页出现时发起一次轻量网络请求，目的是让 iOS 尽早弹出
+    /// 「无线数据」和「本地网络」权限弹窗，避免用户进入上传流程后才看到
+    private func triggerNetworkPermissionCheck() {
+        Task {
+            do {
+                let _: HealthResponse = try await NetworkService.shared.request(endpoint: .healthCheck)
+            } catch {
+                // 健康检查失败不需要提示用户，仅用于触发系统权限弹窗
+                // 后续真实请求失败时会有对应错误提示
+            }
+        }
+    }
 
     // MARK: - 顶部 App 名称
     private var headerSection: some View {
@@ -73,7 +119,7 @@ struct HomeView: View {
             Image("appicon-small")
                 .resizable()
                 .scaledToFit()
-                .frame(width: 24, height: 24)
+                .frame(width: 25, height: 25)
             Text("宝贝绘本")
                 .font(.system(size: 18, weight: .bold))
                 .foregroundColor(DesignTokens.Colors.primaryText)
@@ -83,7 +129,7 @@ struct HomeView: View {
             Spacer()
         }
         .padding(.horizontal, DesignTokens.Layout.pagePadding)
-        .padding(.top, 50)
+        .padding(.top, 24)
         .overlay(alignment: .topTrailing) {
             Image("balloon")
                 .resizable()
@@ -126,8 +172,11 @@ struct HomeView: View {
         VStack(spacing: 0) {
             TabView(selection: $selectedBook) {
                 ForEach(MockService.shared.mockBooks) { book in
-                    BookCarouselCard(book: book)
-                        .tag(book as Book?)
+                    BookCarouselCard(book: book, onSelect: {
+                        selectedBook = book
+                        showDetail = true
+                    })
+                    .tag(book as Book?)
                 }
             }
             .tabViewStyle(PageTabViewStyle(indexDisplayMode: .never))
@@ -153,11 +202,11 @@ struct HomeView: View {
                 .resizable()
                 .scaledToFit()
                 .frame(maxWidth: .infinity)
-                .padding(.bottom, 55)
+                .padding(.bottom, 65)
 
-            // 按钮内容
+            // 按钮内容（置底展示）
             VStack(spacing: 0) {
-                VStack(spacing: 8) {
+                VStack(spacing: 16) {
                     // 一键定制按钮（与绘本详情页样式一致）
                     ZStack(alignment: .bottom) {
                         Button(action: {
@@ -190,7 +239,7 @@ struct HomeView: View {
 
                     // 获取实体书 + 我的绘本（并排一行）
                     HStack(spacing: 32) {
-                        Button(action: { openPhysicalBookStore() }) {
+                        Button(action: { showLeaveAppAlert = true }) {
                             HStack(spacing: 4) {
                                 Text("获取实体书")
                                     .font(.system(size: 14, weight: .medium))
@@ -215,72 +264,20 @@ struct HomeView: View {
                 .padding(.horizontal, 0)
                 .padding(.vertical, 12)
             }
+            .frame(maxWidth: .infinity, alignment: .bottom)
         }
         .padding(.top, DesignTokens.Spacing.xl)
     }
-
-    // MARK: - 调试入口（上线前移除）
-    #if DEBUG
-    private var debugSection: some View {
-        VStack(spacing: 12) {
-            Text("调试入口")
-                .font(.system(size: 14, weight: .bold))
-                .foregroundColor(DesignTokens.Colors.tertiaryText)
-
-            NavigationLink(destination: UploadPhotoView(book: MockService.shared.mockBooks[0])) {
-                Text("查看上传照片页")
-                    .font(.system(size: 14, weight: .semibold))
-                    .foregroundColor(.white)
-                    .frame(maxWidth: .infinity)
-                    .frame(height: 44)
-                    .background(DesignTokens.Colors.primary)
-                    .cornerRadius(22)
-            }
-
-            NavigationLink(destination: PaymentView(book: MockService.shared.mockBooks[0], order: BackendOrder(id: "test-order", deviceId: "test", bookId: "Book001", bookName: "《这是我》", amount: 3.0, status: "UNPAID", createdAt: "2026-06-24T10:00:00Z", updatedAt: nil), babyImage: nil, babyImageUrl: nil)) {
-                Text("查看支付页")
-                    .font(.system(size: 14, weight: .semibold))
-                    .foregroundColor(.white)
-                    .frame(maxWidth: .infinity)
-                    .frame(height: 44)
-                    .background(DesignTokens.Colors.success)
-                    .cornerRadius(22)
-            }
-
-            NavigationLink(destination: GeneratingView(book: MockService.shared.mockBooks[0], order: BackendOrder(id: "test-order", deviceId: "test", bookId: "Book001", bookName: "《这是我》", amount: 3.0, status: "GENERATING", createdAt: "2026-06-24T10:00:00Z", updatedAt: nil))) {
-                Text("查看生成中页")
-                    .font(.system(size: 14, weight: .semibold))
-                    .foregroundColor(.white)
-                    .frame(maxWidth: .infinity)
-                    .frame(height: 44)
-                    .background(Color(hex: "#D4A574"))
-                    .cornerRadius(22)
-            }
-
-            NavigationLink(destination: CompleteView(book: MockService.shared.mockBooks[0], order: BackendOrder(id: "test-order", deviceId: "test", bookId: "Book001", bookName: "《这是我》", amount: 3.0, status: "SUCCESS", createdAt: "2026-06-24T10:00:00Z", updatedAt: nil), task: BackendTask(id: "test-task", orderId: "test-order", status: "COMPLETED", progress: 100, resultUrl: "https://example.com/generated.png", errorMessage: nil, createdAt: "2026-06-24T10:01:00Z", updatedAt: "2026-06-24T10:02:00Z"))) {
-                Text("查看完成页")
-                    .font(.system(size: 14, weight: .semibold))
-                    .foregroundColor(.white)
-                    .frame(maxWidth: .infinity)
-                    .frame(height: 44)
-                    .background(DesignTokens.Colors.secondaryText)
-                    .cornerRadius(22)
-            }
-        }
-        .padding(.horizontal, DesignTokens.Layout.pagePadding)
-        .padding(.top, 32)
-    }
-    #endif
 }
 
     // MARK: - 绘本轮播卡片
 struct BookCarouselCard: View {
     let book: Book
-    @State private var showDetail = false
+    let onSelect: () -> Void
 
     var body: some View {
         Button(action: {
-            showDetail = true
+            onSelect()
         }) {
             VStack(spacing: 16) {
                 // 绘本封面展示
@@ -335,9 +332,6 @@ struct BookCarouselCard: View {
             .padding(.horizontal, DesignTokens.Layout.pagePadding)
         }
         .buttonStyle(PlainButtonStyle())
-        .navigationDestination(isPresented: $showDetail) {
-            BookDetailView(book: book)
-        }
     }
 
     // 加载封面图片（优先从 Bundle 读取，回退到绝对路径）
@@ -372,6 +366,7 @@ struct UploadPhotoSheet: View {
     @State private var showError = false
     @State private var errorMessage = ""
     @State private var navigateToGenerating = false
+    @State private var navigateToFailureResult = false
     @State private var isProcessingPayment = false
     @State private var isCreatingOrder = false
     @State private var isUploadingImage = false
@@ -409,12 +404,26 @@ struct UploadPhotoSheet: View {
                 GeneratingView(book: book, order: order)
             }
         }
+        .navigationDestination(isPresented: $navigateToFailureResult) {
+            if let order = createdOrder {
+                FailureResultView(book: book, order: BackendOrder(
+                    id: order.id,
+                    deviceId: order.deviceId,
+                    bookId: order.bookId,
+                    bookName: order.bookName,
+                    amount: order.amount,
+                    status: "FAILED",
+                    createdAt: order.createdAt,
+                    updatedAt: order.updatedAt
+                ), taskErrorMessage: "支付成功但服务器连接异常，请添加客服微信协助处理")
+            }
+        }
         .alert("提示", isPresented: $showError) {
             Button("确定", role: .cancel) {}
         } message: {
             Text(errorMessage)
         }
-        .alert("相册权限", isPresented: $showPermissionAlert) {
+        .alert("相机权限", isPresented: $showPermissionAlert) {
             Button("取消", role: .cancel) {}
             Button("前往设置") {
                 #if canImport(UIKit)
@@ -441,15 +450,18 @@ struct UploadPhotoSheet: View {
             CameraView(
                 capturedImage: $selectedImage,
                 isPresented: $showCamera,
+                onCapture: { _ in
+                    performFaceDetection()
+                },
                 onCancel: {}
             )
-            .onDisappear {
-                if selectedImage != nil {
-                    performFaceDetection()
-                }
-            }
             #endif
         }
+        .photosPicker(
+            isPresented: $showPhotoPicker,
+            selection: $selectedPhoto,
+            matching: .images
+        )
     }
 
     private var uploadSheetContent: some View {
@@ -572,7 +584,7 @@ struct UploadPhotoSheet: View {
                 }
                 #else
                 Button(action: {
-                    checkPhotoPermission()
+                    showPhotoPicker = true
                 }) {
                     HStack {
                         Image(systemName: "photo.on.rectangle")
@@ -600,7 +612,9 @@ struct UploadPhotoSheet: View {
             y: -4
         )
         .onChange(of: selectedPhoto) { newItem in
-            if let newItem { loadImage(from: newItem) }
+            guard let newItem else { return }
+            selectedPhoto = nil
+            loadImage(from: newItem)
         }
     }
 
@@ -625,32 +639,6 @@ struct UploadPhotoSheet: View {
                 }
             }
         }
-    }
-
-    private func checkPhotoPermission() {
-        #if canImport(UIKit)
-        let status = PHPhotoLibrary.authorizationStatus()
-        switch status {
-        case .authorized, .limited:
-            showPhotoPicker = true
-        case .denied, .restricted:
-            permissionAlertMessage = "需要访问相册才能选择宝宝照片，请在设置中开启权限"
-            showPermissionAlert = true
-        case .notDetermined:
-            PHPhotoLibrary.requestAuthorization { newStatus in
-                DispatchQueue.main.async {
-                    if newStatus == .authorized || newStatus == .limited {
-                        showPhotoPicker = true
-                    } else {
-                        permissionAlertMessage = "需要访问相册才能选择宝宝照片，请在设置中开启权限"
-                        showPermissionAlert = true
-                    }
-                }
-            }
-        @unknown default:
-            break
-        }
-        #endif
     }
 
     private func checkCameraPermission() {
@@ -821,6 +809,13 @@ struct UploadPhotoSheet: View {
             #if targetEnvironment(simulator)
             try await Task.sleep(nanoseconds: 1_500_000_000)
             #else
+            // 确保 IAP 产品已加载（从弹窗直接支付时可能尚未加载）
+            if paymentService.products.isEmpty {
+                await paymentService.loadProducts()
+            }
+            guard paymentService.product(for: book.bookId) != nil else {
+                throw PaymentError.productNotFound
+            }
             let _ = try await paymentService.purchase(
                 bookId: book.bookId,
                 orderId: order.id
@@ -834,6 +829,14 @@ struct UploadPhotoSheet: View {
             #endif
             await MainActor.run {
                 isProcessingPayment = false
+
+                // 支付成功后立即把本地订单更新为 PAID，
+                // 这样即使立刻杀端，恢复时也能识别为已支付的绘本订单。
+                if let paidOrder = createdOrder?.updatingStatus(to: "PAID") {
+                    OrderStatusManager.shared.currentOrder = paidOrder
+                    OrderStatusManager.shared.saveCurrentOrder(paidOrder)
+                }
+
                 withAnimation(.easeInOut(duration: 0.25)) {
                     isPresented = false
                 }
@@ -845,9 +848,16 @@ struct UploadPhotoSheet: View {
             }
         } catch {
             await MainActor.run {
-                errorMessage = error.localizedDescription
-                showError = true
                 isProcessingPayment = false
+                if let paymentError = error as? PaymentError,
+                   case .paidButServerError = paymentError {
+                    // Apple 已扣款，但后端验证/任务创建失败，进入失败结果页联系客服
+                    navigateToFailureResult = true
+                } else {
+                    // Apple 支付阶段失败（未付款成功）
+                    errorMessage = error.localizedDescription
+                    showError = true
+                }
             }
         }
     }

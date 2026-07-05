@@ -1,0 +1,18 @@
+/* 中文本地化字符串 */
+
+// 系统权限弹窗文案
+"NSCameraUsageDescription" = "需要访问相机以拍摄宝宝照片，用于生成专属绘本";
+"NSPhotoLibraryUsageDescription" = "需要访问相册以选择宝宝照片，用于生成专属绘本";
+"NSLocalNetworkUsageDescription" = "需要访问本地网络以连接开发服务器，上传宝宝照片并生成专属绘本";
+
+// 通用按钮
+"OK" = "确定";
+"Cancel" = "取消";
+"Done" = "完成";
+"Allow" = "允许";
+"Don't Allow" = "不允许";
+
+// 错误提示
+"The Internet connection appears to be offline." = "网络连接似乎已断开。";
+"The request timed out." = "请求超时，请稍后重试。";
+"Cannot connect to server." = "无法连接到服务器。";

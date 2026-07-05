@@ -33,7 +33,8 @@ async function bootstrap() {
   });
 
   const port = process.env.PORT ?? 3000;
-  await app.listen(port);
+  // 监听 0.0.0.0 以支持局域网真机访问（默认 localhost 只允许本机）
+  await app.listen(port, '0.0.0.0');
   console.log(`🚀 BabyBook 后端服务已启动，端口: ${port}`);
   console.log(`📚 API 文档地址: http://localhost:${port}/api/docs`);
 }

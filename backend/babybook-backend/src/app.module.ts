@@ -1,7 +1,9 @@
 import { Module } from '@nestjs/common';
+import { APP_GUARD } from '@nestjs/core';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { ScheduleModule } from '@nestjs/schedule';
+import { ThrottlerModule, ThrottlerGuard } from '@nestjs/throttler';
 import { OrderModule } from './order/order.module';
 import { PaymentModule } from './payment/payment.module';
 import { TaskModule } from './task/task.module';
@@ -48,6 +50,14 @@ import { UploadModule } from './upload/upload.module';
     }),
     // 定时任务模块（用于轮询和重试）
     ScheduleModule.forRoot(),
+    // 全局限流：防止接口被高频滥用烧掉豆包生图额度
+    // 默认每个 IP 60 秒内最多 60 次请求；烧钱接口在 controller 层单独收紧
+    ThrottlerModule.forRoot([
+      {
+        ttl: 60000, // 时间窗口 60 秒
+        limit: 60, // 窗口内最大请求数
+      },
+    ]),
     // 业务模块
     OrderModule,
     PaymentModule,
@@ -55,6 +65,13 @@ import { UploadModule } from './upload/upload.module';
     AiModule,
     BookModule,
     UploadModule,
+  ],
+  providers: [
+    // 将 ThrottlerGuard 注册为全局守卫，所有接口默认受限流保护
+    {
+      provide: APP_GUARD,
+      useClass: ThrottlerGuard,
+    },
   ],
 })
 export class AppModule {}

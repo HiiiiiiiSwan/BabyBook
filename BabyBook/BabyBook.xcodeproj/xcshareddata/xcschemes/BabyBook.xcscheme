@@ -14,9 +14,9 @@
             buildForAnalyzing = "YES">
             <BuildableReference
                BuildableIdentifier = "primary"
-               BlueprintIdentifier = "88F56D6A2F90F79D5F551E46"
+               BlueprintIdentifier = "66F833BA630346B3A6A2B98C"
                BuildableName = "BabyBook.app"
-               BlueprintName = "BabyBook"
+               BlueprintName = "BabyBookApp"
                ReferencedContainer = "container:BabyBook.xcodeproj">
             </BuildableReference>
          </BuildActionEntry>
@@ -43,9 +43,9 @@
          runnableDebuggingMode = "0">
          <BuildableReference
             BuildableIdentifier = "primary"
-            BlueprintIdentifier = "88F56D6A2F90F79D5F551E46"
+            BlueprintIdentifier = "66F833BA630346B3A6A2B98C"
             BuildableName = "BabyBook.app"
-            BlueprintName = "BabyBook"
+            BlueprintName = "BabyBookApp"
             ReferencedContainer = "container:BabyBook.xcodeproj">
          </BuildableReference>
       </BuildableProductRunnable>
@@ -56,6 +56,9 @@
             isEnabled = "YES">
          </EnvironmentVariable>
       </EnvironmentVariables>
+      <StoreKitConfigurationFileReference
+         identifier = "../../BabyBookProducts.storekit">
+      </StoreKitConfigurationFileReference>
    </LaunchAction>
    <ProfileAction
       buildConfiguration = "Release"
@@ -67,9 +70,9 @@
          runnableDebuggingMode = "0">
          <BuildableReference
             BuildableIdentifier = "primary"
-            BlueprintIdentifier = "88F56D6A2F90F79D5F551E46"
+            BlueprintIdentifier = "66F833BA630346B3A6A2B98C"
             BuildableName = "BabyBook.app"
-            BlueprintName = "BabyBook"
+            BlueprintName = "BabyBookApp"
             ReferencedContainer = "container:BabyBook.xcodeproj">
          </BuildableReference>
       </BuildableProductRunnable>

@@ -3,7 +3,7 @@ import { ApiTags, ApiOperation, ApiResponse } from '@nestjs/swagger';
 import type { Response } from 'express';
 import { BookService } from './book.service';
 import { DeviceAuthGuard } from '../common/guards/device-auth.guard';
-import { Request } from 'express';
+import type { Request } from 'express';
 
 @ApiTags('绘本')
 @Controller('api/book')

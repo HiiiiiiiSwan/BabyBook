@@ -105,6 +105,21 @@ export class PaymentService {
    */
   private async verifyAppleReceipt(receiptData: string, transactionId: string): Promise<boolean> {
     try {
+      // 开发环境支持 StoreKit2 的 JWS 收据直接解析
+      // 真机 StoreKit2 返回的是 JWT 格式，与旧版 base64 receipt 不同
+      if (this.configService.get('NODE_ENV') === 'development') {
+        const jwtPayload = this.parseJWSPayload(receiptData);
+        if (jwtPayload) {
+          // JWS 中的 transactionId 字段名可能是 transactionId 或 originalTransactionId
+          const jwtTransactionId = jwtPayload.transactionId || jwtPayload.originalTransactionId;
+          if (jwtTransactionId === transactionId) {
+            this.logger.log('开发环境：StoreKit2 JWS 收据验证通过');
+            return true;
+          }
+          this.logger.warn(`JWS 中的 transactionId 不匹配: ${jwtTransactionId} != ${transactionId}`);
+        }
+      }
+
       // 先请求生产环境
       let response = await this.requestAppleVerify(this.appleVerifyUrl, receiptData);
 
@@ -135,6 +150,27 @@ export class PaymentService {
     } catch (error) {
       this.logger.error(`Apple 验证请求失败: ${error.message}`);
       return false;
+    }
+  }
+
+  /**
+   * 解析 StoreKit2 JWS 收据的 payload（不验证签名，仅用于开发环境）
+   */
+  private parseJWSPayload(receiptData: string): any {
+    const parts = receiptData.split('.');
+    if (parts.length !== 3) {
+      return null;
+    }
+    try {
+      // base64url 解码 payload
+      const base64 = parts[1].replace(/-/g, '+').replace(/_/g, '/');
+      const pad = base64.length % 4;
+      const padded = pad ? base64 + '='.repeat(4 - pad) : base64;
+      const payload = Buffer.from(padded, 'base64').toString('utf8');
+      return JSON.parse(payload);
+    } catch (error) {
+      this.logger.warn(`解析 JWS payload 失败: ${error.message}`);
+      return null;
     }
   }
 

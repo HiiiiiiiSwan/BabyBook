@@ -9,6 +9,7 @@ import AVFoundation
 struct CameraView: UIViewControllerRepresentable {
     @Binding var capturedImage: UIImage?
     @Binding var isPresented: Bool
+    var onCapture: ((UIImage) -> Void)?
     var onCancel: (() -> Void)?
 
     func makeUIViewController(context: Context) -> CameraViewController {
@@ -32,6 +33,7 @@ struct CameraView: UIViewControllerRepresentable {
 
         func didCaptureImage(_ image: UIImage) {
             parent.capturedImage = image
+            parent.onCapture?(image)
             parent.isPresented = false
         }
 

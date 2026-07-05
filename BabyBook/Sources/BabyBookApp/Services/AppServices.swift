@@ -129,11 +129,13 @@ class OrderStatusManager: ObservableObject {
     @Published var currentTask: BackendTask?
     @Published var isPolling = false
     @Published var isTimeout = false  // 新增：超时标志
+    @Published var pollingFailureCount = 0  // 新增：连续轮询失败次数
 
     private var pollingTask: Task<Void, Never>?
     private var timeoutTask: Task<Void, Never>?  // 新增：超时计时器
     private let pollingInterval: UInt64 = 3_000_000_000 // 3 秒（纳秒）
     private let maxPollingDuration: UInt64 = 300_000_000_000 // 5 分钟（纳秒）
+    private let maxPollingFailureCount = 3  // 新增：连续失败阈值
 
     // MARK: - 本地持久化
     private let orderKey = "com.babybook.lastOrder"
@@ -169,13 +171,13 @@ class OrderStatusManager: ObservableObject {
         UserDefaults.standard.removeObject(forKey: orderStatusKey)
     }
 
-    /// 恢复订单：App 启动时调用，检查是否有未完成的订单
+    /// 恢复订单：App 启动或回到前台时调用，检查是否有未完成的订单
     func restoreOrderIfNeeded() async -> BackendOrder? {
-        guard let order = loadLastOrder() else { return nil }
+        guard let localOrder = loadLastOrder() else { return nil }
 
         do {
             // 从后端获取最新订单状态
-            let latestOrder = try await NetworkService.shared.getOrder(orderId: order.id)
+            let latestOrder = try await NetworkService.shared.getOrder(orderId: localOrder.id)
 
             await MainActor.run {
                 self.currentOrder = latestOrder
@@ -190,20 +192,49 @@ class OrderStatusManager: ObservableObject {
                 // 生成中，需要恢复轮询
                 startPolling(orderId: latestOrder.id)
                 return latestOrder
-            case "SUCCESS":
-                // 已完成，清除本地记录
-                clearSavedOrder()
+            case "FAILED":
+                // 生成失败，需要弹窗提醒并进入失败结果页
                 return latestOrder
-            case "FAILED", "CANCELLED":
-                // 失败或取消，清除本地记录
+            case "UNPAID":
+                // 如果后端仍是 UNPAID，但本地已经走到 PAID/GENERATING/FAILED，
+                // 说明可能是后端状态同步延迟，优先信任本地状态，确保杀端后能恢复。
+                if localOrder.status == "PAID" || localOrder.status == "GENERATING" || localOrder.status == "FAILED" {
+                    await MainActor.run {
+                        self.currentOrder = localOrder
+                    }
+                    if localOrder.status == "GENERATING" {
+                        startPolling(orderId: localOrder.id)
+                    }
+                    return localOrder
+                }
+                // 本地也是 UNPAID，说明订单确实未支付，不弹窗
+                return nil
+            case "SUCCESS":
+                // 已完成，允许弹窗引导到生成中页，再内跳完成页
+                return latestOrder
+            case "CANCELLED":
+                // 已取消，清除本地记录，不再弹窗
                 clearSavedOrder()
                 return nil
             default:
                 return nil
             }
         } catch {
-            print("恢复订单失败: \(error)")
-            return nil
+            print("恢复订单网络请求失败，尝试使用本地订单: \(error)")
+            // 网络异常时回退到本地保存的订单，只要尚未完成就允许恢复
+            switch localOrder.status {
+            case "PAID", "GENERATING", "UNPAID", "FAILED", "SUCCESS":
+                await MainActor.run {
+                    self.currentOrder = localOrder
+                }
+                if localOrder.status == "GENERATING" {
+                    startPolling(orderId: localOrder.id)
+                }
+                return localOrder
+            default:
+                clearSavedOrder()
+                return nil
+            }
         }
     }
 
@@ -212,6 +243,7 @@ class OrderStatusManager: ObservableObject {
         stopPolling()
         isPolling = true
         isTimeout = false
+        pollingFailureCount = 0
 
         // 保存当前订单到本地（用于崩溃恢复）
         if let order = currentOrder {
@@ -236,6 +268,7 @@ class OrderStatusManager: ObservableObject {
                     if let task = try await NetworkService.shared.getTaskByOrderId(orderId: orderId) {
                         await MainActor.run {
                             self.currentTask = task
+                            self.pollingFailureCount = 0
                         }
 
                         // 任务完成或失败，停止轮询
@@ -248,6 +281,9 @@ class OrderStatusManager: ObservableObject {
                     }
                 } catch {
                     print("轮询任务状态失败: \(error.localizedDescription)")
+                    await MainActor.run {
+                        self.pollingFailureCount += 1
+                    }
                 }
 
                 // 等待 3 秒后再次轮询

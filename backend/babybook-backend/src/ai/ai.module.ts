@@ -12,8 +12,10 @@ const aiServiceProvider = {
   useFactory: (configService: ConfigService) => {
     const useMock = configService.get('MOCK_AI_GENERATION') === 'true';
     if (useMock) {
+      console.log('[AI 模块] MOCK_AI_GENERATION=true, 使用 MockAI 服务');
       return new MockAiService(configService);
     }
+    console.log('[AI 模块] MOCK_AI_GENERATION=false, 使用真实豆包 Seedream 服务');
     return new AiService(configService);
   },
   inject: [ConfigService],

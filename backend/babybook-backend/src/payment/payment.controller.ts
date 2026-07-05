@@ -3,7 +3,7 @@ import { ApiTags, ApiOperation, ApiResponse } from '@nestjs/swagger';
 import { PaymentService } from './payment.service';
 import { VerifyPaymentDto, PaymentResponseDto } from './dto/payment.dto';
 import { DeviceAuthGuard } from '../common/guards/device-auth.guard';
-import { Request } from 'express';
+import type { Request } from 'express';
 
 @ApiTags('支付')
 @Controller('api/payment')

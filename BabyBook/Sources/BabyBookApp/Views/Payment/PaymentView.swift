@@ -20,6 +20,7 @@ struct PaymentView: View {
     @State private var showError = false
     @State private var errorMessage = ""
     @State private var navigateToGenerating = false
+    @State private var navigateToFailureResult = false
     @State private var showTaskConfirmError = false
     @State private var taskConfirmErrorMessage = ""
     @Environment(\.dismiss) private var dismiss
@@ -49,9 +50,20 @@ struct PaymentView: View {
         .navigationDestination(isPresented: $navigateToGenerating) {
             GeneratingView(book: book, order: order)
         }
+        .navigationDestination(isPresented: $navigateToFailureResult) {
+            FailureResultView(book: book, order: BackendOrder(
+                id: order.id,
+                deviceId: order.deviceId,
+                bookId: order.bookId,
+                bookName: order.bookName,
+                amount: order.amount,
+                status: "FAILED",
+                createdAt: order.createdAt,
+                updatedAt: order.updatedAt
+            ), taskErrorMessage: "支付成功但服务器连接异常，请添加客服微信协助处理")
+        }
         .alert("支付失败", isPresented: $showError) {
-            Button("重试", role: .none) { startPayment() }
-            Button("取消", role: .cancel) {}
+            Button("我知道了", role: .cancel) {}
         } message: {
             Text(errorMessage)
         }
@@ -295,9 +307,16 @@ struct PaymentView: View {
                 }
             } catch {
                 await MainActor.run {
-                    errorMessage = error.localizedDescription
-                    showError = true
                     isProcessing = false
+                    if let paymentError = error as? PaymentError,
+                       case .paidButServerError = paymentError {
+                        // Apple 已扣款，但后端验证/任务创建失败，进入失败结果页联系客服
+                        navigateToFailureResult = true
+                    } else {
+                        // Apple 支付阶段失败（未付款成功）
+                        errorMessage = error.localizedDescription
+                        showError = true
+                    }
                 }
             }
         }

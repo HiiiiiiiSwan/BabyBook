@@ -23,6 +23,22 @@ struct BackendOrder: Codable, Identifiable {
     }
 }
 
+extension BackendOrder {
+    /// 返回一个状态被更新后的新订单（struct 不可变，需要复制）
+    func updatingStatus(to newStatus: String) -> BackendOrder {
+        return BackendOrder(
+            id: id,
+            deviceId: deviceId,
+            bookId: bookId,
+            bookName: bookName,
+            amount: amount,
+            status: newStatus,
+            createdAt: createdAt,
+            updatedAt: updatedAt
+        )
+    }
+}
+
 // MARK: - 后端任务模型
 struct BackendTask: Codable, Identifiable {
     let id: String

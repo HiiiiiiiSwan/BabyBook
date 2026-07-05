@@ -1,11 +1,12 @@
 import { Controller, Post, UseInterceptors, UploadedFile, Get, Param, Res, NotFoundException, Delete, UseGuards, Req, UnauthorizedException } from '@nestjs/common';
+import { Throttle } from '@nestjs/throttler';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { ApiTags, ApiOperation, ApiResponse, ApiConsumes } from '@nestjs/swagger';
 import type { Response } from 'express';
 import { existsSync, unlinkSync } from 'fs';
 import { ConfigService } from '@nestjs/config';
 import { DeviceAuthGuard } from '../common/guards/device-auth.guard';
-import { Request } from 'express';
+import type { Request } from 'express';
 
 /**
  * 图片上传配置
@@ -46,6 +47,8 @@ export class UploadController {
    */
   @Post('image')
   @UseGuards(DeviceAuthGuard)
+  // 上传照片是生图前置步骤，收紧限流：每 60 秒最多 10 次
+  @Throttle({ default: { ttl: 60000, limit: 10 } })
   @ApiOperation({ summary: '上传宝宝照片' })
   @ApiConsumes('multipart/form-data')
   @ApiResponse({ status: 201, description: '上传成功' })

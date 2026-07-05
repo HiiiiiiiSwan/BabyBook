@@ -4,6 +4,7 @@ struct BookDetailView: View {
     let book: Book
     @Environment(\.dismiss) private var dismiss
     @State private var showUploadSheet = false
+    @State private var showLeaveAppAlert = false
     @State private var currentPageIndex = 0  // 当前展示的页面索引
     @State private var isFlipping = false
     @State private var flipDirection: Bool = true // true = 向右翻，false = 向左翻
@@ -50,6 +51,17 @@ struct BookDetailView: View {
             if showUploadSheet {
                 UploadPhotoSheet(book: book, isPresented: $showUploadSheet)
             }
+        }
+        .onReceive(NotificationCenter.default.publisher(for: .resetNavigation)) { _ in
+            showUploadSheet = false
+        }
+        .alert("即将离开 App", isPresented: $showLeaveAppAlert) {
+            Button("取消", role: .cancel) {}
+            Button("继续") {
+                openPhysicalBookStore()
+            }
+        } message: {
+            Text("将打开 Safari 访问外部页面，是否继续？")
         }
     }
 
@@ -364,7 +376,7 @@ struct BookDetailView: View {
 
     private var bottomCTA: some View {
         VStack(spacing: 0) {
-            VStack(spacing: 8) {
+            VStack(spacing: 16) {
                 // 一键定制按钮：样式与首页一致
                 ZStack(alignment: .bottom) {
                     Button(action: {
@@ -394,7 +406,7 @@ struct BookDetailView: View {
                 .padding(.top, 16)
 
                 // 获取实体书按钮
-                Button(action: { openPhysicalBookStore() }) {
+                Button(action: { showLeaveAppAlert = true }) {
                     HStack(spacing: 4) {
                         Text("获取实体书")
                             .font(.system(size: 14, weight: .medium))

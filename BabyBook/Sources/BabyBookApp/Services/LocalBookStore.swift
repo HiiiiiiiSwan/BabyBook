@@ -7,6 +7,7 @@ struct LocalBookMetadata: Codable, Identifiable {
     let bookId: String
     let bookName: String
     let filePath: String    // 图片文件路径
+    let pdfFilePath: String? // PDF 文件路径（可选，兼容旧数据）
     let createTime: Date
 }
 
@@ -25,7 +26,8 @@ class LocalBookStore {
 
     // MARK: - 保存绘本元数据
     /// - Parameter createTime: 绘本生成时间，默认当前时间；更新已存在记录时保留原生成时间
-    func save(orderId: String, bookId: String, bookName: String, filePath: String, createTime: Date? = nil) {
+    /// - Parameter pdfFilePath: 生成的 PDF 文件路径，可选
+    func save(orderId: String, bookId: String, bookName: String, filePath: String, pdfFilePath: String? = nil, createTime: Date? = nil) {
         guard let url = metadataURL else { return }
 
         var books = loadAll()
@@ -44,6 +46,7 @@ class LocalBookStore {
             bookId: bookId,
             bookName: bookName,
             filePath: filePath,
+            pdfFilePath: pdfFilePath,
             createTime: finalCreateTime
         )
 
@@ -101,5 +104,10 @@ class LocalBookStore {
     // MARK: - 检查绘本是否存在
     func exists(orderId: String) -> Bool {
         loadAll().contains { $0.orderId == orderId }
+    }
+
+    // MARK: - 根据订单 ID 查询绘本
+    func get(orderId: String) -> LocalBookMetadata? {
+        loadAll().first { $0.orderId == orderId }
     }
 }

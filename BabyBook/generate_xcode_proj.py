@@ -14,17 +14,26 @@ for root, dirs, files in os.walk(os.path.join(PROJECT_DIR, "Sources/BabyBookApp"
             swift_files.append(os.path.join(root, f))
 swift_files.sort()
 
-# 收集资源目录（只包含目录，不包含单个文件）
+# 收集资源目录（只包含目录，不包含单个文件，同时排除 Assets.xcassets 单独处理）
 resource_dirs = []
+resource_files = []
 resources_base = os.path.join(PROJECT_DIR, "Sources/BabyBookApp/Resources")
 for d in os.listdir(resources_base):
     full_path = os.path.join(resources_base, d)
     if os.path.isdir(full_path):
+        if os.path.basename(full_path) == "Assets.xcassets":
+            continue
         resource_dirs.append(full_path)
+    else:
+        resource_files.append(full_path)
 
 # 单独处理 xcassets
 xcassets_path = os.path.join(resources_base, "Assets.xcassets")
 has_xcassets = os.path.exists(xcassets_path)
+
+# Info.plist 文件路径
+info_plist_path = os.path.join(PROJECT_DIR, "Sources/BabyBookApp/Info.plist")
+has_info_plist = os.path.exists(info_plist_path)
 
 print(f"找到 {len(swift_files)} 个 Swift 文件")
 print(f"找到 {len(resource_dirs)} 个资源目录")
@@ -56,6 +65,16 @@ for d in resource_dirs:
     resource_dir_refs[rel] = u
     resource_build_files[rel] = gen_uuid()
 
+# 单个资源文件引用
+resource_file_refs = {}
+resource_file_build_files = {}
+for f in resource_files:
+    rel = f[len(PROJECT_DIR)+1:]
+    name = os.path.basename(f)
+    u = gen_uuid()
+    resource_file_refs[rel] = u
+    resource_file_build_files[rel] = gen_uuid()
+
 # xcassets 引用
 xcassets_ref = None
 xcassets_build = None
@@ -63,6 +82,11 @@ if has_xcassets:
     xcassets_rel = "Sources/BabyBookApp/Resources/Assets.xcassets"
     xcassets_ref = gen_uuid()
     xcassets_build = gen_uuid()
+
+# Info.plist 引用
+info_plist_ref = None
+if has_info_plist:
+    info_plist_ref = gen_uuid()
 
 # 目录组
 all_dirs = set()
@@ -98,9 +122,18 @@ for rel, u in resource_dir_refs.items():
     name = os.path.basename(rel)
     file_ref_section += f"\t\t{u} /* {name} */ = {{isa = PBXFileReference; lastKnownFileType = folder; name = \"{name}\"; path = \"{name}\"; sourceTree = \"<group>\"; }};\n"
 
+# 单个资源文件引用
+for rel, u in resource_file_refs.items():
+    name = os.path.basename(rel)
+    file_ref_section += f"\t\t{u} /* {name} */ = {{isa = PBXFileReference; lastKnownFileType = image.png; name = \"{name}\"; path = \"{name}\"; sourceTree = \"<group>\"; }};\n"
+
 # xcassets 引用
 if xcassets_ref:
     file_ref_section += f"\t\t{xcassets_ref} /* Assets.xcassets */ = {{isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; name = \"Assets.xcassets\"; path = \"Assets.xcassets\"; sourceTree = \"<group>\"; }};\n"
+
+# Info.plist 引用
+if info_plist_ref:
+    file_ref_section += f"\t\t{info_plist_ref} /* Info.plist */ = {{isa = PBXFileReference; lastKnownFileType = text.plist.xml; name = \"Info.plist\"; path = \"Info.plist\"; sourceTree = \"<group>\"; }};\n"
 
 # 构建 PBXBuildFile 部分
 build_file_section = ""
@@ -111,6 +144,10 @@ for rel, u in build_files.items():
 for rel, u in resource_build_files.items():
     name = os.path.basename(rel)
     build_file_section += f"\t\t{u} /* {name} in Resources */ = {{isa = PBXBuildFile; fileRef = {resource_dir_refs[rel]} /* {name} */; }};\n"
+
+for rel, u in resource_file_build_files.items():
+    name = os.path.basename(rel)
+    build_file_section += f"\t\t{u} /* {name} in Resources */ = {{isa = PBXBuildFile; fileRef = {resource_file_refs[rel]} /* {name} */; }};\n"
 
 if xcassets_build:
     build_file_section += f"\t\t{xcassets_build} /* Assets.xcassets in Resources */ = {{isa = PBXBuildFile; fileRef = {xcassets_ref} /* Assets.xcassets */; }};\n"
@@ -136,8 +173,13 @@ for d in sorted(all_dirs):
     if d == os.path.join(PROJECT_DIR, "Sources/BabyBookApp/Resources"):
         for rel_dir, uu in resource_dir_refs.items():
             children.append(f"{uu} /* {os.path.basename(rel_dir)} */")
+        for rel_file, uu in resource_file_refs.items():
+            children.append(f"{uu} /* {os.path.basename(rel_file)} */")
         if xcassets_ref:
             children.append(f"{xcassets_ref} /* Assets.xcassets */")
+    # Info.plist 添加到 BabyBookApp 组
+    if d == os.path.join(PROJECT_DIR, "Sources/BabyBookApp") and info_plist_ref:
+        children.append(f"{info_plist_ref} /* Info.plist */")
 
     children_str = "\n".join([f"\t\t\t\t{c}," for c in children])
     # 移除可能的双逗号
@@ -167,6 +209,9 @@ for d in sorted(all_dirs):
 # 构建资源构建列表
 resource_build_list = ""
 for rel, u in resource_build_files.items():
+    name = os.path.basename(rel)
+    resource_build_list += f"\t\t\t\t{u} /* {name} in Resources */,\n"
+for rel, u in resource_file_build_files.items():
     name = os.path.basename(rel)
     resource_build_list += f"\t\t\t\t{u} /* {name} in Resources */,\n"
 if xcassets_build:
@@ -309,8 +354,8 @@ pbxproj = f"""// !$*UTF8*$!
 \t\t\t\tCODE_SIGN_STYLE = Automatic;
 \t\t\t\tCURRENT_PROJECT_VERSION = 1;
 \t\t\t\tDEVELOPMENT_TEAM = 7BSKXTD6DF;
-\t\t\t\tGENERATE_INFOPLIST_FILE = YES;
-\t\t\t\tINFOPLIST_FILE = "";
+\t\t\t\tGENERATE_INFOPLIST_FILE = NO;
+\t\t\t\tINFOPLIST_FILE = "Sources/BabyBookApp/Info.plist";
 \t\t\t\tINFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 \t\t\t\tINFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 \t\t\t\tINFOPLIST_KEY_UILaunchScreen_Generation = YES;
@@ -323,14 +368,17 @@ pbxproj = f"""// !$*UTF8*$!
 \t\t\t\t);
 \t\t\t\tMARKETING_VERSION = 1.0;
 \t\t\t\tPRODUCT_BUNDLE_IDENTIFIER = com.shihui.babybook;
-\t\t\t\tPRODUCT_NAME = "$(TARGET_NAME)";
+\t\t\t\tPRODUCT_NAME = BabyBook;
 \t\t\t\tSDKROOT = iphoneos;
 \t\t\t\tSWIFT_EMIT_LOC_STRINGS = YES;
 \t\t\t\tSWIFT_VERSION = 5.0;
 \t\t\t\tTARGETED_DEVICE_FAMILY = "1,2";
+\t\t\t\t// 应用显示名称
+\t\t\t\tINFOPLIST_KEY_CFBundleDisplayName = "宝贝绘本";
 \t\t\t\t// 隐私权限描述
 \t\t\t\tINFOPLIST_KEY_NSCameraUsageDescription = "需要访问相机以拍摄宝宝照片，用于生成专属绘本";
 \t\t\t\tINFOPLIST_KEY_NSPhotoLibraryUsageDescription = "需要访问相册以选择宝宝照片，用于生成专属绘本";
+				INFOPLIST_KEY_NSLocalNetworkUsageDescription = "需要访问本地网络以连接开发服务器，上传宝宝照片并生成专属绘本";
 \t\t\t\t// 加密声明：使用标准 HTTPS 和系统 Keychain，属于豁免范围
 \t\t\t\tINFOPLIST_KEY_ITSEncryptionExportComplianceCode = "";  // 空值表示使用标准加密，无需文档
 \t\t\t}};
@@ -344,8 +392,8 @@ pbxproj = f"""// !$*UTF8*$!
 \t\t\t\tCODE_SIGN_STYLE = Automatic;
 \t\t\t\tCURRENT_PROJECT_VERSION = 1;
 \t\t\t\tDEVELOPMENT_TEAM = 7BSKXTD6DF;
-\t\t\t\tGENERATE_INFOPLIST_FILE = YES;
-\t\t\t\tINFOPLIST_FILE = "";
+\t\t\t\tGENERATE_INFOPLIST_FILE = NO;
+\t\t\t\tINFOPLIST_FILE = "Sources/BabyBookApp/Info.plist";
 \t\t\t\tINFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 \t\t\t\tINFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 \t\t\t\tINFOPLIST_KEY_UILaunchScreen_Generation = YES;
@@ -358,14 +406,17 @@ pbxproj = f"""// !$*UTF8*$!
 \t\t\t\t);
 \t\t\t\tMARKETING_VERSION = 1.0;
 \t\t\t\tPRODUCT_BUNDLE_IDENTIFIER = com.shihui.babybook;
-\t\t\t\tPRODUCT_NAME = "$(TARGET_NAME)";
+\t\t\t\tPRODUCT_NAME = BabyBook;
 \t\t\t\tSDKROOT = iphoneos;
 \t\t\t\tSWIFT_EMIT_LOC_STRINGS = YES;
 \t\t\t\tSWIFT_VERSION = 5.0;
 \t\t\t\tTARGETED_DEVICE_FAMILY = "1,2";
+\t\t\t\t// 应用显示名称
+\t\t\t\tINFOPLIST_KEY_CFBundleDisplayName = "宝贝绘本";
 \t\t\t\t// 隐私权限描述
 \t\t\t\tINFOPLIST_KEY_NSCameraUsageDescription = "需要访问相机以拍摄宝宝照片，用于生成专属绘本";
 \t\t\t\tINFOPLIST_KEY_NSPhotoLibraryUsageDescription = "需要访问相册以选择宝宝照片，用于生成专属绘本";
+				INFOPLIST_KEY_NSLocalNetworkUsageDescription = "需要访问本地网络以连接开发服务器，上传宝宝照片并生成专属绘本";
 \t\t\t\t// 加密声明：使用标准 HTTPS 和系统 Keychain，属于豁免范围
 \t\t\t\tINFOPLIST_KEY_ITSEncryptionExportComplianceCode = "";  // 空值表示使用标准加密，无需文档
 \t\t\t}};

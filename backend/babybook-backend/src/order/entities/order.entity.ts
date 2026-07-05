@@ -36,7 +36,7 @@ export class Order {
   @Column({ type: 'varchar', length: 255, nullable: true })
   imageUrl: string; // 宝宝照片临时URL（生成后立即删除）
 
-  @Column({ type: 'varchar', length: 255, nullable: true })
+  @Column({ type: 'text', nullable: true })
   resultImageUrl: string; // 生成的九宫格图片URL
 
   @Column({ type: 'int', default: 0 })

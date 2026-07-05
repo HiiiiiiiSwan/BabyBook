@@ -6,8 +6,6 @@ struct GeneratingView: View {
     let order: BackendOrder
 
     @StateObject private var statusManager = OrderStatusManager.shared
-    @State private var showCancelAlert = false
-    @State private var showCannotRefundAlert = false
     @State private var navigateToComplete = false
     @State private var statusText = "魔法生成中..."
     @State private var remainingSeconds = 60
@@ -30,14 +28,6 @@ struct GeneratingView: View {
                 // 底部插画
                 bottomIllustration
                     .padding(.bottom, 24)
-
-                // 取消按钮
-                Button(action: { showCancelAlert = true }) {
-                    Text("取消生成")
-                        .font(.system(size: 14, weight: .medium))
-                        .foregroundColor(Color(hex: "#999999"))
-                }
-                .padding(.bottom, 24)
             }
         }
         .navigationTitle("")
@@ -51,25 +41,12 @@ struct GeneratingView: View {
             }
         }
         .navigationDestination(isPresented: $navigateToComplete) {
-            CompleteView(book: book, order: order, task: statusManager.currentTask)
+            CompleteView(book: book, order: order, task: statusManager.currentTask, preloadedImage: nil)
         }
         .onAppear { startGeneration() }
         .onDisappear {
             timer?.invalidate()
             statusManager.stopPolling()
-        }
-        .alert("取消生成", isPresented: $showCancelAlert) {
-            Button("继续生成", role: .cancel) {}
-            Button("确认取消", role: .destructive) { cancelGeneration() }
-        } message: {
-            Text("图片生成费用订单已生成，无法退款，是否确认取消？")
-        }
-        .alert("提示", isPresented: $showCannotRefundAlert) {
-            Button("确定", role: .cancel) {
-                goBackToHome()
-            }
-        } message: {
-            Text("绘本生成已取消。由于图片生成服务已调用，订单费用无法退回。")
         }
     }
 
@@ -235,20 +212,6 @@ struct GeneratingView: View {
 
     @State private var showError = false
     @State private var errorMessage = ""
-
-    private func cancelGeneration() {
-        timer?.invalidate()
-        Task {
-            await statusManager.cancelTask()
-            await MainActor.run {
-                showCannotRefundAlert = true
-            }
-        }
-    }
-
-    private func goBackToHome() {
-        navPath.wrappedValue = NavigationPath()
-    }
 
     // MARK: - 生成完成后自动保存绘本到本地
     private func saveGeneratedBook() async {

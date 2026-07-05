@@ -2,6 +2,7 @@ import SwiftUI
 import PDFKit
 #if canImport(UIKit)
 import UIKit
+import Photos
 #endif
 
 // MARK: - 绘本详情查看页（从我的绘本页点击进入）
@@ -9,23 +10,36 @@ struct LocalBookDetailView: View {
     let book: LocalBookMetadata
     @Environment(\.dismiss) private var dismiss
     @State private var showDeleteAlert = false
+    @State private var showLeaveAppAlert = false
     @State private var showShareSheet = false
     @State private var shareItems: [Any] = []
     @State private var showError = false
     @State private var errorMessage = ""
-    @State private var isLoading = false
+    @State private var isSavingToPhotos = false
+    @State private var isSavingPDF = false
+    @State private var pdfGenerated = false
+    @State private var downloadSuccess = false
+    @State private var showSavePermissionAlert = false
 
     var body: some View {
         ZStack {
             Color(hex: "#FFF9F2").ignoresSafeArea()
 
-            ScrollView(showsIndicators: false) {
+            GeometryReader { geometry in
                 VStack(spacing: 0) {
-                    headerSection
-                    bookPreviewSection
+                    // 可滚动内容区
+                    ScrollView(showsIndicators: false) {
+                        VStack(spacing: 0) {
+                            headerSection
+                            bookPreviewSection(width: geometry.size.width)
+                            Spacer().frame(minHeight: 24)
+                        }
+                        .frame(maxWidth: .infinity, minHeight: geometry.size.height - 220, alignment: .top)
+                    }
+
+                    // 底部固定操作区
                     actionButtons
-                    weakWarning
-                    Spacer().frame(height: 40)
+                        .padding(.bottom, 16)
                 }
             }
         }
@@ -36,23 +50,13 @@ struct LocalBookDetailView: View {
         .toolbar {
             ToolbarItem(placement: .topBarLeading) {
                 Button(action: { dismiss() }) {
-                    HStack(spacing: 4) {
-                        Image(systemName: "chevron.left")
-                            .font(.system(size: 20, weight: .semibold))
-                            .foregroundColor(Color(hex: "#222222"))
-                    }
+                    Image(systemName: "chevron.left")
+                        .font(.system(size: 20, weight: .semibold))
+                        .foregroundColor(Color(hex: "#222222"))
                 }
-            }
-            ToolbarItem(placement: .principal) {
-                Text(book.bookName)
-                    .font(.system(size: 18, weight: .bold))
-                    .foregroundColor(Color(hex: "#222222"))
             }
             ToolbarItem(placement: .topBarTrailing) {
                 Menu {
-                    Button(action: { shareBook() }) {
-                        Label("分享绘本", systemImage: "square.and.arrow.up")
-                    }
                     Button(role: .destructive, action: { showDeleteAlert = true }) {
                         Label("删除绘本", systemImage: "trash")
                     }
@@ -82,10 +86,25 @@ struct LocalBookDetailView: View {
         } message: {
             Text(errorMessage)
         }
-        .overlay {
-            if isLoading {
-                LoadingOverlay(message: "正在处理...")
+        .alert("保存权限", isPresented: $showSavePermissionAlert) {
+            Button("取消", role: .cancel) {}
+            Button("前往设置") {
+                #if os(iOS)
+                if let url = URL(string: UIApplication.openSettingsURLString) {
+                    UIApplication.shared.open(url)
+                }
+                #endif
             }
+        } message: {
+            Text("需要访问相册权限才能保存绘本图片")
+        }
+        .alert("即将离开 App", isPresented: $showLeaveAppAlert) {
+            Button("取消", role: .cancel) {}
+            Button("继续") {
+                openPhysicalBookStore()
+            }
+        } message: {
+            Text("将打开 Safari 访问外部页面，是否继续？")
         }
     }
 
@@ -97,13 +116,13 @@ struct LocalBookDetailView: View {
                     .font(.system(size: 20))
                     .foregroundColor(Color(hex: "#F28C28"))
                 Text("宝宝的专属绘本")
-                    .font(.system(size: 22, weight: .bold))
+                    .font(.system(size: 28, weight: .bold))
                     .foregroundColor(Color(hex: "#222222"))
                 Image(systemName: "sparkles")
                     .font(.system(size: 20))
                     .foregroundColor(Color(hex: "#F28C28"))
             }
-            .padding(.top, 20)
+            .padding(.top, 32)
 
             Text(formatDate(book.createTime))
                 .font(.system(size: 14))
@@ -112,9 +131,9 @@ struct LocalBookDetailView: View {
     }
 
     // MARK: - 绘本预览
-    private var bookPreviewSection: some View {
-        VStack(spacing: 12) {
-            // 正方形绘本封面（屏幕宽度 - 64px 边距），与完成页保持一致
+    private func bookPreviewSection(width: CGFloat) -> some View {
+        VStack(spacing: 20) {
+            // 正方形绘本封面（屏幕宽度 - 64px 边距）
             ZStack {
                 RoundedRectangle(cornerRadius: 16)
                     .fill(Color.white)
@@ -136,126 +155,85 @@ struct LocalBookDetailView: View {
                 bookPreviewPlaceholder
                 #endif
             }
-            .aspectRatio(1, contentMode: .fit)
-            .padding(.horizontal, 32)
+            .frame(width: width - 64, height: width - 64)
 
-            Text(book.bookName)
+            Text("《\(book.bookName)》")
                 .font(.system(size: 18, weight: .bold))
                 .foregroundColor(Color(hex: "#222222"))
-
-            if let fileSize = getFileSize() {
-                Text(formatFileSize(fileSize))
-                    .font(.system(size: 14))
-                    .foregroundColor(Color(hex: "#999999"))
-            }
         }
-        .padding(.top, 16)
+        .padding(.top, 32)
     }
 
     private var bookPreviewPlaceholder: some View {
         VStack(spacing: 8) {
-            HStack {
-                VStack(alignment: .leading, spacing: 2) {
-                    Text("My First Book")
-                        .font(.system(size: 12, weight: .medium))
-                        .foregroundColor(Color(hex: "#666666"))
-                    Text(book.bookName)
-                        .font(.system(size: 10))
-                        .foregroundColor(Color(hex: "#999999"))
-                }
-                Spacer()
-                Image(systemName: "face.smiling")
-                    .font(.system(size: 20))
-                    .foregroundColor(Color(hex: "#F28C28"))
-            }
-            .padding(.horizontal, 12)
-            .padding(.top, 12)
-
-            Image(systemName: "person.crop.square.fill")
-                .font(.system(size: 80))
-                .foregroundColor(Color(hex: "#F28C28").opacity(0.15))
-
-            HStack {
-                VStack(alignment: .leading, spacing: 2) {
-                    Label("Head", systemImage: "circle.fill")
-                        .font(.system(size: 10))
-                    Label("Hand", systemImage: "hand.fill")
-                        .font(.system(size: 10))
-                    Label("Foot", systemImage: "footprint.fill")
-                        .font(.system(size: 10))
-                }
-                .foregroundColor(Color(hex: "#999999"))
-                Spacer()
-            }
-            .padding(.horizontal, 12)
-            .padding(.bottom, 12)
+            Spacer()
+                .frame(height: 12)
         }
     }
 
     // MARK: - 操作按钮
     private var actionButtons: some View {
-        VStack(spacing: 12) {
-            // 查看 PDF
-            Button(action: { openPDF() }) {
-                HStack {
-                    Image(systemName: "doc.text")
-                    Text("查看 PDF 电子版")
-                }
-                .font(.system(size: 16, weight: .semibold))
-                .foregroundColor(.white)
-                .frame(maxWidth: .infinity)
-                .frame(height: 56)
-                .background(Color(hex: "#F28C28"))
-                .cornerRadius(28)
-            }
+        VStack(spacing: 0) {
+            // 提示文案（主按钮上方 10pt，浅灰色一行）
+            Text("请及时保存 卸载app后将无法恢复")
+                .font(.system(size: 12))
+                .foregroundColor(Color(hex: "#CCCCCC"))
+                .padding(.bottom, 10)
 
-            // 分享绘本
-            Button(action: { shareBook() }) {
-                HStack {
-                    Image(systemName: "square.and.arrow.up")
-                    Text("分享绘本")
-                }
-                .font(.system(size: 14, weight: .medium))
-                .foregroundColor(Color(hex: "#666666"))
-                .frame(maxWidth: .infinity)
-                .frame(height: 48)
-                .background(Color.white)
-                .cornerRadius(24)
-                .overlay(
-                    RoundedRectangle(cornerRadius: 24)
-                        .stroke(Color(hex: "#E5E5E5"), lineWidth: 1)
-                )
-            }
+            VStack(spacing: 16) {
+                // 保存绘本图片（主按钮）
+                Button(action: { downloadBook() }) {
+                    ZStack {
+                        HStack(spacing: 6) {
+                            Image(systemName: downloadSuccess ? "checkmark.circle" : "arrow.down.doc")
+                            Text(downloadSuccess ? "已保存到相册" : "保存绘本图片")
+                        }
+                        .font(.system(size: 16, weight: .semibold))
+                        .foregroundColor(.white)
+                        .opacity(isSavingToPhotos ? 0 : 1)
 
-            // 获取实体书
-            Button(action: { openPhysicalBookStore() }) {
-                Text("获取实体书（跳转微店）")
-                    .font(.system(size: 14, weight: .medium))
-                    .foregroundColor(Color(hex: "#666666"))
+                        if isSavingToPhotos {
+                            ProgressView()
+                                .scaleEffect(0.8)
+                                .tint(.white)
+                        }
+                    }
                     .frame(maxWidth: .infinity)
-                    .frame(height: 48)
-                .background(Color.white)
-                    .cornerRadius(24)
-                    .overlay(
-                        RoundedRectangle(cornerRadius: 24)
-                            .stroke(Color(hex: "#E5E5E5"), lineWidth: 1)
-                    )
+                    .frame(height: 56)
+                    .background(downloadSuccess ? Color(hex: "#8BC34A") : Color(hex: "#F28C28"))
+                    .cornerRadius(28)
+                }
+                .disabled(isSavingToPhotos)
+
+                // 保存逐页 PDF + 获取实体书（并排文字按钮，参考首页样式）
+                HStack(spacing: 32) {
+                    Button(action: { savePDF() }) {
+                        HStack(spacing: 4) {
+                            Text(pdfGenerated ? "PDF 已保存" : "导出PDF")
+                                .font(.system(size: 14, weight: .medium))
+                            Image(systemName: "chevron.right")
+                                .font(.system(size: 12))
+                        }
+                        .foregroundColor(Color(hex: "#666666"))
+                    }
+                    .disabled(isSavingPDF)
+
+                    Button(action: { showLeaveAppAlert = true }) {
+                        HStack(spacing: 4) {
+                            Text("获取实体书")
+                                .font(.system(size: 14, weight: .medium))
+                            Image(systemName: "chevron.right")
+                                .font(.system(size: 12))
+                        }
+                        .foregroundColor(Color(hex: "#666666"))
+                    }
+                }
+                .padding(.vertical, 8)
             }
         }
         .padding(.horizontal, 24)
-        .padding(.top, 24)
-    }
-
-    private var weakWarning: some View {
-        VStack(spacing: 4) {
-            Text("绘本已保存在本地")
-                .font(.system(size: 12))
-                .foregroundColor(Color(hex: "#999999"))
-            Text("卸载 App 后将无法恢复哦~")
-                .font(.system(size: 12))
-                .foregroundColor(Color(hex: "#CCCCCC"))
-        }
         .padding(.top, 16)
+        .background(Color(hex: "#FFF9F2"))
     }
 
     // MARK: - 加载绘本图片
@@ -265,14 +243,6 @@ struct LocalBookDetailView: View {
     }
     #endif
 
-    // MARK: - 获取文件大小
-    private func getFileSize() -> Int64? {
-        guard let attributes = try? FileManager.default.attributesOfItem(atPath: book.filePath) else {
-            return nil
-        }
-        return attributes[.size] as? Int64
-    }
-
     // MARK: - 格式化日期
     private func formatDate(_ date: Date) -> String {
         let formatter = DateFormatter()
@@ -280,47 +250,131 @@ struct LocalBookDetailView: View {
         return formatter.string(from: date)
     }
 
-    // MARK: - 格式化文件大小
-    private func formatFileSize(_ size: Int64) -> String {
-        let kb = Double(size) / 1024.0
-        if kb < 1024 {
-            return String(format: "%.1f KB", kb)
-        } else {
-            let mb = kb / 1024.0
-            return String(format: "%.1f MB", mb)
-        }
-    }
+    // MARK: - 保存绘本图片
+    private func downloadBook() {
+        #if canImport(UIKit)
+        isSavingToPhotos = true
 
-    // MARK: - 打开 PDF
-    private func openPDF() {
-        let pdfPath = book.filePath.replacingOccurrences(of: ".png", with: ".pdf")
-        guard FileManager.default.fileExists(atPath: pdfPath) else {
-            errorMessage = "PDF 文件不存在，请重新生成"
-            showError = true
-            return
-        }
+        Task {
+            guard let image = loadBookImage() else {
+                await MainActor.run {
+                    errorMessage = "绘本图片加载失败"
+                    showError = true
+                    isSavingToPhotos = false
+                }
+                return
+            }
 
-        #if os(iOS)
-        let fileURL = URL(fileURLWithPath: pdfPath)
-        shareItems = [fileURL]
-        showShareSheet = true
+            guard let imageData = image.jpegData(compressionQuality: 1.0) else {
+                await MainActor.run {
+                    errorMessage = "图片数据转换失败"
+                    showError = true
+                    isSavingToPhotos = false
+                }
+                return
+            }
+
+            await saveImageToPhotos(image: image, imageData: imageData)
+        }
+        #else
+        errorMessage = "保存绘本图片仅在 iOS 平台可用"
+        showError = true
         #endif
     }
 
-    // MARK: - 分享绘本
-    private func shareBook() {
-        var items: [Any] = []
+    // MARK: - 保存 PDF（生成本地 PDF 后拉起系统分享页）
+    private func savePDF() {
+        #if canImport(UIKit)
+        isSavingPDF = true
 
-        // 优先分享 PDF，如果没有则分享图片
-        let pdfPath = book.filePath.replacingOccurrences(of: ".png", with: ".pdf")
-        if FileManager.default.fileExists(atPath: pdfPath) {
-            items.append(URL(fileURLWithPath: pdfPath))
-        } else {
-            items.append(URL(fileURLWithPath: book.filePath))
+        Task {
+            guard let image = loadBookImage() else {
+                await MainActor.run {
+                    errorMessage = "绘本图片加载失败"
+                    showError = true
+                    isSavingPDF = false
+                }
+                return
+            }
+
+            do {
+                let pdfPath = try PDFService.shared.generatePDF(
+                    from: image,
+                    bookName: book.bookName,
+                    orderId: book.orderId
+                )
+                let pdfURL = URL(fileURLWithPath: pdfPath)
+
+                await MainActor.run {
+                    pdfGenerated = true
+                    isSavingPDF = false
+                    shareItems = [pdfURL]
+                    showShareSheet = true
+                }
+            } catch {
+                await MainActor.run {
+                    errorMessage = "PDF 保存失败: \(error.localizedDescription)"
+                    showError = true
+                    isSavingPDF = false
+                }
+            }
         }
+        #else
+        errorMessage = "PDF 保存仅在 iOS 平台可用"
+        showError = true
+        #endif
+    }
 
-        shareItems = items
-        showShareSheet = true
+    // MARK: - 保存图片到相册（带权限检查和结果回调）
+    private func saveImageToPhotos(image: UIImage, imageData: Data) async {
+        #if canImport(UIKit)
+        let status = PHPhotoLibrary.authorizationStatus(for: .addOnly)
+
+        switch status {
+        case .authorized, .limited:
+            do {
+                try await PHPhotoLibrary.shared().performChanges {
+                    let request = PHAssetCreationRequest.forAsset()
+                    request.addResource(with: .photo, data: imageData, options: nil)
+                }
+
+                await MainActor.run {
+                    isSavingToPhotos = false
+                    downloadSuccess = true
+                }
+            } catch {
+                await MainActor.run {
+                    errorMessage = "保存到相册失败: \(error.localizedDescription)"
+                    showError = true
+                    isSavingToPhotos = false
+                }
+            }
+
+        case .denied, .restricted:
+            await MainActor.run {
+                isSavingToPhotos = false
+                showSavePermissionAlert = true
+            }
+
+        case .notDetermined:
+            let newStatus = await PHPhotoLibrary.requestAuthorization(for: .addOnly)
+            if newStatus == .authorized || newStatus == .limited {
+                await saveImageToPhotos(image: image, imageData: imageData)
+            } else {
+                await MainActor.run {
+                    isSavingToPhotos = false
+                    showSavePermissionAlert = true
+                }
+            }
+
+        @unknown default:
+            await MainActor.run {
+                isSavingToPhotos = false
+                errorMessage = "无法访问相册"
+                showError = true
+            }
+        }
+        #endif
     }
 
     // MARK: - 删除绘本
@@ -330,9 +384,13 @@ struct LocalBookDetailView: View {
             try? FileManager.default.removeItem(atPath: book.filePath)
         }
         // 删除对应 PDF
-        let pdfPath = book.filePath.replacingOccurrences(of: ".png", with: ".pdf")
-        if FileManager.default.fileExists(atPath: pdfPath) {
+        if let pdfPath = book.pdfFilePath, FileManager.default.fileExists(atPath: pdfPath) {
             try? FileManager.default.removeItem(atPath: pdfPath)
+        } else {
+            let legacyPDFPath = book.filePath.replacingOccurrences(of: ".png", with: ".pdf")
+            if FileManager.default.fileExists(atPath: legacyPDFPath) {
+                try? FileManager.default.removeItem(atPath: legacyPDFPath)
+            }
         }
         // 删除元数据
         LocalBookStore.shared.delete(orderId: book.orderId)
@@ -361,6 +419,7 @@ struct LocalBookDetailView: View {
                 bookId: "Book001",
                 bookName: "《这是我》",
                 filePath: "/tmp/test.png",
+                pdfFilePath: nil,
                 createTime: Date()
             )
         )

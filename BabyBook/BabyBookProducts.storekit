@@ -1,0 +1,84 @@
+{
+  "appPolicies" : {
+    "eula" : "",
+    "policies" : [
+      {
+        "locale" : "en_US",
+        "policyText" : "",
+        "policyURL" : ""
+      }
+    ]
+  },
+  "identifier" : "F4583D9E",
+  "nonRenewingSubscriptions" : [
+
+  ],
+  "products" : [
+    {
+      "displayPrice" : "3",
+      "familyShareable" : false,
+      "internalID" : "79B13FC0",
+      "localizations" : [
+        {
+          "description" : "上传宝宝照片，ai生成身体认知绘本内容",
+          "displayName" : "《这是我》绘本生成",
+          "locale" : "zh_Hans"
+        }
+      ],
+      "productID" : "com.shihui.babybook.book001",
+      "referenceName" : "《这是我》绘本",
+      "type" : "Consumable"
+    },
+    {
+      "displayPrice" : "3",
+      "familyShareable" : false,
+      "internalID" : "5E21407D",
+      "localizations" : [
+        {
+          "description" : "上传宝宝照片，ai生成职业认知绘本内容",
+          "displayName" : "《我长大想做什么》绘本生成",
+          "locale" : "zh_Hans"
+        }
+      ],
+      "productID" : "com.shihui.babybook.book002",
+      "referenceName" : "《我长大想做什么》绘本",
+      "type" : "Consumable"
+    },
+    {
+      "displayPrice" : "3",
+      "familyShareable" : false,
+      "internalID" : "F693E895",
+      "localizations" : [
+        {
+          "description" : "上传宝宝照片，ai生成身体认知绘本内容",
+          "displayName" : "《认识颜色》绘本",
+          "locale" : "zh_Hans"
+        }
+      ],
+      "productID" : "com.shihui.babybook.book003",
+      "referenceName" : "《认识颜色》绘本",
+      "type" : "Consumable"
+    }
+  ],
+  "settings" : {
+    "_askToBuyEnabled" : false,
+    "_billingGracePeriodEnabled" : false,
+    "_billingIssuesEnabled" : false,
+    "_disableDialogs" : false,
+    "_failTransactionsEnabled" : false,
+    "_locale" : "zh_CN",
+    "_renewalBillingIssuesEnabled" : false,
+    "_storefront" : "CHN",
+    "_storeKitErrors" : [
+
+    ],
+    "_timeRate" : 0
+  },
+  "subscriptionGroups" : [
+
+  ],
+  "version" : {
+    "major" : 4,
+    "minor" : 0
+  }
+}

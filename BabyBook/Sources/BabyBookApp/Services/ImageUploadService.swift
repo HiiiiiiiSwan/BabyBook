@@ -47,7 +47,12 @@ class ImageUploadService {
         request.httpBody = body
 
         // 发送请求
-        let (data, response) = try await session.data(for: request)
+        let (data, response): (Data, URLResponse)
+        do {
+            (data, response) = try await session.data(for: request)
+        } catch {
+            throw UploadError.networkFailure(error)
+        }
 
         guard let httpResponse = response as? HTTPURLResponse,
               (200...299).contains(httpResponse.statusCode) else {
@@ -107,6 +112,7 @@ enum UploadError: Error, LocalizedError {
     case fileTooLarge
     case uploadFailed(String)
     case invalidResponse
+    case networkFailure(Error)
 
     var errorDescription: String? {
         switch self {
@@ -118,6 +124,27 @@ enum UploadError: Error, LocalizedError {
             return "上传失败: \(message)"
         case .invalidResponse:
             return "服务器响应异常"
+        case .networkFailure(let error):
+            return UploadError.localizedNetworkMessage(for: error)
+        }
+    }
+
+    /// 将网络错误转换为用户可理解的提示
+    private static func localizedNetworkMessage(for error: Error) -> String {
+        let nsError = error as NSError
+        switch nsError.code {
+        case NSURLErrorNotConnectedToInternet:
+            return "网络连接异常，请检查网络后重试"
+        case NSURLErrorAppTransportSecurityRequiresSecureConnection:
+            return "当前服务器地址不是 HTTPS，请在 Info.plist 中开启“允许任意加载”(NSAllowsArbitraryLoads)"
+        case NSURLErrorCannotFindHost, NSURLErrorCannotConnectToHost:
+            return "网络连接异常，请检查网络后重试"
+        case NSURLErrorTimedOut:
+            return "连接服务器超时，请检查网络或稍后重试"
+        case NSURLErrorNetworkConnectionLost:
+            return "网络连接中断，请检查网络后重试"
+        default:
+            return "网络连接异常，请检查网络后重试"
         }
     }
 }

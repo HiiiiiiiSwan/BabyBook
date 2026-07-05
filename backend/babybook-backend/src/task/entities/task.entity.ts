@@ -24,7 +24,7 @@ export class Task {
   @Column({ type: 'int', default: 0 })
   progress: number; // 生成进度（0-100）
 
-  @Column({ type: 'varchar', length: 255, nullable: true })
+  @Column({ type: 'text', nullable: true })
   resultUrl: string; // 生成结果图片URL
 
   @Column({ type: 'text', nullable: true })

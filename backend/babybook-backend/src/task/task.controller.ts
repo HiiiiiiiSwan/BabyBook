@@ -3,7 +3,7 @@ import { ApiTags, ApiOperation, ApiResponse } from '@nestjs/swagger';
 import { TaskService } from './task.service';
 import { TaskResponseDto, UpdateTaskStatusDto } from './dto/task.dto';
 import { DeviceAuthGuard } from '../common/guards/device-auth.guard';
-import { Request } from 'express';
+import type { Request } from 'express';
 
 @ApiTags('任务')
 @Controller('api/task')

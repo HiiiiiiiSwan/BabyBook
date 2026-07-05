@@ -1,6 +1,8 @@
 import { Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 
+import { GenerateImageResult } from './ai.service';
+
 /**
  * Mock AI 生成服务
  * 用于测试环境，不调用真实 AI API
@@ -13,7 +15,7 @@ export class MockAiService {
    * Mock 生成绘本图片
    * 返回预设图片 URL，用于测试流程
    */
-  async generateBookImage(params: { bookId: string; imageUrl: string }): Promise<string> {
+  async generateBookImage(params: { bookId: string; imageUrl: string }): Promise<GenerateImageResult> {
     const mockImageUrl = this.configService.get(
       'MOCK_IMAGE_URL',
       'https://picsum.photos/2048/2048',
@@ -22,7 +24,7 @@ export class MockAiService {
     // 模拟生成延迟
     await this.delay(3000);
 
-    return mockImageUrl;
+    return { resultUrl: mockImageUrl, localPath: '' };
   }
 
   private delay(ms: number): Promise<void> {

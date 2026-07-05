@@ -2,7 +2,6 @@ import SwiftUI
 import PhotosUI
 #if canImport(UIKit)
 import UIKit
-import Photos
 #endif
 
 // MARK: - 上传照片页面（接入真实 API）
@@ -17,6 +16,7 @@ struct UploadPhotoView: View {
     @State private var showError = false
     @State private var errorMessage = ""
     @State private var navigateToGenerating = false
+    @State private var navigateToFailureResult = false
     @State private var isProcessingPayment = false
     @State private var showSheet = false
     @State private var showPhotoPicker = false
@@ -121,12 +121,26 @@ struct UploadPhotoView: View {
                     GeneratingView(book: book, order: order)
                 }
             }
+            .navigationDestination(isPresented: $navigateToFailureResult) {
+                if let order = createdOrder {
+                    FailureResultView(book: book, order: BackendOrder(
+                        id: order.id,
+                        deviceId: order.deviceId,
+                        bookId: order.bookId,
+                        bookName: order.bookName,
+                        amount: order.amount,
+                        status: "FAILED",
+                        createdAt: order.createdAt,
+                        updatedAt: order.updatedAt
+                    ), taskErrorMessage: "支付成功但服务器连接异常，请添加客服微信协助处理")
+                }
+            }
             .alert("提示", isPresented: $showError) {
                 Button("确定", role: .cancel) {}
             } message: {
                 Text(errorMessage)
             }
-            .alert("相册权限", isPresented: $showPermissionAlert) {
+            .alert("相机权限", isPresented: $showPermissionAlert) {
                 Button("取消", role: .cancel) {}
                 Button("前往设置") {
                     #if canImport(UIKit)
@@ -233,7 +247,7 @@ struct UploadPhotoView: View {
                 }
                 #else
                 Button(action: {
-                    checkPhotoPermission()
+                    showPhotoPicker = true
                 }) {
                     HStack {
                         Image(systemName: "photo.on.rectangle")
@@ -295,13 +309,11 @@ struct UploadPhotoView: View {
             CameraView(
                 capturedImage: $selectedImage,
                 isPresented: $showCamera,
+                onCapture: { _ in
+                    performFaceDetection()
+                },
                 onCancel: {}
             )
-            .onDisappear {
-                if selectedImage != nil {
-                    performFaceDetection()
-                }
-            }
             #endif
         }
         .alert("人脸检测", isPresented: $showFaceDetectionError) {
@@ -309,35 +321,6 @@ struct UploadPhotoView: View {
         } message: {
             Text(faceDetectionErrorMessage)
         }
-    }
-
-    private func checkPhotoPermission() {
-        #if canImport(UIKit)
-        let status = PHPhotoLibrary.authorizationStatus()
-        switch status {
-        case .authorized, .limited:
-            // 有权限，打开 PhotosPicker
-            showPhotoPicker = true
-        case .denied, .restricted:
-            // 权限被拒绝，显示引导
-            permissionAlertMessage = "需要访问相册才能选择宝宝照片，请在设置中开启权限"
-            showPermissionAlert = true
-        case .notDetermined:
-            // 请求权限
-            PHPhotoLibrary.requestAuthorization { newStatus in
-                DispatchQueue.main.async {
-                    if newStatus == .authorized || newStatus == .limited {
-                        showPhotoPicker = true
-                    } else {
-                        permissionAlertMessage = "需要访问相册才能选择宝宝照片，请在设置中开启权限"
-                        showPermissionAlert = true
-                    }
-                }
-            }
-        @unknown default:
-            break
-        }
-        #endif
     }
 
     private func performFaceDetection() {
@@ -500,6 +483,8 @@ struct UploadPhotoView: View {
                     createdOrder = mockOrder
                     isCreatingOrder = false
                 }
+                // 保存订单到本地（用于崩溃/杀后台后恢复）
+                OrderStatusManager.shared.saveCurrentOrder(mockOrder)
                 await startPayment(order: mockOrder)
                 #else
                 // 真机环境：调用真实后端 API
@@ -514,6 +499,8 @@ struct UploadPhotoView: View {
                     createdOrder = order
                     isCreatingOrder = false
                 }
+                // 保存订单到本地（用于崩溃/杀后台后恢复）
+                OrderStatusManager.shared.saveCurrentOrder(order)
                 await startPayment(order: order)
                 #endif
             } catch {
@@ -545,6 +532,14 @@ struct UploadPhotoView: View {
             #endif
             await MainActor.run {
                 isProcessingPayment = false
+
+                // 支付成功后立即把本地订单更新为 PAID，
+                // 这样即使立刻杀端，恢复时也能识别为已支付的绘本订单。
+                if let paidOrder = createdOrder?.updatingStatus(to: "PAID") {
+                    OrderStatusManager.shared.currentOrder = paidOrder
+                    OrderStatusManager.shared.saveCurrentOrder(paidOrder)
+                }
+
                 navigateToGenerating = true
             }
         } catch PaymentError.userCancelled {
@@ -553,9 +548,16 @@ struct UploadPhotoView: View {
             }
         } catch {
             await MainActor.run {
-                errorMessage = error.localizedDescription
-                showError = true
                 isProcessingPayment = false
+                if let paymentError = error as? PaymentError,
+                   case .paidButServerError = paymentError {
+                    // Apple 已扣款，但后端验证/任务创建失败，进入失败结果页联系客服
+                    navigateToFailureResult = true
+                } else {
+                    // Apple 支付阶段失败（未付款成功）
+                    errorMessage = error.localizedDescription
+                    showError = true
+                }
             }
         }
     }

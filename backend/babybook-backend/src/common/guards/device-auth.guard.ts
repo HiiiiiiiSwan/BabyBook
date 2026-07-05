@@ -1,5 +1,5 @@
 import { Injectable, CanActivate, ExecutionContext, UnauthorizedException } from '@nestjs/common';
-import { Request } from 'express';
+import type { Request } from 'express';
 
 /**
  * 设备认证守卫

@@ -11,7 +11,7 @@ enum APIConfig {
     }
 
     // 当前环境（修改此处切换）
-    static let current: Environment = .local
+    static let current: Environment = .lan
 
     // 后端服务地址
     static var baseURL: String {
@@ -20,7 +20,7 @@ enum APIConfig {
             return "http://localhost:3000"
         case .lan:
             // 替换为你的局域网 IP
-            return "http://192.168.1.100:3000"
+            return "http://192.168.0.28:3000"
         case .staging:
             return "https://staging-api.babybook.com"
         case .production:
@@ -50,6 +50,7 @@ enum APIConfig {
 // MARK: - API 端点
 enum APIEndpoint {
     case createOrder          // POST /order/create
+    case healthCheck          // GET /health
     case getOrder(String)     // GET /order/:id
     case listOrders           // GET /order
     case verifyPayment        // POST /payment/verify
@@ -64,6 +65,8 @@ enum APIEndpoint {
         switch self {
         case .createOrder:
             return "/order/create"
+        case .healthCheck:
+            return "/health"
         case .getOrder(let id):
             return "/order/\(id)"
         case .listOrders:
@@ -93,7 +96,7 @@ enum APIEndpoint {
         switch self {
         case .createOrder, .verifyPayment, .cancelTask, .updateOrderImage:
             return "POST"
-        case .getOrder, .listOrders, .getTask, .getTaskByOrder, .downloadBook, .downloadBookImage:
+        case .healthCheck, .getOrder, .listOrders, .getTask, .getTaskByOrder, .downloadBook, .downloadBookImage:
             return "GET"
         }
     }
@@ -135,6 +138,11 @@ struct APIResponse<T: Codable>: Codable {
     let data: T?
     let message: String?
     let error: String?
+}
+
+struct HealthResponse: Codable {
+    let status: String
+    let timestamp: Int
 }
 
 // MARK: - 请求模型

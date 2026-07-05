@@ -147,16 +147,6 @@ struct MyBooksView: View {
                 }
             }
             .padding(.top, 8)
-
-            VStack(spacing: 4) {
-                Text("请及时下载保存")
-                    .font(.system(size: 12))
-                    .foregroundColor(Color(hex: "#999999"))
-                Text("卸载 App 后将无法恢复哦~")
-                    .font(.system(size: 12))
-                    .foregroundColor(Color(hex: "#CCCCCC"))
-            }
-            .padding(.top, 16)
             .padding(.bottom, 24)
         }
         .background(Color(hex: "#FFF9F2"))
@@ -165,6 +155,7 @@ struct MyBooksView: View {
     // MARK: - 加载本地绘本
     private func loadLocalBooks() {
         localBooks = LocalBookStore.shared.loadAll()
+            .filter { FileManager.default.fileExists(atPath: $0.filePath) }
             .sorted { $0.createTime > $1.createTime }
     }
 
@@ -175,9 +166,13 @@ struct MyBooksView: View {
             try? FileManager.default.removeItem(atPath: book.filePath)
         }
         // 删除对应 PDF
-        let pdfPath = book.filePath.replacingOccurrences(of: ".png", with: ".pdf")
-        if FileManager.default.fileExists(atPath: pdfPath) {
+        if let pdfPath = book.pdfFilePath, FileManager.default.fileExists(atPath: pdfPath) {
             try? FileManager.default.removeItem(atPath: pdfPath)
+        } else {
+            let legacyPDFPath = book.filePath.replacingOccurrences(of: ".png", with: ".pdf")
+            if FileManager.default.fileExists(atPath: legacyPDFPath) {
+                try? FileManager.default.removeItem(atPath: legacyPDFPath)
+            }
         }
         // 删除元数据
         LocalBookStore.shared.delete(orderId: book.orderId)
@@ -189,11 +184,15 @@ struct MyBooksView: View {
         var items: [Any] = []
 
         // 优先分享 PDF，如果没有则分享图片
-        let pdfPath = book.filePath.replacingOccurrences(of: ".png", with: ".pdf")
-        if FileManager.default.fileExists(atPath: pdfPath) {
+        if let pdfPath = book.pdfFilePath, FileManager.default.fileExists(atPath: pdfPath) {
             items.append(URL(fileURLWithPath: pdfPath))
         } else {
-            items.append(URL(fileURLWithPath: book.filePath))
+            let legacyPDFPath = book.filePath.replacingOccurrences(of: ".png", with: ".pdf")
+            if FileManager.default.fileExists(atPath: legacyPDFPath) {
+                items.append(URL(fileURLWithPath: legacyPDFPath))
+            } else {
+                items.append(URL(fileURLWithPath: book.filePath))
+            }
         }
 
         shareItems = items
@@ -269,12 +268,6 @@ struct LocalBookRow: View {
                 Text(formatDate(book.createTime))
                     .font(.system(size: 12))
                     .foregroundColor(Color(hex: "#999999"))
-
-                if let fileSize = getFileSize() {
-                    Text(formatFileSize(fileSize))
-                        .font(.system(size: 12))
-                        .foregroundColor(Color(hex: "#999999"))
-                }
             }
 
             Spacer()

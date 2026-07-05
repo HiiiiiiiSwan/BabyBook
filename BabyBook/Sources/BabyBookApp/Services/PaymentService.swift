@@ -58,18 +58,31 @@ class PaymentService: ObservableObject {
             throw PaymentError.productNotFound
         }
 
+        // 校验商品类型必须为 Consumable（消耗型）
+        guard product.type == .consumable else {
+            throw PaymentError.productNotConsumable
+        }
+
         // 开始购买流程
         let result = try await product.purchase()
 
         switch result {
         case .success(let verification):
+            // 先提取 StoreKit2 JWS 收据（必须在 checkVerified 之前，因为 jwsRepresentation 在 VerificationResult 上）
+            let receiptData = verification.jwsRepresentation
+
             // 验证交易
             let transaction = try checkVerified(verification)
 
-            // 验证支付并提交到后端
-            try await verifyPaymentWithBackend(transaction: transaction, orderId: orderId)
+            // 先向后端验证支付，确认服务端已收到并创建生成任务后，
+            // 再 finish 交易。避免 Apple 已扣款但后端未确认时交易被关闭。
+            try await verifyPaymentWithBackend(
+                transaction: transaction,
+                receiptData: receiptData,
+                orderId: orderId
+            )
 
-            // 完成交易
+            // 后端验证成功后，再 finish 交易，防止 StoreKit 重复推送
             await transaction.finish()
 
             return transaction
@@ -96,37 +109,50 @@ class PaymentService: ObservableObject {
     }
 
     // MARK: - 向后端验证支付
-    private func verifyPaymentWithBackend(transaction: Transaction, orderId: String) async throws {
+    private func verifyPaymentWithBackend(
+        transaction: Transaction,
+        receiptData: String,
+        orderId: String
+    ) async throws {
         #if os(iOS)
         #if targetEnvironment(simulator)
         // 模拟器环境：跳过实际的 StoreKit 验证，使用模拟收据
         print("模拟器环境：跳过 StoreKit 验证，使用模拟收据")
-        let receiptData = "simulator_receipt_\(transaction.id)"
+        let finalReceiptData = "simulator_receipt_\(transaction.id)"
         let transactionId = String(transaction.id)
 
-        let response = try await NetworkService.shared.verifyPayment(
-            orderId: orderId,
-            receiptData: receiptData,
-            transactionId: transactionId
-        )
+        do {
+            let response = try await NetworkService.shared.verifyPayment(
+                orderId: orderId,
+                receiptData: finalReceiptData,
+                transactionId: transactionId
+            )
 
-        guard response.success else {
-            throw PaymentError.verificationFailed(response.errorMessage ?? "支付验证失败")
+            guard response.success else {
+                throw PaymentError.paidButServerError(response.errorMessage ?? "支付验证失败")
+            }
+        } catch is APIError, is URLError {
+            // Apple 已扣款（模拟器视为已扣款），但后端网络异常
+            throw PaymentError.paidButServerError("服务器连接异常，请稍后重试或联系客服")
         }
         #else
-        // 真机环境：获取收据数据（StoreKit2 使用 jwsRepresentation）
-        let receiptData = transaction.jwsRepresentation
+        // 真机环境：使用从 VerificationResult 提取的 JWS 收据
         let transactionId = String(transaction.id)
 
         // 调用后端验证接口
-        let response = try await NetworkService.shared.verifyPayment(
-            orderId: orderId,
-            receiptData: receiptData,
-            transactionId: transactionId
-        )
+        do {
+            let response = try await NetworkService.shared.verifyPayment(
+                orderId: orderId,
+                receiptData: receiptData,
+                transactionId: transactionId
+            )
 
-        guard response.success else {
-            throw PaymentError.verificationFailed(response.errorMessage ?? "支付验证失败")
+            guard response.success else {
+                throw PaymentError.paidButServerError(response.errorMessage ?? "支付验证失败")
+            }
+        } catch is APIError, is URLError {
+            // Apple 已扣款，但后端验证网络异常
+            throw PaymentError.paidButServerError("服务器连接异常，请稍后重试或联系客服")
         }
         #endif
         #endif
@@ -148,13 +174,16 @@ class PaymentService: ObservableObject {
                     let transaction = try checkVerified(verificationResult)
 
                     // 检查交易是否已完成验证
+                    var shouldFinish = true
                     if transaction.revocationDate == nil {
                         // 从未完成的交易恢复：提取 orderId 并验证
-                        await handleUnfinishedTransaction(transaction)
+                        shouldFinish = await handleUnfinishedTransaction(transaction)
                     }
 
-                    // 完成交易
-                    await transaction.finish()
+                    // 只有验证成功或已撤销/退款等无需恢复的交易才 finish
+                    if shouldFinish {
+                        await transaction.finish()
+                    }
                 } catch {
                     print("交易更新处理失败: \(error)")
                 }
@@ -163,7 +192,7 @@ class PaymentService: ObservableObject {
     }
 
     // MARK: - 处理未完成的交易（App 崩溃/杀后台后恢复）
-    private func handleUnfinishedTransaction(_ transaction: Transaction) async {
+    private func handleUnfinishedTransaction(_ transaction: Transaction) async -> Bool {
         // 从交易备注中提取 orderId（如果购买时存储了）
         // StoreKit2 不直接支持自定义 payload，我们通过本地存储关联
 
@@ -173,8 +202,11 @@ class PaymentService: ObservableObject {
 
             do {
                 // 向后端验证支付
+                // 注意：恢复交易时无法获取原始 VerificationResult 的 jwsRepresentation
+                // 这里使用 transactionId 作为收据占位符，后端开发环境会特殊处理
                 try await verifyPaymentWithBackend(
                     transaction: transaction,
+                    receiptData: "restored_\(transaction.id)",
                     orderId: pendingOrderId
                 )
 
@@ -185,25 +217,33 @@ class PaymentService: ObservableObject {
                         object: pendingOrderId
                     )
                 }
+                return true
             } catch {
                 print("恢复交易验证失败: \(error)")
+                // 验证失败时不 finish，让 StoreKit 下次继续推送，便于重试
+                return false
             }
         }
+        return true
     }
 }
 
 // MARK: - 支付错误
 enum PaymentError: Error, LocalizedError {
     case productNotFound
+    case productNotConsumable
     case userCancelled
     case pending
     case unknown
     case verificationFailed(String)
+    case paidButServerError(String)  // Apple 已扣款，但后端验证/任务创建失败
 
     var errorDescription: String? {
         switch self {
         case .productNotFound:
             return "产品未找到"
+        case .productNotConsumable:
+            return "商品类型配置错误，请稍后再试"
         case .userCancelled:
             return "用户取消支付"
         case .pending:
@@ -212,6 +252,8 @@ enum PaymentError: Error, LocalizedError {
             return "未知错误"
         case .verificationFailed(let message):
             return "验证失败: \(message)"
+        case .paidButServerError(let message):
+            return "支付成功但服务器异常: \(message)"
         }
     }
 }

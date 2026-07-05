@@ -9,9 +9,9 @@ import { OrderStatus, BookTemplate } from '../common/enums';
  * 绘本模板配置
  */
 const BOOK_TEMPLATES: Record<BookTemplate, { name: string; price: number }> = {
-  [BookTemplate.SELF_INTRO]: { name: '《这是我》', price: 12.99 },
-  [BookTemplate.DREAM_JOB]: { name: '《我长大想做什么》', price: 12.99 },
-  [BookTemplate.COLOR_RECOGNITION]: { name: '《认识颜色》', price: 12.99 },
+  [BookTemplate.SELF_INTRO]: { name: '《这是我》', price: 3.0 },
+  [BookTemplate.DREAM_JOB]: { name: '《我长大想做什么》', price: 3.0 },
+  [BookTemplate.COLOR_RECOGNITION]: { name: '《认识颜色》', price: 3.0 },
 };
 
 @Injectable()

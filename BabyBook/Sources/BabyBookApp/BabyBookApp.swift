@@ -62,11 +62,11 @@ struct ScreenshotTestView: View {
             }
             .navigationTitle("截图验收")
         }
-        .alert("恢复订单", isPresented: $showOrderRestoreAlert) {
+        .alert("绘本生成中", isPresented: $showOrderRestoreAlert) {
             Button("取消", role: .cancel) {}
-            Button("继续") {}
+            Button("查看") {}
         } message: {
-            Text("检测到未完成的绘本生成订单，是否继续？")
+            Text("检测到有未完成的绘本，点击可查看最新进展")
         }
         .alert("提示", isPresented: $showPaymentConfirmError) {
             Button("确定", role: .cancel) {}
@@ -124,7 +124,8 @@ struct ScreenshotTestView: View {
                         errorMessage: nil,
                         createdAt: "2026-06-23T10:01:00Z",
                         updatedAt: "2026-06-23T10:02:00Z"
-                    )
+                    ),
+                    preloadedImage: nil
                 )
             }
         }
@@ -135,6 +136,7 @@ struct ScreenshotTestView: View {
 extension Notification.Name {
     static let resetNavigation = Notification.Name("resetNavigation")
     static let navigateToGenerating = Notification.Name("navigateToGenerating")
+    static let navigateToFailureResult = Notification.Name("navigateToFailureResult")
 }
 
 @main
@@ -146,6 +148,10 @@ struct BabyBookApp: App {
 
     init() {
         PaymentService.shared.listenForTransactions()
+        // App 启动时预加载 IAP 产品，避免从首页弹窗直接支付时产品列表为空
+        Task {
+            await PaymentService.shared.loadProducts()
+        }
     }
 
     var body: some Scene {
@@ -161,6 +167,8 @@ struct ContentView: View {
     @State private var navigationPath = NavigationPath()
     @State private var restoredOrder: BackendOrder?
     @State private var showRestoredAlert = false
+    @Environment(\.scenePhase) private var scenePhase
+    @State private var previousScenePhase: ScenePhase = .active
 
     var body: some View {
         NavigationStack(path: $navigationPath) {
@@ -178,19 +186,26 @@ struct ContentView: View {
             // App 启动时检查是否有未完成的订单
             restoreOrderIfNeeded()
         }
+        .onChange(of: scenePhase) { newPhase in
+            // 只有真正从后台返回前台时才检查（避免页面内切换 active 时误触发）
+            if newPhase == .active && self.previousScenePhase == .background {
+                restoreOrderIfNeeded()
+            }
+            self.previousScenePhase = newPhase
+        }
         .onReceive(NotificationCenter.default.publisher(for: .orderPaymentRestored)) { notification in
             if let orderId = notification.object as? String {
                 handlePaymentRestored(orderId: orderId)
             }
         }
-        .alert("恢复订单", isPresented: $showRestoredAlert) {
-            Button("继续") {
+        .alert("绘本生成中", isPresented: $showRestoredAlert) {
+            Button("查看") {
                 if let order = restoredOrder {
                     navigateToGenerating(order: order)
                 }
             }
         } message: {
-            Text("检测到未完成的绘本生成订单，是否继续？")
+            Text("检测到有未完成的绘本，点击可查看最新进展")
         }
     }
 
@@ -199,11 +214,15 @@ struct ContentView: View {
         guard debugMode == nil else { return } // 调试模式跳过恢复
 
         Task {
+            print("[订单恢复] 开始检查未完成订单...")
             if let order = await orderStatusManager.restoreOrderIfNeeded() {
+                print("[订单恢复] 发现未完成订单: \(order.id), 状态: \(order.status)")
                 await MainActor.run {
                     self.restoredOrder = order
                     self.showRestoredAlert = true
                 }
+            } else {
+                print("[订单恢复] 没有需要恢复的订单")
             }
         }
     }
@@ -223,10 +242,9 @@ struct ContentView: View {
     }
 
     private func navigateToGenerating(order: BackendOrder) {
-        // 根据订单状态导航到对应页面
-        guard let book = MockService.shared.mockBooks.first(where: { $0.id == order.bookId }) else { return }
+        // 恢复弹窗统一进入生成中页，再由生成中页根据状态内跳完成页/失败页
+        guard let book = MockService.shared.mockBooks.first(where: { $0.bookId == order.bookId }) else { return }
 
-        // 发送通知让 NavigationStack 跳转到生成页
         NotificationCenter.default.post(
             name: .navigateToGenerating,
             object: ["book": book, "order": order]
@@ -294,7 +312,8 @@ struct ContentView: View {
                     errorMessage: nil,
                     createdAt: "2026-06-24T10:01:00Z",
                     updatedAt: "2026-06-24T10:02:00Z"
-                )
+                ),
+                preloadedImage: nil
             )
         case "mybooks":
             MyBooksView()
