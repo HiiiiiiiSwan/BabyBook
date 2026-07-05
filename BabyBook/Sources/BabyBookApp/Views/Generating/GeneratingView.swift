@@ -144,22 +144,17 @@ struct GeneratingView: View {
         .padding(.horizontal, 24)
     }
 
-    // 副标题文案：高亮品牌色加粗
+    // 副标题文案：仅高亮品牌色加粗「1-5分钟」
     private var subtitleText: Text {
-        let base = Text("预计需要")
+        let base = Text("预计共需要")
             .foregroundColor(Color(hex: "#666666"))
-        let highlight1 = Text("1-5分钟")
+        let highlight = Text("1-5分钟")
             .foregroundColor(Color(hex: "#F28C28"))
             .font(.system(size: 14, weight: .bold))
-        let middle = Text("即可获得专属绘本\n请不要")
-            .foregroundColor(Color(hex: "#666666"))
-        let highlight2 = Text("熄屏/关闭页面")
-            .foregroundColor(Color(hex: "#F28C28"))
-            .font(.system(size: 14, weight: .bold))
-        let trailing = Text("，避免生成中断～")
+        let trailing = Text("即可获得专属绘本\n请不要关闭页面，避免生成中断～")
             .foregroundColor(Color(hex: "#666666"))
 
-        return base + highlight1 + middle + highlight2 + trailing
+        return base + highlight + trailing
     }
 
     private var bottomIllustration: some View {
