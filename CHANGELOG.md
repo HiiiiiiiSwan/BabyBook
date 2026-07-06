@@ -12,6 +12,18 @@
 
 ### 2026-07-06
 
+- `feat` 后端生产环境加固与 App 上线前优化
+  - 切换 App API 环境为 production，保留 Railway 域名占位符
+  - 后端 CORS 改为白名单配置，生产环境只允许 `CORS_ORIGIN` 配置的域名
+  - 生产环境关闭 Swagger 文档暴露
+  - `paymentId` 添加唯一索引，并在支付验证前校验 `transactionId` 是否已被使用
+  - `GET /api/upload/image/:filename` 增加 `DeviceAuthGuard` 认证
+  - 新增 `/health` 健康检查端点，Dockerfile `HEALTHCHECK` 改为探测 `/health`
+  - 创建 TypeORM 迁移脚本与 `data-source.ts`，`package.json` 新增 `migration:generate/run/revert` 脚本
+  - 统一模板目录命名为 `pages`（`dream_job`、`color_recognition`）
+  - App 价格展示改用 StoreKit `Product.displayPrice`，无产品时回退到本地价格
+  - 新增 `PrivacyInfo.xcprivacy` 隐私清单文件，并集成到 Xcode 项目与生成脚本
+
 - `fix` 修复杀端恢复后失败页误触发与历史订单反复弹窗
   - `BabyBookApp.swift`：启动时调用 `loadLastOrder()` 清理超过 30 分钟的过期本地订单，防止历史失败记录反复弹窗
   - 恢复弹窗根据订单状态（`FAILED` / `SUCCESS` / `GENERATING`）动态调整标题、文案与路由
