@@ -4,7 +4,5 @@
 <dict>
 	<key>com.apple.developer.in-app-purchase</key>
 	<true/>
-	<key>com.apple.developer.networking.local_network</key>
-	<true/>
 </dict>
 </plist>

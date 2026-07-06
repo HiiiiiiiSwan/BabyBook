@@ -424,9 +424,11 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_IDENTITY = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_TEAM = 7BSKXTD6DF;
+				CODE_SIGN_ENTITLEMENTS = "Sources/BabyBookApp/BabyBookApp.entitlements";
 				GENERATE_INFOPLIST_FILE = NO;
 				INFOPLIST_FILE = "Sources/BabyBookApp/Info.plist";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
@@ -451,7 +453,6 @@
 				// 隐私权限描述
 				INFOPLIST_KEY_NSCameraUsageDescription = "需要访问相机以拍摄宝宝照片，用于生成专属绘本";
 				INFOPLIST_KEY_NSPhotoLibraryUsageDescription = "需要访问相册以选择宝宝照片，用于生成专属绘本";
-				INFOPLIST_KEY_NSLocalNetworkUsageDescription = "需要访问本地网络以连接开发服务器，上传宝宝照片并生成专属绘本";
 				// 加密声明：使用标准 HTTPS 和系统 Keychain，属于豁免范围
 				INFOPLIST_KEY_ITSEncryptionExportComplianceCode = "";  // 空值表示使用标准加密，无需文档
 			};
@@ -462,9 +463,11 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_IDENTITY = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_TEAM = 7BSKXTD6DF;
+				CODE_SIGN_ENTITLEMENTS = "Sources/BabyBookApp/BabyBookApp.entitlements";
 				GENERATE_INFOPLIST_FILE = NO;
 				INFOPLIST_FILE = "Sources/BabyBookApp/Info.plist";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
@@ -489,7 +492,6 @@
 				// 隐私权限描述
 				INFOPLIST_KEY_NSCameraUsageDescription = "需要访问相机以拍摄宝宝照片，用于生成专属绘本";
 				INFOPLIST_KEY_NSPhotoLibraryUsageDescription = "需要访问相册以选择宝宝照片，用于生成专属绘本";
-				INFOPLIST_KEY_NSLocalNetworkUsageDescription = "需要访问本地网络以连接开发服务器，上传宝宝照片并生成专属绘本";
 				// 加密声明：使用标准 HTTPS 和系统 Keychain，属于豁免范围
 				INFOPLIST_KEY_ITSEncryptionExportComplianceCode = "";  // 空值表示使用标准加密，无需文档
 			};

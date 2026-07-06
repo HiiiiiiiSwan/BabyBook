@@ -20,14 +20,21 @@
 	<string>1</string>
 	<key>NSAppTransportSecurity</key>
 	<dict>
-		<!-- 开发阶段：允许局域网 HTTP（192.168.x.x 测试后端）；上线前替换为生产 HTTPS 域名后删除此例外 -->
 		<key>NSAllowsArbitraryLoads</key>
 		<false/>
-		<key>NSAllowsLocalNetworking</key>
-		<true/>
+		<key>NSExceptionDomains</key>
+		<dict>
+			<key>babybook-api-production-ef09.up.railway.app</key>
+			<dict>
+				<key>NSIncludesSubdomains</key>
+				<true/>
+				<key>NSTemporaryExceptionAllowsInsecureHTTPLoads</key>
+				<false/>
+				<key>NSTemporaryExceptionMinimumTLSVersion</key>
+				<string>TLSv1.2</string>
+			</dict>
+		</dict>
 	</dict>
-	<key>NSLocalNetworkUsageDescription</key>
-	<string>需要访问局域网以连接开发测试服务器</string>
 	<key>UIApplicationSceneManifest</key>
 	<dict>
 		<key>UIApplicationSupportsMultipleScenes</key>
