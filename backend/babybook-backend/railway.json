@@ -6,6 +6,7 @@
   },
   "deploy": {
     "startCommand": "node dist/src/main.js",
+    "preDeployCommand": "npm run migration:run:prod",
     "healthcheckPath": "/health",
     "healthcheckTimeout": 30,
     "restartPolicyType": "ON_FAILURE",
