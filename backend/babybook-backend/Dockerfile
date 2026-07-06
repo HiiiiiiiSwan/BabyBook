@@ -45,9 +45,9 @@ USER nodejs
 # 暴露端口
 EXPOSE 3000
 
-# 健康检查
+# 健康检查（使用无需认证的 /health 端点）
 HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
-  CMD node -e "require('http').get('http://localhost:3000/api/order', (r) => r.statusCode === 200 ? process.exit(0) : process.exit(1))"
+  CMD node -e "require('http').get('http://localhost:3000/health', (r) => r.statusCode === 200 ? process.exit(0) : process.exit(1))"
 
 # 启动命令
 CMD ["dumb-init", "node", "dist/src/main.js"]

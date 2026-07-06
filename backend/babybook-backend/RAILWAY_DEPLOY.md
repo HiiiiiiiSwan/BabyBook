@@ -56,16 +56,16 @@ railway up
 # 进入 Railway 容器
 railway connect
 
-# 运行迁移（TypeORM 会自动同步，生产环境建议手动迁移）
-npx typeorm migration:run
+# 运行迁移（生产环境已关闭 synchronize，必须手动执行）
+npm run migration:run
 ```
 
 ## 6. 验证部署
 
 部署完成后，访问以下地址验证：
 
-- API 文档：`https://your-app-url.railway.app/api/docs`
-- 健康检查：`https://your-app-url.railway.app/api/order`
+- API 文档：`https://your-app-url.railway.app/api/docs`（生产环境已关闭）
+- 健康检查：`https://your-app-url.railway.app/health`
 
 ## 7. 自定义域名（可选）
 

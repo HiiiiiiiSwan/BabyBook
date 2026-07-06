@@ -4,6 +4,7 @@ import { ConfigModule, ConfigService } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { ScheduleModule } from '@nestjs/schedule';
 import { ThrottlerModule, ThrottlerGuard } from '@nestjs/throttler';
+import { AppController } from './app.controller';
 import { OrderModule } from './order/order.module';
 import { PaymentModule } from './payment/payment.module';
 import { TaskModule } from './task/task.module';
@@ -29,7 +30,9 @@ import { UploadModule } from './upload/upload.module';
             type: 'postgres',
             url: databaseUrl,
             entities: [__dirname + '/**/*.entity{.ts,.js}'],
+            migrations: [__dirname + '/migrations/**/*{.ts,.js}'],
             synchronize: false, // 生产环境禁止自动同步
+            migrationsRun: false, // 手动运行迁移，避免启动时不可控变更
             ssl: { rejectUnauthorized: false }, // Railway PostgreSQL 需要 SSL
           };
         }
@@ -42,7 +45,9 @@ import { UploadModule } from './upload/upload.module';
           password: configService.get('DB_PASSWORD', 'postgres'),
           database: configService.get('DB_DATABASE', 'babybook'),
           entities: [__dirname + '/**/*.entity{.ts,.js}'],
+          migrations: [__dirname + '/migrations/**/*{.ts,.js}'],
           synchronize: configService.get('NODE_ENV') !== 'production',
+          migrationsRun: false,
           ssl: configService.get('DB_SSL') === 'true' ? { rejectUnauthorized: false } : false,
         };
       },
@@ -66,6 +71,7 @@ import { UploadModule } from './upload/upload.module';
     BookModule,
     UploadModule,
   ],
+  controllers: [AppController],
   providers: [
     // 将 ThrottlerGuard 注册为全局守卫，所有接口默认受限流保护
     {

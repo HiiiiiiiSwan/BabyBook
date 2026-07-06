@@ -84,6 +84,16 @@ def collect_files():
                             "dir": "Resources"
                         })
 
+    # PrivacyInfo.xcprivacy（放在 Sources/BabyBookApp 根目录）
+    privacy_info_path = os.path.join(SOURCES_DIR, "PrivacyInfo.xcprivacy")
+    if os.path.exists(privacy_info_path):
+        resource_files.append({
+            "path": privacy_info_path,
+            "rel_path": "PrivacyInfo.xcprivacy",
+            "name": "PrivacyInfo.xcprivacy",
+            "dir": ""
+        })
+
     swift_files.sort(key=lambda x: x["rel_path"])
     resource_files.sort(key=lambda x: x["rel_path"])
     asset_catalogs.sort(key=lambda x: x["rel_path"])

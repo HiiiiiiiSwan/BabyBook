@@ -45,6 +45,7 @@
 		0158CDFAB5914902BBBE3079 /* cover3.png in Resources */ = {isa = PBXBuildFile; fileRef = 76BBFDA1961448AFB9EBCD8F /* cover3.png */; };
 		53C004FE501045A59EF6540C /* cover2.png in Resources */ = {isa = PBXBuildFile; fileRef = 7A476055DC12430BA9BA5362 /* cover2.png */; };
 		BFB6BFA8D56444108B4D5757 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = EEF788B745644AE6900F2785 /* Assets.xcassets */; };
+		A1B2C3D4E5F6789012345678 /* PrivacyInfo.xcprivacy in Resources */ = {isa = PBXBuildFile; fileRef = B2C3D4E5F678901234567890 /* PrivacyInfo.xcprivacy */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -88,6 +89,7 @@
 		7A476055DC12430BA9BA5362 /* cover2.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = "cover2.png"; path = "cover2.png"; sourceTree = "<group>"; };
 		EEF788B745644AE6900F2785 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; name = "Assets.xcassets"; path = "Assets.xcassets"; sourceTree = "<group>"; };
 		E18550D544134DADA649D073 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; name = "Info.plist"; path = "Info.plist"; sourceTree = "<group>"; };
+		B2C3D4E5F678901234567890 /* PrivacyInfo.xcprivacy */ = {isa = PBXFileReference; lastKnownFileType = text.xml; name = "PrivacyInfo.xcprivacy"; path = "PrivacyInfo.xcprivacy"; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -135,6 +137,7 @@
 				B865B0F988E64D2080966EAF /* Views */,
 				E28FFB1BAABB441FAF4F5060 /* BabyBookApp.swift */,
 				E18550D544134DADA649D073 /* Info.plist */,
+				B2C3D4E5F678901234567890 /* PrivacyInfo.xcprivacy */,
 			);
 			path = BabyBookApp;
 			sourceTree = "<group>";
@@ -371,6 +374,7 @@
 				0158CDFAB5914902BBBE3079 /* cover3.png in Resources */,
 				53C004FE501045A59EF6540C /* cover2.png in Resources */,
 				BFB6BFA8D56444108B4D5757 /* Assets.xcassets in Resources */,
+				A1B2C3D4E5F6789012345678 /* PrivacyInfo.xcprivacy in Resources */,
 
 			);
 			runOnlyForDeploymentPostprocessing = 0;

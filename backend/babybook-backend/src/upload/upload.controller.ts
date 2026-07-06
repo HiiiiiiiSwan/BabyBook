@@ -84,7 +84,10 @@ export class UploadController {
    * 获取上传的图片
    */
   @Get('image/:filename')
+  @UseGuards(DeviceAuthGuard)
   @ApiOperation({ summary: '获取上传的图片' })
+  @ApiResponse({ status: 200, description: '获取成功' })
+  @ApiResponse({ status: 401, description: '缺少或无效的设备标识' })
   async getImage(@Param('filename') filename: string, @Res() res: Response) {
     const filePath = `./uploads/temp/${filename}`;
 

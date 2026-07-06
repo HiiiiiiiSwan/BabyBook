@@ -13,23 +13,59 @@ async function bootstrap() {
     forbidNonWhitelisted: true, // 禁止提交 DTO 中未定义的属性
   }));
 
-  // 配置 Swagger 文档
-  const config = new DocumentBuilder()
-    .setTitle('BabyBook API')
-    .setDescription('宝贝绘本后端 API 文档')
-    .setVersion('1.0.0')
-    .addTag('订单', '订单管理相关接口')
-    .addTag('支付', 'Apple IAP 支付验证')
-    .addTag('任务', 'AI 生成任务管理')
-    .build();
-  const document = SwaggerModule.createDocument(app, config);
-  SwaggerModule.setup('api/docs', app, document);
+  // 配置 Swagger 文档（生产环境不暴露）
+  if (process.env.NODE_ENV !== 'production') {
+    const config = new DocumentBuilder()
+      .setTitle('BabyBook API')
+      .setDescription('宝贝绘本后端 API 文档')
+      .setVersion('1.0.0')
+      .addTag('订单', '订单管理相关接口')
+      .addTag('支付', 'Apple IAP 支付验证')
+      .addTag('任务', 'AI 生成任务管理')
+      .build();
+    const document = SwaggerModule.createDocument(app, config);
+    SwaggerModule.setup('api/docs', app, document);
+  }
 
-  // 启用 CORS（允许 iOS App 访问）
+  // 启用 CORS（iOS App 白名单）
+  const nodeEnv = process.env.NODE_ENV;
+  const corsOriginEnv = process.env.CORS_ORIGIN;
+  const productionOrigins = corsOriginEnv ? corsOriginEnv.split(',').map((o) => o.trim()) : [];
+
   app.enableCors({
-    origin: '*',
+    origin: (origin: string | undefined, callback: (err: Error | null, allow?: boolean) => void) => {
+      // 生产环境：只允许配置的白名单域名
+      if (nodeEnv === 'production') {
+        if (!origin || productionOrigins.includes(origin)) {
+          callback(null, true);
+          return;
+        }
+        callback(new Error('不允许的跨域来源'), false);
+        return;
+      }
+
+      // 开发/测试环境：允许本地、局域网、预发布域名
+      const allowedOrigins = [
+        'http://localhost:3000',
+        'http://localhost:8081',
+        'https://staging-api.babybook.com',
+        ...productionOrigins,
+      ];
+      const isAllowed =
+        !origin ||
+        allowedOrigins.includes(origin) ||
+        /^https?:\/\/192\.168\.\d{1,3}\.\d{1,3}(:\d+)?$/.test(origin) ||
+        /^https?:\/\/10\.\d{1,3}\.\d{1,3}\.\d{1,3}(:\d+)?$/.test(origin);
+
+      if (isAllowed) {
+        callback(null, true);
+      } else {
+        callback(new Error('不允许的跨域来源'), false);
+      }
+    },
     methods: 'GET,HEAD,PUT,PATCH,POST,DELETE',
     allowedHeaders: 'Content-Type,Authorization,X-Device-Id',
+    credentials: false,
   });
 
   const port = process.env.PORT ?? 3000;

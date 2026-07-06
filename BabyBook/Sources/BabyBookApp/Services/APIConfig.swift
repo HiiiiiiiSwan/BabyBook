@@ -11,7 +11,7 @@ enum APIConfig {
     }
 
     // 当前环境（修改此处切换）
-    static let current: Environment = .lan
+    static let current: Environment = .production
 
     // 后端服务地址
     static var baseURL: String {

@@ -3,6 +3,7 @@ import SwiftUI
 struct BookDetailView: View {
     let book: Book
     @Environment(\.dismiss) private var dismiss
+    @StateObject private var paymentService = PaymentService.shared
     @State private var showUploadSheet = false
     @State private var showLeaveAppAlert = false
     @State private var currentPageIndex = 0  // 当前展示的页面索引
@@ -394,7 +395,7 @@ struct BookDetailView: View {
                     }
                     .padding(.horizontal, 32)
 
-                    Text("仅需¥\(String(format: "%.1f", book.price))")
+                    Text("仅需\(displayPrice)")
                         .font(.system(size: 12, weight: .bold))
                         .foregroundColor(.white)
                         .padding(.horizontal, 10)
@@ -455,6 +456,13 @@ struct BookDetailView: View {
         return nil
     }
 
+    private var displayPrice: String {
+        if let displayPrice = paymentService.product(for: book.bookId)?.displayPrice {
+            return "¥\(displayPrice)"
+        }
+        return "¥\(String(format: "%.1f", book.price))"
+    }
+
     private func pageBundlePath(for named: String) -> String {
         switch book.bookId {
         case "Book001":
@@ -474,9 +482,9 @@ struct BookDetailView: View {
         case "Book001":
             basePath = "/Users/wang/Documents/Vibe coding/【新】宝贝绘本/templates/self_intro/pages"
         case "Book002":
-            basePath = "/Users/wang/Documents/Vibe coding/【新】宝贝绘本/templates/dream_job/page"
+            basePath = "/Users/wang/Documents/Vibe coding/【新】宝贝绘本/templates/dream_job/pages"
         case "Book003":
-            basePath = "/Users/wang/Documents/Vibe coding/【新】宝贝绘本/templates/color_recognition/page"
+            basePath = "/Users/wang/Documents/Vibe coding/【新】宝贝绘本/templates/color_recognition/pages"
         default:
             basePath = "/Users/wang/Documents/Vibe coding/【新】宝贝绘本/templates/self_intro/pages"
         }

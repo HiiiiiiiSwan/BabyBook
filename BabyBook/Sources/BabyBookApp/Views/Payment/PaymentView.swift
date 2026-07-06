@@ -73,6 +73,13 @@ struct PaymentView: View {
         }
     }
 
+    private var displayPrice: String {
+        if let displayPrice = paymentService.product(for: book.bookId)?.displayPrice {
+            return "¥\(displayPrice)"
+        }
+        return "¥\(String(format: "%.2f", order.amount))"
+    }
+
     // MARK: - 顶部标题
     private var headerSection: some View {
         Text("支付")
@@ -120,7 +127,7 @@ struct PaymentView: View {
                         .font(.system(size: 12))
                         .foregroundColor(Color(hex: "#999999"))
 
-                    Text("¥\(String(format: "%.2f", order.amount))")
+                    Text(displayPrice)
                         .font(.system(size: 18, weight: .bold))
                         .foregroundColor(Color(hex: "#F28C28"))
                         .padding(.top, 4)
@@ -140,7 +147,7 @@ struct PaymentView: View {
                         .font(.system(size: 14))
                         .foregroundColor(Color(hex: "#666666"))
                     Spacer()
-                    Text("¥\(String(format: "%.2f", order.amount))")
+                    Text(displayPrice)
                         .font(.system(size: 14))
                         .foregroundColor(Color(hex: "#222222"))
                 }
@@ -163,7 +170,7 @@ struct PaymentView: View {
                         .font(.system(size: 16, weight: .semibold))
                         .foregroundColor(Color(hex: "#222222"))
                     Spacer()
-                    Text("¥\(String(format: "%.2f", order.amount))")
+                    Text(displayPrice)
                         .font(.system(size: 24, weight: .bold))
                         .foregroundColor(Color(hex: "#F28C28"))
                 }

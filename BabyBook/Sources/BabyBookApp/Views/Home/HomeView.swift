@@ -226,7 +226,7 @@ struct HomeView: View {
                         }
                         .padding(.horizontal, 32)
 
-                        Text("仅需¥\(String(format: "%.1f", selectedBook?.price ?? 3.0))")
+                        Text("仅需\(displayPrice(for: selectedBook))")
                             .font(.system(size: 12, weight: .bold))
                             .foregroundColor(.white)
                             .padding(.horizontal, 10)
@@ -479,7 +479,7 @@ struct UploadPhotoSheet: View {
                         .font(.system(size: 24, weight: .bold))
                         .foregroundColor(DesignTokens.Colors.primaryText)
 
-                    Text("定制专属《\(book.name)》，仅需\(Text("1张").foregroundColor(DesignTokens.Colors.primary))宝宝照片并支付\(Text("￥\(String(format: "%.1f", book.price))").foregroundColor(DesignTokens.Colors.primary))")
+                    Text("定制专属《\(book.name)》，仅需\(Text("1张").foregroundColor(DesignTokens.Colors.primary))宝宝照片并支付\(Text(displayPrice(for: book)).foregroundColor(DesignTokens.Colors.primary))")
                         .font(.system(size: 14, weight: .medium))
                         .foregroundColor(DesignTokens.Colors.secondaryText)
                 }
@@ -861,6 +861,16 @@ struct UploadPhotoSheet: View {
             }
         }
     }
+}
+
+// MARK: - 根据绘本获取展示价格（优先 StoreKit Product.displayPrice）
+@MainActor
+private func displayPrice(for book: Book?) -> String {
+    guard let book = book else { return "¥3.0" }
+    if let displayPrice = PaymentService.shared.product(for: book.bookId)?.displayPrice {
+        return "¥\(displayPrice)"
+    }
+    return "¥\(String(format: "%.1f", book.price))"
 }
 
 #if canImport(UIKit)

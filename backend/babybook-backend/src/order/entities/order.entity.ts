@@ -27,8 +27,8 @@ export class Order {
   @Index()
   status: OrderStatus; // 订单状态
 
-  @Column({ type: 'varchar', length: 255, nullable: true })
-  paymentId: string; // Apple 支付交易ID
+  @Column({ type: 'varchar', length: 255, nullable: true, unique: true })
+  paymentId: string; // Apple 支付交易ID（全局唯一，防止 transactionId 复用）
 
   @Column({ type: 'text', nullable: true })
   receiptData: string; // Apple 支付收据（Base64）

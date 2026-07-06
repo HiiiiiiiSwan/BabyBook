@@ -63,7 +63,15 @@ export class PaymentService {
       throw new BadRequestException('订单状态不正确，无法重复支付');
     }
 
-    // 2. 验证 Apple 收据
+    // 2. 校验 transactionId 是否已被其他订单使用
+    const existingOrder = await this.orderRepository.findOne({
+      where: { paymentId: transactionId },
+    });
+    if (existingOrder) {
+      throw new BadRequestException('该交易已完成支付，请勿重复提交');
+    }
+
+    // 3. 验证 Apple 收据
     const isValid = await this.verifyAppleReceipt(receiptData, transactionId);
     if (!isValid) {
       throw new BadRequestException('支付验证失败');
