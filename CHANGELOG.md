@@ -12,6 +12,17 @@
 
 ### 2026-07-06
 
+- `fix` 修复 Railway 部署缺失绘本模板导致《认识颜色》生成失败
+  - 根因：Docker 构建上下文为 `backend/babybook-backend`，未包含项目根目录的 `templates/`，容器内 `/templates/...` 路径不存在
+  - `railway.json`：构建上下文改为项目根目录，`dockerfilePath` 指定为 `backend/babybook-backend/Dockerfile`
+  - `Dockerfile`：从项目根目录复制后端源码与 `templates/` 到镜像 `/app/templates`
+  - `ai.service.ts`：`getTemplatePath` 增加 `/app/templates` 等多路径候选，兼容 Docker 生产环境与本地开发
+  - 新增项目根目录 `.dockerignore`，限制构建上下文仅包含后端源码与模板资源
+
+- `fix` 修复 App 健康检查端点 URL 错误
+  - 后端 `/health` 位于根路径，不加 `/api` 前缀
+  - `APIConfig.swift`：`healthCheck` 使用 `baseURL + "/health"`，其他接口仍使用 `fullBaseURL`
+
 - `feat` 后端生产环境加固与 App 上线前优化
   - 切换 App API 环境为 production，保留 Railway 域名占位符
   - 后端 CORS 改为白名单配置，生产环境只允许 `CORS_ORIGIN` 配置的域名

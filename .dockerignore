@@ -1,0 +1,16 @@
+# Docker 构建上下文白名单（仅用于 Railway 以项目根目录为构建上下文时）
+# 默认忽略所有文件，再按需放行后端源码与绘本模板资源
+
+**
+
+# 后端 NestJS 项目
+!backend/babybook-backend/package*.json
+!backend/babybook-backend/nest-cli.json
+!backend/babybook-backend/tsconfig*.json
+!backend/babybook-backend/src/
+
+# 绘本模板资源（AI 生成依赖）
+!templates/
+
+# 文档
+!README.md

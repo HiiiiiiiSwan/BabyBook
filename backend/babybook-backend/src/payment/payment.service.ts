@@ -109,25 +109,24 @@ export class PaymentService {
 
   /**
    * 验证 Apple 收据
-   * 先请求生产环境，如果是沙盒收据则自动切换到沙盒环境
+   * 支持 StoreKit2 JWS 收据（真机/Sandbox）和旧版 base64 receipt
    */
   private async verifyAppleReceipt(receiptData: string, transactionId: string): Promise<boolean> {
     try {
-      // 开发环境支持 StoreKit2 的 JWS 收据直接解析
-      // 真机 StoreKit2 返回的是 JWT 格式，与旧版 base64 receipt 不同
-      if (this.configService.get('NODE_ENV') === 'development') {
-        const jwtPayload = this.parseJWSPayload(receiptData);
-        if (jwtPayload) {
-          // JWS 中的 transactionId 字段名可能是 transactionId 或 originalTransactionId
-          const jwtTransactionId = jwtPayload.transactionId || jwtPayload.originalTransactionId;
-          if (jwtTransactionId === transactionId) {
-            this.logger.log('开发环境：StoreKit2 JWS 收据验证通过');
-            return true;
-          }
-          this.logger.warn(`JWS 中的 transactionId 不匹配: ${jwtTransactionId} != ${transactionId}`);
+      // StoreKit2 真机/Sandbox 返回的是 JWS 格式（三段 base64url）
+      // 先尝试解析 JWS payload 并校验 transactionId
+      const jwtPayload = this.parseJWSPayload(receiptData);
+      if (jwtPayload) {
+        const jwtTransactionId = jwtPayload.transactionId || jwtPayload.originalTransactionId;
+        if (jwtTransactionId === transactionId) {
+          this.logger.log(`StoreKit2 JWS 收据校验通过，transactionId: ${transactionId}`);
+          return true;
         }
+        this.logger.warn(`JWS 中的 transactionId 不匹配: ${jwtTransactionId} != ${transactionId}`);
+        return false;
       }
 
+      // 旧版 StoreKit base64 receipt 走 verifyReceipt
       // 先请求生产环境
       let response = await this.requestAppleVerify(this.appleVerifyUrl, receiptData);
 

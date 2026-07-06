@@ -159,31 +159,33 @@ export class AiService {
 
   /**
    * 获取模板文件路径
+   * 支持多环境：Docker 容器 /app/templates、本地开发相对路径等
    */
   private getTemplatePath(bookId: BookTemplate): string {
-    // 模板文件位于项目根目录的 templates/ 目录下
-    const projectRoot = path.join(process.cwd(), '..', '..'); // 从 backend/babybook-backend/src 回到项目根
-
-    const templatePaths: Record<BookTemplate, string> = {
-      [BookTemplate.SELF_INTRO]: path.join(projectRoot, 'templates', 'self_intro', 'all-none.png'),
-      [BookTemplate.DREAM_JOB]: path.join(projectRoot, 'templates', 'dream_job', 'all-none.png'),
-      [BookTemplate.COLOR_RECOGNITION]: path.join(projectRoot, 'templates', 'color_recognition', 'all-none.png'),
+    const dirNames: Record<BookTemplate, string> = {
+      [BookTemplate.SELF_INTRO]: 'self_intro',
+      [BookTemplate.DREAM_JOB]: 'dream_job',
+      [BookTemplate.COLOR_RECOGNITION]: 'color_recognition',
     };
+    const dirName = dirNames[bookId];
 
-    // 尝试项目根目录相对路径
-    let templatePath = templatePaths[bookId];
-    if (!fs.existsSync(templatePath)) {
-      // 回退：尝试从 backend 目录向上找
-      const altRoot = path.join(process.cwd(), '..');
-      const altPaths: Record<BookTemplate, string> = {
-        [BookTemplate.SELF_INTRO]: path.join(altRoot, 'templates', 'self_intro', 'all-none.png'),
-        [BookTemplate.DREAM_JOB]: path.join(altRoot, 'templates', 'dream_job', 'all-none.png'),
-        [BookTemplate.COLOR_RECOGNITION]: path.join(altRoot, 'templates', 'color_recognition', 'all-none.png'),
-      };
-      templatePath = altPaths[bookId];
+    const candidates = [
+      // Docker 生产环境：模板复制到 /app/templates
+      path.join(process.cwd(), 'templates', dirName, 'all-none.png'),
+      // 本地开发：从 backend/babybook-backend 向上到项目根
+      path.join(process.cwd(), '..', '..', 'templates', dirName, 'all-none.png'),
+      // 本地运行构建产物：从 dist/src 向上到项目根
+      path.join(process.cwd(), '..', '..', '..', 'templates', dirName, 'all-none.png'),
+    ];
+
+    for (const candidate of candidates) {
+      if (fs.existsSync(candidate)) {
+        return candidate;
+      }
     }
 
-    return templatePath;
+    // 均不存在时返回第一个候选，触发标准“模板文件不存在”错误
+    return candidates[0];
   }
 
   /**

@@ -89,7 +89,13 @@ enum APIEndpoint {
     }
 
     var url: URL? {
-        return URL(string: APIConfig.fullBaseURL + path)
+        switch self {
+        case .healthCheck:
+            // 健康检查端点位于根路径，不加 /api 前缀
+            return URL(string: APIConfig.baseURL + path)
+        default:
+            return URL(string: APIConfig.fullBaseURL + path)
+        }
     }
 
     var method: String {

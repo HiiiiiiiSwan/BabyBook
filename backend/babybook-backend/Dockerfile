@@ -5,12 +5,17 @@ FROM node:22-alpine AS builder
 
 WORKDIR /app
 
-# 复制 package 文件
-COPY package*.json ./
+# 复制 package 文件（构建上下文为项目根目录）
+COPY backend/babybook-backend/package*.json ./
 RUN npm ci && npm cache clean --force
 
-# 复制源代码
-COPY . .
+# 复制后端源代码（构建上下文为项目根目录）
+COPY backend/babybook-backend/tsconfig*.json ./
+COPY backend/babybook-backend/nest-cli.json ./
+COPY backend/babybook-backend/src ./src
+
+# 复制绘本模板资源到容器固定目录，供 AI 生图时读取
+COPY templates ./templates
 
 # 构建 NestJS 项目
 RUN npm run build
@@ -28,10 +33,11 @@ WORKDIR /app
 # 安装 dumb-init 用于正确处理信号
 RUN apk add --no-cache dumb-init
 
-# 复制构建产物和依赖
+# 复制构建产物、依赖与模板资源
 COPY --from=builder /app/dist ./dist
 COPY --from=builder /app/node_modules ./node_modules
 COPY --from=builder /app/package*.json ./
+COPY --from=builder /app/templates ./templates
 
 # 验证文件
 RUN ls -la dist/src/ && ls -la dist/src/main.js
