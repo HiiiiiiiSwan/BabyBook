@@ -6,6 +6,7 @@ import { ScheduleModule } from '@nestjs/schedule';
 import { ThrottlerModule, ThrottlerGuard } from '@nestjs/throttler';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
+import { KeepAliveService } from './common/keep-alive.service';
 import { OrderModule } from './order/order.module';
 import { PaymentModule } from './payment/payment.module';
 import { TaskModule } from './task/task.module';
@@ -75,6 +76,7 @@ import { UploadModule } from './upload/upload.module';
   controllers: [AppController],
   providers: [
     AppService,
+    KeepAliveService,
     // 将 ThrottlerGuard 注册为全局守卫，所有接口默认受限流保护
     {
       provide: APP_GUARD,
