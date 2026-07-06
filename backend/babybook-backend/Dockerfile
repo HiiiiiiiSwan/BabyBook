@@ -40,6 +40,10 @@ RUN ls -la dist/src/ && ls -la dist/src/main.js
 RUN addgroup -g 1001 -S nodejs && \
     adduser -S nodejs -u 1001
 
+# 预创建上传临时目录并授权给 nodejs 用户
+# multer 在模块加载时会 mkdirSync('./uploads/temp')，非 root 用户需提前拥有该目录写权限
+RUN mkdir -p /app/uploads/temp && chown -R nodejs:nodejs /app/uploads
+
 USER nodejs
 
 # 暴露端口
