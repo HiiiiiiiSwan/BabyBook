@@ -59,15 +59,25 @@ export class PaymentService {
       throw new NotFoundException('订单不存在');
     }
 
+    // 幂等处理：同一笔交易被 StoreKit 重放时，若该订单已用同一 transactionId 支付过，
+    // 直接返回成功，避免客户端误判为失败（不重复扣款、不重复建任务）
     if (order.status !== OrderStatus.UNPAID) {
+      if (order.paymentId === transactionId) {
+        this.logger.log(`订单 ${orderId} 已支付（交易 ${transactionId} 重放），幂等返回成功`);
+        return {
+          success: true,
+          orderId: order.id,
+          status: order.status,
+        };
+      }
       throw new BadRequestException('订单状态不正确，无法重复支付');
     }
 
-    // 2. 校验 transactionId 是否已被其他订单使用
+    // 2. 校验 transactionId 是否已被其他订单使用（防止一笔交易顶多个订单）
     const existingOrder = await this.orderRepository.findOne({
       where: { paymentId: transactionId },
     });
-    if (existingOrder) {
+    if (existingOrder && existingOrder.id !== orderId) {
       throw new BadRequestException('该交易已完成支付，请勿重复提交');
     }
 
