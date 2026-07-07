@@ -169,6 +169,7 @@ export class TaskService {
     task.startedAt = new Date();
     task.progress = 10;
     await this.taskRepository.save(task);
+    this.logger.log(`[任务时间线] 任务 ${taskId} 开始执行，订单 ${task.orderId}，时间 ${task.startedAt.toISOString()}`);
 
     try {
       this.logger.log(`开始执行任务: ${taskId}, 订单: ${task.orderId}`);
@@ -182,12 +183,15 @@ export class TaskService {
       // 更新进度
       task.progress = 30;
       await this.taskRepository.save(task);
+      this.logger.log(`[任务时间线] 任务 ${taskId} 进度 30%，准备调用 AI`);
 
       // 调用 AI 生成九宫格图片
+      this.logger.log(`[任务时间线] 任务 ${taskId} 开始 AI 生成`);
       const { resultUrl, localPath } = await this.aiService.generateBookImage({
         bookId: order.bookId,
         imageUrl: order.imageUrl,
       });
+      this.logger.log(`[任务时间线] 任务 ${taskId} AI 生成完成`);
 
       // 更新进度
       task.progress = 80;
@@ -199,6 +203,7 @@ export class TaskService {
       task.resultUrl = resultUrl;
       task.completedAt = new Date();
       await this.taskRepository.save(task);
+      this.logger.log(`[任务时间线] 任务 ${taskId} 标记为 COMPLETED，完成时间 ${task.completedAt.toISOString()}`);
 
       // 更新订单状态为成功
       order.status = OrderStatus.SUCCESS;
@@ -232,6 +237,7 @@ export class TaskService {
         await this.cleanupTempFiles(order);
       }
       await this.orderRepository.save(order);
+      this.logger.log(`[任务时间线] 任务 ${taskId} 标记为 FAILED，当前重试次数 ${task.retryCount}，订单状态 ${order.status}`);
     }
   }
 
@@ -249,11 +255,11 @@ export class TaskService {
     });
 
     if (failedTasks.length > 0) {
-      this.logger.log(`发现 ${failedTasks.length} 个失败任务，开始重试`);
+      this.logger.log(`[任务时间线-Cron] 发现 ${failedTasks.length} 个失败任务，开始重试`);
     }
 
     for (const task of failedTasks) {
-      this.logger.log(`重试任务: ${task.id}, 当前重试次数: ${task.retryCount}`);
+      this.logger.log(`[任务时间线-Cron] 重试任务: ${task.id}, 当前重试次数: ${task.retryCount}`);
       // 重置为 PENDING 状态，重新执行
       task.status = TaskStatus.PENDING;
       task.errorMessage = undefined;
@@ -289,8 +295,12 @@ export class TaskService {
       relations: ['order'],
     });
 
+    if (timeoutTasks.length > 0) {
+      this.logger.log(`[任务时间线-Cron] 发现 ${timeoutTasks.length} 个超时 RUNNING 任务`);
+    }
+
     for (const task of timeoutTasks) {
-      this.logger.warn(`任务超时: ${task.id}`);
+      this.logger.warn(`[任务时间线-Cron] 任务超时: ${task.id}, 开始时间 ${task.startedAt.toISOString()}`);
       task.status = TaskStatus.FAILED;
       task.errorMessage = '任务执行超时';
       task.retryCount += 1;

@@ -95,6 +95,7 @@ struct GeneratingView: View {
             reached89Time = nil
             completedTime = nil
             persistOrderAsGenerating()
+            print("[生成页] onAppear orderId=\(order.id), isRestored=\(isRestored), 当前订单状态=\(order.status)")
             startGeneration()
         }
         .onDisappear {
@@ -329,6 +330,7 @@ struct GeneratingView: View {
         let mapped = mapBackendProgressToFrontend(backendProgress)
         let floor = min(89, Double(mapped))
         if pollingProgress < floor {
+            print("[生成页-进度] 后端进度 \(backendProgress)% 映射为前端 \(mapped)%，抬升地板从 \(String(format: "%.1f", pollingProgress))% 到 \(String(format: "%.1f", floor))%")
             pollingProgress = floor
         }
     }
@@ -476,6 +478,8 @@ struct GeneratingView: View {
     private func handleNetworkLost() {
         // 整理/下载阶段的断网由各自的重试逻辑处理，这里只管 AI 生图轮询阶段
         guard !isFinalizing, !navigateToComplete, !navigateToFailureResult else { return }
+        let progress = Int(progressValue * 100)
+        print("[生成页-网络] 网络断开，暂停计时与进度 progress=\(progress)%, isTimeoutPaused=true")
         // 暂停总超时计时，避免把断网等待误判为生成超时
         statusManager.isTimeoutPaused = true
         // 暂停前端匀速进度，停在当前位置
@@ -486,11 +490,14 @@ struct GeneratingView: View {
     // MARK: - 网络恢复：恢复计时与进度，隐藏提示，并确保轮询在运行
     @MainActor
     private func handleNetworkRecovered() {
+        let progress = Int(progressValue * 100)
+        print("[生成页-网络] 网络恢复，当前进度=\(progress)%, isPolling=\(statusManager.isPolling), isTimeoutPaused=\(statusManager.isTimeoutPaused)")
         // 恢复总超时计时
         statusManager.isTimeoutPaused = false
         hideNetworkToast()
         // 整理阶段若正处于重试等待中，立刻打断等待，尽早发起下载
         if isWaitingRetry {
+            print("[生成页-网络] 整理阶段处于重试等待，立即打断")
             resumeRetryWaitImmediately()
             return
         }
@@ -498,6 +505,7 @@ struct GeneratingView: View {
         guard !isFinalizing, !navigateToComplete, !navigateToFailureResult else { return }
         resumePollingProgressAnimation()
         if !statusManager.isPolling {
+            print("[生成页-网络] 轮询已停止，重新启动轮询")
             statusManager.startPolling(orderId: order.id)
         }
     }
@@ -516,8 +524,13 @@ struct GeneratingView: View {
     #endif
 
     private func handleTimeout() {
+        let progress = Int(progressValue * 100)
+        print("[生成页-超时] 触发 handleTimeout progress=\(progress)%, isFinalizing=\(isFinalizing), navigateToComplete=\(navigateToComplete), navigateToFailureResult=\(navigateToFailureResult)")
         // 双重保护：整理阶段或已跳转完成页时，超时事件属于过期信号，直接忽略
-        guard !isFinalizing, !navigateToComplete, !navigateToFailureResult else { return }
+        guard !isFinalizing, !navigateToComplete, !navigateToFailureResult else {
+            print("[生成页-超时] 已处于非轮询阶段或已跳转，忽略本次超时")
+            return
+        }
         timer?.invalidate()
         statusManager.stopPolling()
         stopPollingProgressAnimation()
@@ -527,11 +540,18 @@ struct GeneratingView: View {
     }
 
     private func checkTaskStatus() {
-        guard let task = statusManager.currentTask else { return }
+        guard let task = statusManager.currentTask else {
+            print("[生成页-状态] currentTask 为空，跳过检查")
+            return
+        }
 
+        print("[生成页-状态] 收到任务状态 status=\(task.status), progress=\(task.progress), orderId=\(task.orderId)")
         switch task.status {
         case "COMPLETED":
-            guard !isFinalizing else { return }
+            guard !isFinalizing else {
+                print("[生成页-状态] COMPLETED 但已在整理阶段，忽略")
+                return
+            }
             // 记录后端任务变为 COMPLETED 的时间，并打印全程耗时与 89% 等待时长
             completedTime = Date()
             if let start = generationStartTime {
@@ -563,6 +583,7 @@ struct GeneratingView: View {
             // 此时任务(task)是 FAILED，但订单(order)仍保持 GENERATING。
             // 因此必须以订单状态为准：订单已 FAILED 才是真正的最终失败，
             // 否则说明后端还在自动重试，应继续留在生成中页轮询等待。
+            print("[生成页-状态] 任务状态 FAILED，开始核实订单最终状态")
             handleTaskFailed(task: task)
         case "RUNNING":
             statusText = "绘本创作中..."
@@ -572,6 +593,7 @@ struct GeneratingView: View {
             statusText = "排队中，即将开始..."
             liftPollingProgressFloor(to: task.progress)
         default:
+            print("[生成页-状态] 未知任务状态: \(task.status)")
             break
         }
     }
@@ -654,6 +676,8 @@ struct GeneratingView: View {
             return
         }
 
+        print("[生成页-下载] 开始下载结果图 resultUrl 前缀=\(resultUrl.prefix(80))...")
+
         await MainActor.run {
             statusText = "创作完成 正在呈现…"
         }
@@ -661,11 +685,13 @@ struct GeneratingView: View {
         do {
             let imageData = try await NetworkService.shared.downloadFile(from: resultUrl)
             guard !Task.isCancelled else { return }
+            print("[生成页-下载] 结果图下载成功，数据大小=\(imageData.count) bytes")
 
             try writeGeneratedBook(imageData: imageData, createTime: parseISODate(task.updatedAt))
 
             #if canImport(UIKit)
             let preloaded = UIImage(data: imageData)
+            print("[生成页-下载] 图片预加载结果: \(preloaded == nil ? "失败" : "成功")")
             #else
             let preloaded: UIImage? = nil
             #endif
@@ -699,6 +725,8 @@ struct GeneratingView: View {
     private func retryDownloadAndPreload(error: Error, currentAttempt: Int = 1) async {
         guard !Task.isCancelled else { return }
 
+        print("[生成页-下载] 第 \(currentAttempt) 次下载重试准备等待...")
+
         let retryIntervals: [UInt64] = [
             2_000_000_000,
             4_000_000_000,
@@ -730,8 +758,10 @@ struct GeneratingView: View {
         }
 
         do {
+            print("[生成页-下载] 第 \(currentAttempt) 次下载重试请求...")
             let imageData = try await NetworkService.shared.downloadFile(from: resultUrl)
             guard !Task.isCancelled else { return }
+            print("[生成页-下载] 第 \(currentAttempt) 次下载重试成功")
 
             // 下载成功：恢复进度并平滑走到完成
             await MainActor.run {
@@ -751,7 +781,7 @@ struct GeneratingView: View {
             await navigateToCompleteWithMinDelay(preloadedImage: preloaded)
         } catch {
             guard !Task.isCancelled else { return }
-            print("第 \(currentAttempt) 次重试失败: \(error)")
+            print("[生成页-下载] 第 \(currentAttempt) 次重试失败: \(error)")
             // 仍然失败：保持暂停，继续下一轮重试
             await MainActor.run {
                 pauseFinalizingProgressAnimation()

@@ -264,6 +264,7 @@ class OrderStatusManager: ObservableObject {
         pollingFailureCount = 0
         // 清空旧 task，避免新的监听器/立即检查读到上次遗留的 FAILED/COMPLETED 状态
         currentTask = nil
+        print("[轮询管理器] startPolling orderId=\(orderId), isPolling=true")
 
         // 保存当前订单到本地（用于崩溃恢复）
         if let order = currentOrder {
@@ -284,8 +285,13 @@ class OrderStatusManager: ObservableObject {
                 if !paused {
                     elapsed += tick
                 }
+                let elapsedSec = elapsed / 1_000_000_000
+                if elapsedSec % 10 == 0 || paused {
+                    print("[轮询管理器-超时计时] elapsed=\(elapsedSec)s, isTimeoutPaused=\(paused), isPolling=\(self.isPolling)")
+                }
             }
             await MainActor.run {
+                print("[轮询管理器-超时计时] 达到 5 分钟上限，设置 isTimeout=true")
                 if self.isPolling {
                     self.isTimeout = true
                     self.isPolling = false
@@ -297,15 +303,18 @@ class OrderStatusManager: ObservableObject {
         pollingTask = Task {
             while !Task.isCancelled {
                 do {
+                    print("[轮询管理器] 查询任务状态 orderId=\(orderId)")
                     if let task = try await NetworkService.shared.getTaskByOrderId(orderId: orderId) {
                         await MainActor.run {
                             self.currentTask = task
                             self.pollingFailureCount = 0
+                            print("[轮询管理器] 任务状态返回 status=\(task.status), progress=\(task.progress)")
                         }
 
                         // 任务完成或失败，停止轮询
                         if task.status == "COMPLETED" || task.status == "FAILED" || task.status == "CANCELLED" {
                             await MainActor.run {
+                                print("[轮询管理器] 任务到达终态 \(task.status)，停止轮询")
                                 self.isPolling = false
                             }
                             break
@@ -314,14 +323,16 @@ class OrderStatusManager: ObservableObject {
                         // 任务尚未创建（404），属于正常等待阶段，不计入网络失败
                         await MainActor.run {
                             self.pollingFailureCount = 0
+                            print("[轮询管理器] 任务尚未创建（404），继续等待")
                         }
                     }
                 } catch {
-                    print("轮询任务状态失败: \(error.localizedDescription)")
+                    print("[轮询管理器] 轮询任务状态失败: \(error.localizedDescription)")
                     // 只有真正的网络错误才累计失败次数，业务错误（5xx等）不视为本地断网
                     if shouldTreatAsNetworkFailure(error) {
                         await MainActor.run {
                             self.pollingFailureCount += 1
+                            print("[轮询管理器] 网络失败计数增加到 \(self.pollingFailureCount)")
                         }
                     } else {
                         await MainActor.run {
@@ -370,6 +381,7 @@ class OrderStatusManager: ObservableObject {
         timeoutTask?.cancel()
         timeoutTask = nil
         isPolling = false
+        print("[轮询管理器] stopPolling 调用，isPolling=false")
     }
 
     /// 取消任务
