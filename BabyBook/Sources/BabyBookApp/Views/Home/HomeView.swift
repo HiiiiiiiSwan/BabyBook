@@ -868,7 +868,7 @@ struct UploadPhotoSheet: View {
 private func displayPrice(for book: Book?) -> String {
     guard let book = book else { return "¥3.0" }
     if let displayPrice = PaymentService.shared.product(for: book.bookId)?.displayPrice {
-        return "¥\(displayPrice)"
+        return displayPrice
     }
     return "¥\(String(format: "%.1f", book.price))"
 }

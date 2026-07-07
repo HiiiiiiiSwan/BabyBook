@@ -458,7 +458,7 @@ struct BookDetailView: View {
 
     private var displayPrice: String {
         if let displayPrice = paymentService.product(for: book.bookId)?.displayPrice {
-            return "¥\(displayPrice)"
+            return displayPrice
         }
         return "¥\(String(format: "%.1f", book.price))"
     }

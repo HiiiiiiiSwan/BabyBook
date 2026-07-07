@@ -7,89 +7,91 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
-		B67FB96DB70A408DBF67A2E4 /* BabyBookApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = E28FFB1BAABB441FAF4F5060 /* BabyBookApp.swift */; };
-		9FB7318169A440C68A794E47 /* APIModels.swift in Sources */ = {isa = PBXBuildFile; fileRef = C8E9BBB1EFAA4C348E5D4AE5 /* APIModels.swift */; };
-		8BC1E1A3134D45DEB5E60B40 /* BookModels.swift in Sources */ = {isa = PBXBuildFile; fileRef = D05D5E216F5144BAAEB7B4C0 /* BookModels.swift */; };
-		01EF2349A5354216AEE5AA60 /* APIConfig.swift in Sources */ = {isa = PBXBuildFile; fileRef = BEB4D20B4CD9467CACDF7EA1 /* APIConfig.swift */; };
-		9F41473FD5814C1B94FDDFA0 /* AppServices.swift in Sources */ = {isa = PBXBuildFile; fileRef = 95D2C839649F490E8E5D6A2B /* AppServices.swift */; };
-		2A4CFAAC27BC438F9FC2905F /* FaceDetectionService.swift in Sources */ = {isa = PBXBuildFile; fileRef = B1A0726E7A1741B68D82B381 /* FaceDetectionService.swift */; };
-		A1C934FB1991442AAF8A2153 /* ImageUploadService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 25CD425BAEB34C559271A5E7 /* ImageUploadService.swift */; };
-		FE3482A4F077495F8104214F /* LocalBookStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3223FC0CBECF4B708BEE47A3 /* LocalBookStore.swift */; };
-		E1A28DA8063440BA9B7D1DCE /* MockService.swift in Sources */ = {isa = PBXBuildFile; fileRef = D92558969FD849208F1F2494 /* MockService.swift */; };
-		33872AE272A6469ABAB31443 /* NetworkService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3750911770684943A552E8ED /* NetworkService.swift */; };
-		242F4D2D25A446F4893EF06D /* PDFService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 54EC425AE2514BE7B88EB68D /* PDFService.swift */; };
-		436941BD69574297BF17AF6D /* PaymentService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6941D6513F4640E8BD482645 /* PaymentService.swift */; };
-		032B8CFA174148C2B51AEF79 /* DesignTokens.swift in Sources */ = {isa = PBXBuildFile; fileRef = 804A766B410F4CC9A0CA1C83 /* DesignTokens.swift */; };
-		E755B8D76AE14AB790257FD3 /* NavigationPath+Environment.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9C8B6BBD00314DE5961B7881 /* NavigationPath+Environment.swift */; };
-		2322220E230042FC923E2C76 /* BookDetailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 65915718405D4881A20A2F56 /* BookDetailView.swift */; };
-		BE9B79029F034CCCB96FAFA7 /* LoadingOverlay.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0EC4565C96D144439F36AEFE /* LoadingOverlay.swift */; };
-		96F199E03383426495EFD20D /* CompleteView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6FF9175D081E4E589A92D397 /* CompleteView.swift */; };
-		9BF695AA43ED4BA0AAC70C0C /* FailureResultView.swift in Sources */ = {isa = PBXBuildFile; fileRef = E572819AAE2E4A248AD2EB93 /* FailureResultView.swift */; };
-		42957A8DBEEC47BB9054F682 /* GeneratingView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 164031AFFCDF4F44814158CC /* GeneratingView.swift */; };
-		7CC855EC5F5E4E0CB3852F79 /* HomeView.swift in Sources */ = {isa = PBXBuildFile; fileRef = ECFA0BEFE9474CF9B1B20921 /* HomeView.swift */; };
-		B01EF80668A64E3095E89C51 /* LocalBookDetailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8BF732A8BFAE417EAE74204C /* LocalBookDetailView.swift */; };
-		6F1FB91B08B549068C8BEEB3 /* MyBooksView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 121C4FC4EA6C4332910A038B /* MyBooksView.swift */; };
-		5D0D674369A743D0BFF13AA9 /* PaymentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5D9FA4AB1795492F8C490EA1 /* PaymentView.swift */; };
-		19851F3B513147E28666B0EE /* CameraView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9D628A07C3BE4013ACC7685C /* CameraView.swift */; };
-		14B67A5B05094EE6B14F1A09 /* UploadPhotoView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 72CE790312264833A081F98F /* UploadPhotoView.swift */; };
-		AED17AD155D64516BC4646B8 /* UploadSheetView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 00C88D988539490D9E1AB720 /* UploadSheetView.swift */; };
-		745915E5490E4268B2EF89DA /* zh-Hans.lproj in Resources */ = {isa = PBXBuildFile; fileRef = 296420515BC94BCFAD16968A /* zh-Hans.lproj */; };
-		1B7EB8C24343406D8825E7A2 /* self_intro in Resources */ = {isa = PBXBuildFile; fileRef = 9E7174E4EDE3423C9B074BFC /* self_intro */; };
-		FE828C5FE0D94F77BA1DC4FD /* color_recognition in Resources */ = {isa = PBXBuildFile; fileRef = 2E13C820612A47A98F91410A /* color_recognition */; };
-		F893E869B95D46FA8A703143 /* dream_job in Resources */ = {isa = PBXBuildFile; fileRef = 6E2C83DD4963407CA421279C /* dream_job */; };
-		5E88552AF0054B438CC41253 /* support.png in Resources */ = {isa = PBXBuildFile; fileRef = CEEA77E9ABE743B8A15CBEA8 /* support.png */; };
-		9879D094D1DB423D999030C2 /* balloon.png in Resources */ = {isa = PBXBuildFile; fileRef = E706DAE0FE964A99A5E72E18 /* balloon.png */; };
-		1A85F8F934604D6EB29C3860 /* appicon-small.png in Resources */ = {isa = PBXBuildFile; fileRef = E44A4BB74D844D01857F6BA0 /* appicon-small.png */; };
-		ADFCB51AEE734CC592666EE2 /* cover1.png in Resources */ = {isa = PBXBuildFile; fileRef = 42826E4D0B49498F9C82B57B /* cover1.png */; };
-		913C6BD62D754365B9F536B5 /* homeBG.png in Resources */ = {isa = PBXBuildFile; fileRef = E89D3002DD5D45FE98211B77 /* homeBG.png */; };
 		0158CDFAB5914902BBBE3079 /* cover3.png in Resources */ = {isa = PBXBuildFile; fileRef = 76BBFDA1961448AFB9EBCD8F /* cover3.png */; };
+		01EF2349A5354216AEE5AA60 /* APIConfig.swift in Sources */ = {isa = PBXBuildFile; fileRef = BEB4D20B4CD9467CACDF7EA1 /* APIConfig.swift */; };
+		032B8CFA174148C2B51AEF79 /* DesignTokens.swift in Sources */ = {isa = PBXBuildFile; fileRef = 804A766B410F4CC9A0CA1C83 /* DesignTokens.swift */; };
+		14B67A5B05094EE6B14F1A09 /* UploadPhotoView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 72CE790312264833A081F98F /* UploadPhotoView.swift */; };
+		19851F3B513147E28666B0EE /* CameraView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9D628A07C3BE4013ACC7685C /* CameraView.swift */; };
+		1A85F8F934604D6EB29C3860 /* appicon-small.png in Resources */ = {isa = PBXBuildFile; fileRef = E44A4BB74D844D01857F6BA0 /* appicon-small.png */; };
+		1B7EB8C24343406D8825E7A2 /* self_intro in Resources */ = {isa = PBXBuildFile; fileRef = 9E7174E4EDE3423C9B074BFC /* self_intro */; };
+		210BB1292FFC0418004FFE98 /* StoreKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 210BB1282FFC0418004FFE98 /* StoreKit.framework */; };
+		2322220E230042FC923E2C76 /* BookDetailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 65915718405D4881A20A2F56 /* BookDetailView.swift */; };
+		242F4D2D25A446F4893EF06D /* PDFService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 54EC425AE2514BE7B88EB68D /* PDFService.swift */; };
+		2A4CFAAC27BC438F9FC2905F /* FaceDetectionService.swift in Sources */ = {isa = PBXBuildFile; fileRef = B1A0726E7A1741B68D82B381 /* FaceDetectionService.swift */; };
+		33872AE272A6469ABAB31443 /* NetworkService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3750911770684943A552E8ED /* NetworkService.swift */; };
+		42957A8DBEEC47BB9054F682 /* GeneratingView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 164031AFFCDF4F44814158CC /* GeneratingView.swift */; };
+		436941BD69574297BF17AF6D /* PaymentService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6941D6513F4640E8BD482645 /* PaymentService.swift */; };
 		53C004FE501045A59EF6540C /* cover2.png in Resources */ = {isa = PBXBuildFile; fileRef = 7A476055DC12430BA9BA5362 /* cover2.png */; };
-		BFB6BFA8D56444108B4D5757 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = EEF788B745644AE6900F2785 /* Assets.xcassets */; };
+		5D0D674369A743D0BFF13AA9 /* PaymentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5D9FA4AB1795492F8C490EA1 /* PaymentView.swift */; };
+		5E88552AF0054B438CC41253 /* support.png in Resources */ = {isa = PBXBuildFile; fileRef = CEEA77E9ABE743B8A15CBEA8 /* support.png */; };
+		6F1FB91B08B549068C8BEEB3 /* MyBooksView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 121C4FC4EA6C4332910A038B /* MyBooksView.swift */; };
+		745915E5490E4268B2EF89DA /* zh-Hans.lproj in Resources */ = {isa = PBXBuildFile; fileRef = 296420515BC94BCFAD16968A /* zh-Hans.lproj */; };
+		7CC855EC5F5E4E0CB3852F79 /* HomeView.swift in Sources */ = {isa = PBXBuildFile; fileRef = ECFA0BEFE9474CF9B1B20921 /* HomeView.swift */; };
+		8BC1E1A3134D45DEB5E60B40 /* BookModels.swift in Sources */ = {isa = PBXBuildFile; fileRef = D05D5E216F5144BAAEB7B4C0 /* BookModels.swift */; };
+		913C6BD62D754365B9F536B5 /* homeBG.png in Resources */ = {isa = PBXBuildFile; fileRef = E89D3002DD5D45FE98211B77 /* homeBG.png */; };
+		96F199E03383426495EFD20D /* CompleteView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6FF9175D081E4E589A92D397 /* CompleteView.swift */; };
+		9879D094D1DB423D999030C2 /* balloon.png in Resources */ = {isa = PBXBuildFile; fileRef = E706DAE0FE964A99A5E72E18 /* balloon.png */; };
+		9BF695AA43ED4BA0AAC70C0C /* FailureResultView.swift in Sources */ = {isa = PBXBuildFile; fileRef = E572819AAE2E4A248AD2EB93 /* FailureResultView.swift */; };
+		9F41473FD5814C1B94FDDFA0 /* AppServices.swift in Sources */ = {isa = PBXBuildFile; fileRef = 95D2C839649F490E8E5D6A2B /* AppServices.swift */; };
+		9FB7318169A440C68A794E47 /* APIModels.swift in Sources */ = {isa = PBXBuildFile; fileRef = C8E9BBB1EFAA4C348E5D4AE5 /* APIModels.swift */; };
 		A1B2C3D4E5F6789012345678 /* PrivacyInfo.xcprivacy in Resources */ = {isa = PBXBuildFile; fileRef = B2C3D4E5F678901234567890 /* PrivacyInfo.xcprivacy */; };
+		A1C934FB1991442AAF8A2153 /* ImageUploadService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 25CD425BAEB34C559271A5E7 /* ImageUploadService.swift */; };
+		ADFCB51AEE734CC592666EE2 /* cover1.png in Resources */ = {isa = PBXBuildFile; fileRef = 42826E4D0B49498F9C82B57B /* cover1.png */; };
+		AED17AD155D64516BC4646B8 /* UploadSheetView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 00C88D988539490D9E1AB720 /* UploadSheetView.swift */; };
+		B01EF80668A64E3095E89C51 /* LocalBookDetailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8BF732A8BFAE417EAE74204C /* LocalBookDetailView.swift */; };
+		B67FB96DB70A408DBF67A2E4 /* BabyBookApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = E28FFB1BAABB441FAF4F5060 /* BabyBookApp.swift */; };
+		BE9B79029F034CCCB96FAFA7 /* LoadingOverlay.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0EC4565C96D144439F36AEFE /* LoadingOverlay.swift */; };
+		BFB6BFA8D56444108B4D5757 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = EEF788B745644AE6900F2785 /* Assets.xcassets */; };
+		E1A28DA8063440BA9B7D1DCE /* MockService.swift in Sources */ = {isa = PBXBuildFile; fileRef = D92558969FD849208F1F2494 /* MockService.swift */; };
+		E755B8D76AE14AB790257FD3 /* NavigationPath+Environment.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9C8B6BBD00314DE5961B7881 /* NavigationPath+Environment.swift */; };
+		F893E869B95D46FA8A703143 /* dream_job in Resources */ = {isa = PBXBuildFile; fileRef = 6E2C83DD4963407CA421279C /* dream_job */; };
+		FE3482A4F077495F8104214F /* LocalBookStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3223FC0CBECF4B708BEE47A3 /* LocalBookStore.swift */; };
+		FE828C5FE0D94F77BA1DC4FD /* color_recognition in Resources */ = {isa = PBXBuildFile; fileRef = 2E13C820612A47A98F91410A /* color_recognition */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
-		336BE5AEFC484FDB98FD6B01 /* BabyBookApp.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = BabyBookApp.app; sourceTree = BUILT_PRODUCTS_DIR; };
-		E28FFB1BAABB441FAF4F5060 /* BabyBookApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = "BabyBookApp.swift"; path = "BabyBookApp.swift"; sourceTree = "<group>"; };
-		C8E9BBB1EFAA4C348E5D4AE5 /* APIModels.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = "APIModels.swift"; path = "APIModels.swift"; sourceTree = "<group>"; };
-		D05D5E216F5144BAAEB7B4C0 /* BookModels.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = "BookModels.swift"; path = "BookModels.swift"; sourceTree = "<group>"; };
-		BEB4D20B4CD9467CACDF7EA1 /* APIConfig.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = "APIConfig.swift"; path = "APIConfig.swift"; sourceTree = "<group>"; };
-		95D2C839649F490E8E5D6A2B /* AppServices.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = "AppServices.swift"; path = "AppServices.swift"; sourceTree = "<group>"; };
-		B1A0726E7A1741B68D82B381 /* FaceDetectionService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = "FaceDetectionService.swift"; path = "FaceDetectionService.swift"; sourceTree = "<group>"; };
-		25CD425BAEB34C559271A5E7 /* ImageUploadService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = "ImageUploadService.swift"; path = "ImageUploadService.swift"; sourceTree = "<group>"; };
-		3223FC0CBECF4B708BEE47A3 /* LocalBookStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = "LocalBookStore.swift"; path = "LocalBookStore.swift"; sourceTree = "<group>"; };
-		D92558969FD849208F1F2494 /* MockService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = "MockService.swift"; path = "MockService.swift"; sourceTree = "<group>"; };
-		3750911770684943A552E8ED /* NetworkService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = "NetworkService.swift"; path = "NetworkService.swift"; sourceTree = "<group>"; };
-		54EC425AE2514BE7B88EB68D /* PDFService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = "PDFService.swift"; path = "PDFService.swift"; sourceTree = "<group>"; };
-		6941D6513F4640E8BD482645 /* PaymentService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = "PaymentService.swift"; path = "PaymentService.swift"; sourceTree = "<group>"; };
-		804A766B410F4CC9A0CA1C83 /* DesignTokens.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = "DesignTokens.swift"; path = "DesignTokens.swift"; sourceTree = "<group>"; };
-		9C8B6BBD00314DE5961B7881 /* NavigationPath+Environment.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = "NavigationPath+Environment.swift"; path = "NavigationPath+Environment.swift"; sourceTree = "<group>"; };
-		65915718405D4881A20A2F56 /* BookDetailView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = "BookDetailView.swift"; path = "BookDetailView.swift"; sourceTree = "<group>"; };
-		0EC4565C96D144439F36AEFE /* LoadingOverlay.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = "LoadingOverlay.swift"; path = "LoadingOverlay.swift"; sourceTree = "<group>"; };
-		6FF9175D081E4E589A92D397 /* CompleteView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = "CompleteView.swift"; path = "CompleteView.swift"; sourceTree = "<group>"; };
-		E572819AAE2E4A248AD2EB93 /* FailureResultView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = "FailureResultView.swift"; path = "FailureResultView.swift"; sourceTree = "<group>"; };
-		164031AFFCDF4F44814158CC /* GeneratingView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = "GeneratingView.swift"; path = "GeneratingView.swift"; sourceTree = "<group>"; };
-		ECFA0BEFE9474CF9B1B20921 /* HomeView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = "HomeView.swift"; path = "HomeView.swift"; sourceTree = "<group>"; };
-		8BF732A8BFAE417EAE74204C /* LocalBookDetailView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = "LocalBookDetailView.swift"; path = "LocalBookDetailView.swift"; sourceTree = "<group>"; };
-		121C4FC4EA6C4332910A038B /* MyBooksView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = "MyBooksView.swift"; path = "MyBooksView.swift"; sourceTree = "<group>"; };
-		5D9FA4AB1795492F8C490EA1 /* PaymentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = "PaymentView.swift"; path = "PaymentView.swift"; sourceTree = "<group>"; };
-		9D628A07C3BE4013ACC7685C /* CameraView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = "CameraView.swift"; path = "CameraView.swift"; sourceTree = "<group>"; };
-		72CE790312264833A081F98F /* UploadPhotoView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = "UploadPhotoView.swift"; path = "UploadPhotoView.swift"; sourceTree = "<group>"; };
-		00C88D988539490D9E1AB720 /* UploadSheetView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = "UploadSheetView.swift"; path = "UploadSheetView.swift"; sourceTree = "<group>"; };
-		296420515BC94BCFAD16968A /* zh-Hans.lproj */ = {isa = PBXFileReference; lastKnownFileType = folder; name = "zh-Hans.lproj"; path = "zh-Hans.lproj"; sourceTree = "<group>"; };
-		9E7174E4EDE3423C9B074BFC /* self_intro */ = {isa = PBXFileReference; lastKnownFileType = folder; name = "self_intro"; path = "self_intro"; sourceTree = "<group>"; };
-		2E13C820612A47A98F91410A /* color_recognition */ = {isa = PBXFileReference; lastKnownFileType = folder; name = "color_recognition"; path = "color_recognition"; sourceTree = "<group>"; };
-		6E2C83DD4963407CA421279C /* dream_job */ = {isa = PBXFileReference; lastKnownFileType = folder; name = "dream_job"; path = "dream_job"; sourceTree = "<group>"; };
-		CEEA77E9ABE743B8A15CBEA8 /* support.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = "support.png"; path = "support.png"; sourceTree = "<group>"; };
-		E706DAE0FE964A99A5E72E18 /* balloon.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = "balloon.png"; path = "balloon.png"; sourceTree = "<group>"; };
-		E44A4BB74D844D01857F6BA0 /* appicon-small.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = "appicon-small.png"; path = "appicon-small.png"; sourceTree = "<group>"; };
-		42826E4D0B49498F9C82B57B /* cover1.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = "cover1.png"; path = "cover1.png"; sourceTree = "<group>"; };
-		E89D3002DD5D45FE98211B77 /* homeBG.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = "homeBG.png"; path = "homeBG.png"; sourceTree = "<group>"; };
-		76BBFDA1961448AFB9EBCD8F /* cover3.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = "cover3.png"; path = "cover3.png"; sourceTree = "<group>"; };
-		7A476055DC12430BA9BA5362 /* cover2.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = "cover2.png"; path = "cover2.png"; sourceTree = "<group>"; };
-		EEF788B745644AE6900F2785 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; name = "Assets.xcassets"; path = "Assets.xcassets"; sourceTree = "<group>"; };
-		E18550D544134DADA649D073 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; name = "Info.plist"; path = "Info.plist"; sourceTree = "<group>"; };
-		B2C3D4E5F678901234567890 /* PrivacyInfo.xcprivacy */ = {isa = PBXFileReference; lastKnownFileType = text.xml; name = "PrivacyInfo.xcprivacy"; path = "PrivacyInfo.xcprivacy"; sourceTree = "<group>"; };
+		00C88D988539490D9E1AB720 /* UploadSheetView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UploadSheetView.swift; sourceTree = "<group>"; };
+		0EC4565C96D144439F36AEFE /* LoadingOverlay.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LoadingOverlay.swift; sourceTree = "<group>"; };
+		121C4FC4EA6C4332910A038B /* MyBooksView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MyBooksView.swift; sourceTree = "<group>"; };
+		164031AFFCDF4F44814158CC /* GeneratingView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GeneratingView.swift; sourceTree = "<group>"; };
+		210BB1282FFC0418004FFE98 /* StoreKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = StoreKit.framework; path = System/Library/Frameworks/StoreKit.framework; sourceTree = SDKROOT; };
+		25CD425BAEB34C559271A5E7 /* ImageUploadService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ImageUploadService.swift; sourceTree = "<group>"; };
+		296420515BC94BCFAD16968A /* zh-Hans.lproj */ = {isa = PBXFileReference; lastKnownFileType = folder; path = "zh-Hans.lproj"; sourceTree = "<group>"; };
+		2E13C820612A47A98F91410A /* color_recognition */ = {isa = PBXFileReference; lastKnownFileType = folder; path = color_recognition; sourceTree = "<group>"; };
+		3223FC0CBECF4B708BEE47A3 /* LocalBookStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LocalBookStore.swift; sourceTree = "<group>"; };
+		336BE5AEFC484FDB98FD6B01 /* BabyBook.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = BabyBook.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		3750911770684943A552E8ED /* NetworkService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NetworkService.swift; sourceTree = "<group>"; };
+		42826E4D0B49498F9C82B57B /* cover1.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = cover1.png; sourceTree = "<group>"; };
+		54EC425AE2514BE7B88EB68D /* PDFService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PDFService.swift; sourceTree = "<group>"; };
+		5D9FA4AB1795492F8C490EA1 /* PaymentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PaymentView.swift; sourceTree = "<group>"; };
+		65915718405D4881A20A2F56 /* BookDetailView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BookDetailView.swift; sourceTree = "<group>"; };
+		6941D6513F4640E8BD482645 /* PaymentService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PaymentService.swift; sourceTree = "<group>"; };
+		6E2C83DD4963407CA421279C /* dream_job */ = {isa = PBXFileReference; lastKnownFileType = folder; path = dream_job; sourceTree = "<group>"; };
+		6FF9175D081E4E589A92D397 /* CompleteView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CompleteView.swift; sourceTree = "<group>"; };
+		72CE790312264833A081F98F /* UploadPhotoView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UploadPhotoView.swift; sourceTree = "<group>"; };
+		76BBFDA1961448AFB9EBCD8F /* cover3.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = cover3.png; sourceTree = "<group>"; };
+		7A476055DC12430BA9BA5362 /* cover2.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = cover2.png; sourceTree = "<group>"; };
+		804A766B410F4CC9A0CA1C83 /* DesignTokens.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DesignTokens.swift; sourceTree = "<group>"; };
+		8BF732A8BFAE417EAE74204C /* LocalBookDetailView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LocalBookDetailView.swift; sourceTree = "<group>"; };
+		95D2C839649F490E8E5D6A2B /* AppServices.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppServices.swift; sourceTree = "<group>"; };
+		9C8B6BBD00314DE5961B7881 /* NavigationPath+Environment.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "NavigationPath+Environment.swift"; sourceTree = "<group>"; };
+		9D628A07C3BE4013ACC7685C /* CameraView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CameraView.swift; sourceTree = "<group>"; };
+		9E7174E4EDE3423C9B074BFC /* self_intro */ = {isa = PBXFileReference; lastKnownFileType = folder; path = self_intro; sourceTree = "<group>"; };
+		B1A0726E7A1741B68D82B381 /* FaceDetectionService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FaceDetectionService.swift; sourceTree = "<group>"; };
+		B2C3D4E5F678901234567890 /* PrivacyInfo.xcprivacy */ = {isa = PBXFileReference; lastKnownFileType = text.xml; path = PrivacyInfo.xcprivacy; sourceTree = "<group>"; };
+		BEB4D20B4CD9467CACDF7EA1 /* APIConfig.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = APIConfig.swift; sourceTree = "<group>"; };
+		C8E9BBB1EFAA4C348E5D4AE5 /* APIModels.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = APIModels.swift; sourceTree = "<group>"; };
+		CEEA77E9ABE743B8A15CBEA8 /* support.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = support.png; sourceTree = "<group>"; };
+		D05D5E216F5144BAAEB7B4C0 /* BookModels.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BookModels.swift; sourceTree = "<group>"; };
+		D92558969FD849208F1F2494 /* MockService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MockService.swift; sourceTree = "<group>"; };
+		E18550D544134DADA649D073 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+		E28FFB1BAABB441FAF4F5060 /* BabyBookApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BabyBookApp.swift; sourceTree = "<group>"; };
+		E44A4BB74D844D01857F6BA0 /* appicon-small.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "appicon-small.png"; sourceTree = "<group>"; };
+		E572819AAE2E4A248AD2EB93 /* FailureResultView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FailureResultView.swift; sourceTree = "<group>"; };
+		E706DAE0FE964A99A5E72E18 /* balloon.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = balloon.png; sourceTree = "<group>"; };
+		E89D3002DD5D45FE98211B77 /* homeBG.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = homeBG.png; sourceTree = "<group>"; };
+		ECFA0BEFE9474CF9B1B20921 /* HomeView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HomeView.swift; sourceTree = "<group>"; };
+		EEF788B745644AE6900F2785 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -97,58 +99,21 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				210BB1292FFC0418004FFE98 /* StoreKit.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
-		D14469BC404542A38C93C40F = {
+		0A5987E5D17E4745AB9320CB /* Upload */ = {
 			isa = PBXGroup;
 			children = (
-				F8E28215369149E8BBDE6BA7 /* Sources */,
-				7198E26629AC49EFB5BC26E4 /* Products */,
+				9D628A07C3BE4013ACC7685C /* CameraView.swift */,
+				72CE790312264833A081F98F /* UploadPhotoView.swift */,
+				00C88D988539490D9E1AB720 /* UploadSheetView.swift */,
 			);
-			sourceTree = "<group>";
-		};
-		7198E26629AC49EFB5BC26E4 /* Products */ = {
-			isa = PBXGroup;
-			children = (
-				336BE5AEFC484FDB98FD6B01 /* BabyBookApp.app */,
-			);
-			name = Products;
-			sourceTree = "<group>";
-		};
-		F8E28215369149E8BBDE6BA7 /* Sources */ = {
-			isa = PBXGroup;
-			children = (
-				8F97DB51404C419D8C680F0F /* BabyBookApp */,
-			);
-			path = Sources;
-			sourceTree = "<group>";
-		};
-		8F97DB51404C419D8C680F0F /* BabyBookApp */ = {
-			isa = PBXGroup;
-			children = (
-				7D33000C32764EF2AA70220C /* Models */,
-				1382315E28304B939CB941F9 /* Resources */,
-				FC75996A9CD34BFFB55C39F8 /* Services */,
-				5C4F8DA6D3D74398A4A96326 /* Utils */,
-				B865B0F988E64D2080966EAF /* Views */,
-				E28FFB1BAABB441FAF4F5060 /* BabyBookApp.swift */,
-				E18550D544134DADA649D073 /* Info.plist */,
-				B2C3D4E5F678901234567890 /* PrivacyInfo.xcprivacy */,
-			);
-			path = BabyBookApp;
-			sourceTree = "<group>";
-		};
-		7D33000C32764EF2AA70220C /* Models */ = {
-			isa = PBXGroup;
-			children = (
-				C8E9BBB1EFAA4C348E5D4AE5 /* APIModels.swift */,
-				D05D5E216F5144BAAEB7B4C0 /* BookModels.swift */,
-			);
-			path = Models;
+			path = Upload;
 			sourceTree = "<group>";
 		};
 		1382315E28304B939CB941F9 /* Resources */ = {
@@ -174,52 +139,43 @@
 			path = Resources;
 			sourceTree = "<group>";
 		};
+		1B721F62E5F94771959C4C61 /* Home */ = {
+			isa = PBXGroup;
+			children = (
+				ECFA0BEFE9474CF9B1B20921 /* HomeView.swift */,
+			);
+			path = Home;
+			sourceTree = "<group>";
+		};
+		210BB1272FFC0418004FFE98 /* Frameworks */ = {
+			isa = PBXGroup;
+			children = (
+				210BB1282FFC0418004FFE98 /* StoreKit.framework */,
+			);
+			name = Frameworks;
+			sourceTree = "<group>";
+		};
 		22127A3318E7477F82ED8B51 /* color_recognition */ = {
 			isa = PBXGroup;
 			children = (
-
 			);
 			path = color_recognition;
-			sourceTree = "<group>";
-		};
-		8D927FEAC848490783C6DDDC /* dream_job */ = {
-			isa = PBXGroup;
-			children = (
-
-			);
-			path = dream_job;
-			sourceTree = "<group>";
-		};
-		F440EDE34DB44F888EE4E0A0 /* self_intro */ = {
-			isa = PBXGroup;
-			children = (
-
-			);
-			path = self_intro;
 			sourceTree = "<group>";
 		};
 		3E64FBABE9034AB9ACC2C414 /* zh-Hans.lproj */ = {
 			isa = PBXGroup;
 			children = (
-
 			);
-			path = zh-Hans.lproj;
+			path = "zh-Hans.lproj";
 			sourceTree = "<group>";
 		};
-		FC75996A9CD34BFFB55C39F8 /* Services */ = {
+		5A71674D3A654FEABAFC3B67 /* Generating */ = {
 			isa = PBXGroup;
 			children = (
-				BEB4D20B4CD9467CACDF7EA1 /* APIConfig.swift */,
-				95D2C839649F490E8E5D6A2B /* AppServices.swift */,
-				B1A0726E7A1741B68D82B381 /* FaceDetectionService.swift */,
-				25CD425BAEB34C559271A5E7 /* ImageUploadService.swift */,
-				3223FC0CBECF4B708BEE47A3 /* LocalBookStore.swift */,
-				D92558969FD849208F1F2494 /* MockService.swift */,
-				3750911770684943A552E8ED /* NetworkService.swift */,
-				54EC425AE2514BE7B88EB68D /* PDFService.swift */,
-				6941D6513F4640E8BD482645 /* PaymentService.swift */,
+				E572819AAE2E4A248AD2EB93 /* FailureResultView.swift */,
+				164031AFFCDF4F44814158CC /* GeneratingView.swift */,
 			);
-			path = Services;
+			path = Generating;
 			sourceTree = "<group>";
 		};
 		5C4F8DA6D3D74398A4A96326 /* Utils */ = {
@@ -229,6 +185,69 @@
 				9C8B6BBD00314DE5961B7881 /* NavigationPath+Environment.swift */,
 			);
 			path = Utils;
+			sourceTree = "<group>";
+		};
+		7198E26629AC49EFB5BC26E4 /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				336BE5AEFC484FDB98FD6B01 /* BabyBook.app */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+		75D5104DBE824F5781C60AF4 /* Payment */ = {
+			isa = PBXGroup;
+			children = (
+				5D9FA4AB1795492F8C490EA1 /* PaymentView.swift */,
+			);
+			path = Payment;
+			sourceTree = "<group>";
+		};
+		7D33000C32764EF2AA70220C /* Models */ = {
+			isa = PBXGroup;
+			children = (
+				C8E9BBB1EFAA4C348E5D4AE5 /* APIModels.swift */,
+				D05D5E216F5144BAAEB7B4C0 /* BookModels.swift */,
+			);
+			path = Models;
+			sourceTree = "<group>";
+		};
+		88F464B1D5D8441B93DDD134 /* Complete */ = {
+			isa = PBXGroup;
+			children = (
+				6FF9175D081E4E589A92D397 /* CompleteView.swift */,
+			);
+			path = Complete;
+			sourceTree = "<group>";
+		};
+		8D927FEAC848490783C6DDDC /* dream_job */ = {
+			isa = PBXGroup;
+			children = (
+			);
+			path = dream_job;
+			sourceTree = "<group>";
+		};
+		8F97DB51404C419D8C680F0F /* BabyBookApp */ = {
+			isa = PBXGroup;
+			children = (
+				7D33000C32764EF2AA70220C /* Models */,
+				1382315E28304B939CB941F9 /* Resources */,
+				FC75996A9CD34BFFB55C39F8 /* Services */,
+				5C4F8DA6D3D74398A4A96326 /* Utils */,
+				B865B0F988E64D2080966EAF /* Views */,
+				E28FFB1BAABB441FAF4F5060 /* BabyBookApp.swift */,
+				E18550D544134DADA649D073 /* Info.plist */,
+				B2C3D4E5F678901234567890 /* PrivacyInfo.xcprivacy */,
+			);
+			path = BabyBookApp;
+			sourceTree = "<group>";
+		};
+		B0550352A5F6418EA546BADA /* BookDetail */ = {
+			isa = PBXGroup;
+			children = (
+				65915718405D4881A20A2F56 /* BookDetailView.swift */,
+			);
+			path = BookDetail;
 			sourceTree = "<group>";
 		};
 		B865B0F988E64D2080966EAF /* Views */ = {
@@ -246,12 +265,13 @@
 			path = Views;
 			sourceTree = "<group>";
 		};
-		B0550352A5F6418EA546BADA /* BookDetail */ = {
+		D14469BC404542A38C93C40F = {
 			isa = PBXGroup;
 			children = (
-				65915718405D4881A20A2F56 /* BookDetailView.swift */,
+				F8E28215369149E8BBDE6BA7 /* Sources */,
+				210BB1272FFC0418004FFE98 /* Frameworks */,
+				7198E26629AC49EFB5BC26E4 /* Products */,
 			);
-			path = BookDetail;
 			sourceTree = "<group>";
 		};
 		D1D4B4205DFC457D929103B6 /* Common */ = {
@@ -260,31 +280,6 @@
 				0EC4565C96D144439F36AEFE /* LoadingOverlay.swift */,
 			);
 			path = Common;
-			sourceTree = "<group>";
-		};
-		88F464B1D5D8441B93DDD134 /* Complete */ = {
-			isa = PBXGroup;
-			children = (
-				6FF9175D081E4E589A92D397 /* CompleteView.swift */,
-			);
-			path = Complete;
-			sourceTree = "<group>";
-		};
-		5A71674D3A654FEABAFC3B67 /* Generating */ = {
-			isa = PBXGroup;
-			children = (
-				E572819AAE2E4A248AD2EB93 /* FailureResultView.swift */,
-				164031AFFCDF4F44814158CC /* GeneratingView.swift */,
-			);
-			path = Generating;
-			sourceTree = "<group>";
-		};
-		1B721F62E5F94771959C4C61 /* Home */ = {
-			isa = PBXGroup;
-			children = (
-				ECFA0BEFE9474CF9B1B20921 /* HomeView.swift */,
-			);
-			path = Home;
 			sourceTree = "<group>";
 		};
 		EA3520949F3B440381A5B1C3 /* MyBooks */ = {
@@ -296,22 +291,35 @@
 			path = MyBooks;
 			sourceTree = "<group>";
 		};
-		75D5104DBE824F5781C60AF4 /* Payment */ = {
+		F440EDE34DB44F888EE4E0A0 /* self_intro */ = {
 			isa = PBXGroup;
 			children = (
-				5D9FA4AB1795492F8C490EA1 /* PaymentView.swift */,
 			);
-			path = Payment;
+			path = self_intro;
 			sourceTree = "<group>";
 		};
-		0A5987E5D17E4745AB9320CB /* Upload */ = {
+		F8E28215369149E8BBDE6BA7 /* Sources */ = {
 			isa = PBXGroup;
 			children = (
-				9D628A07C3BE4013ACC7685C /* CameraView.swift */,
-				72CE790312264833A081F98F /* UploadPhotoView.swift */,
-				00C88D988539490D9E1AB720 /* UploadSheetView.swift */,
+				8F97DB51404C419D8C680F0F /* BabyBookApp */,
 			);
-			path = Upload;
+			path = Sources;
+			sourceTree = "<group>";
+		};
+		FC75996A9CD34BFFB55C39F8 /* Services */ = {
+			isa = PBXGroup;
+			children = (
+				BEB4D20B4CD9467CACDF7EA1 /* APIConfig.swift */,
+				95D2C839649F490E8E5D6A2B /* AppServices.swift */,
+				B1A0726E7A1741B68D82B381 /* FaceDetectionService.swift */,
+				25CD425BAEB34C559271A5E7 /* ImageUploadService.swift */,
+				3223FC0CBECF4B708BEE47A3 /* LocalBookStore.swift */,
+				D92558969FD849208F1F2494 /* MockService.swift */,
+				3750911770684943A552E8ED /* NetworkService.swift */,
+				54EC425AE2514BE7B88EB68D /* PDFService.swift */,
+				6941D6513F4640E8BD482645 /* PaymentService.swift */,
+			);
+			path = Services;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -331,7 +339,7 @@
 			);
 			name = BabyBookApp;
 			productName = BabyBookApp;
-			productReference = 336BE5AEFC484FDB98FD6B01 /* BabyBookApp.app */;
+			productReference = 336BE5AEFC484FDB98FD6B01 /* BabyBook.app */;
 			productType = "com.apple.product-type.application";
 		};
 /* End PBXNativeTarget section */
@@ -339,6 +347,8 @@
 /* Begin PBXProject section */
 		9B131DA7152342BAAE88E26D /* Project object */ = {
 			isa = PBXProject;
+			attributes = {
+			};
 			buildConfigurationList = DAF5E4D68C7B47DA8FB56C33 /* Build configuration list for PBXProject "BabyBook" */;
 			compatibilityVersion = "Xcode 14.0";
 			developmentRegion = en;
@@ -375,7 +385,6 @@
 				53C004FE501045A59EF6540C /* cover2.png in Resources */,
 				BFB6BFA8D56444108B4D5757 /* Assets.xcassets in Resources */,
 				A1B2C3D4E5F6789012345678 /* PrivacyInfo.xcprivacy in Resources */,
-
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -412,7 +421,6 @@
 				19851F3B513147E28666B0EE /* CameraView.swift in Sources */,
 				14B67A5B05094EE6B14F1A09 /* UploadPhotoView.swift in Sources */,
 				AED17AD155D64516BC4646B8 /* UploadSheetView.swift in Sources */,
-
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -424,13 +432,17 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_ENTITLEMENTS = Sources/BabyBookApp/BabyBookApp.entitlements;
 				CODE_SIGN_IDENTITY = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_TEAM = 7BSKXTD6DF;
-				CODE_SIGN_ENTITLEMENTS = "Sources/BabyBookApp/BabyBookApp.entitlements";
 				GENERATE_INFOPLIST_FILE = NO;
-				INFOPLIST_FILE = "Sources/BabyBookApp/Info.plist";
+				INFOPLIST_FILE = Sources/BabyBookApp/Info.plist;
+				INFOPLIST_KEY_CFBundleDisplayName = "宝贝绘本";
+				INFOPLIST_KEY_ITSEncryptionExportComplianceCode = "";
+				INFOPLIST_KEY_NSCameraUsageDescription = "需要访问相机以拍摄宝宝照片，用于生成专属绘本";
+				INFOPLIST_KEY_NSPhotoLibraryUsageDescription = "需要访问相册以选择宝宝照片，用于生成专属绘本";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
@@ -444,17 +456,11 @@
 				MARKETING_VERSION = 1.0;
 				PRODUCT_BUNDLE_IDENTIFIER = com.shihui.babybook;
 				PRODUCT_NAME = BabyBook;
+				PROVISIONING_PROFILE_SPECIFIER = "";
 				SDKROOT = iphoneos;
 				SWIFT_EMIT_LOC_STRINGS = YES;
 				SWIFT_VERSION = 5.0;
 				TARGETED_DEVICE_FAMILY = "1,2";
-				// 应用显示名称
-				INFOPLIST_KEY_CFBundleDisplayName = "宝贝绘本";
-				// 隐私权限描述
-				INFOPLIST_KEY_NSCameraUsageDescription = "需要访问相机以拍摄宝宝照片，用于生成专属绘本";
-				INFOPLIST_KEY_NSPhotoLibraryUsageDescription = "需要访问相册以选择宝宝照片，用于生成专属绘本";
-				// 加密声明：使用标准 HTTPS 和系统 Keychain，属于豁免范围
-				INFOPLIST_KEY_ITSEncryptionExportComplianceCode = "";  // 空值表示使用标准加密，无需文档
 			};
 			name = Debug;
 		};
@@ -463,13 +469,17 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_ENTITLEMENTS = Sources/BabyBookApp/BabyBookApp.entitlements;
 				CODE_SIGN_IDENTITY = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_TEAM = 7BSKXTD6DF;
-				CODE_SIGN_ENTITLEMENTS = "Sources/BabyBookApp/BabyBookApp.entitlements";
 				GENERATE_INFOPLIST_FILE = NO;
-				INFOPLIST_FILE = "Sources/BabyBookApp/Info.plist";
+				INFOPLIST_FILE = Sources/BabyBookApp/Info.plist;
+				INFOPLIST_KEY_CFBundleDisplayName = "宝贝绘本";
+				INFOPLIST_KEY_ITSEncryptionExportComplianceCode = "";
+				INFOPLIST_KEY_NSCameraUsageDescription = "需要访问相机以拍摄宝宝照片，用于生成专属绘本";
+				INFOPLIST_KEY_NSPhotoLibraryUsageDescription = "需要访问相册以选择宝宝照片，用于生成专属绘本";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
@@ -483,17 +493,28 @@
 				MARKETING_VERSION = 1.0;
 				PRODUCT_BUNDLE_IDENTIFIER = com.shihui.babybook;
 				PRODUCT_NAME = BabyBook;
+				PROVISIONING_PROFILE_SPECIFIER = "";
 				SDKROOT = iphoneos;
 				SWIFT_EMIT_LOC_STRINGS = YES;
 				SWIFT_VERSION = 5.0;
 				TARGETED_DEVICE_FAMILY = "1,2";
-				// 应用显示名称
-				INFOPLIST_KEY_CFBundleDisplayName = "宝贝绘本";
-				// 隐私权限描述
-				INFOPLIST_KEY_NSCameraUsageDescription = "需要访问相机以拍摄宝宝照片，用于生成专属绘本";
-				INFOPLIST_KEY_NSPhotoLibraryUsageDescription = "需要访问相册以选择宝宝照片，用于生成专属绘本";
-				// 加密声明：使用标准 HTTPS 和系统 Keychain，属于豁免范围
-				INFOPLIST_KEY_ITSEncryptionExportComplianceCode = "";  // 空值表示使用标准加密，无需文档
+			};
+			name = Release;
+		};
+		9D66E15208EA4F6F8096DED1 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				ENABLE_NS_ASSERTIONS = NO;
+				GCC_NO_COMMON_BLOCKS = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 16.0;
+				SDKROOT = iphoneos;
+				SWIFT_COMPILATION_MODE = wholemodule;
+				VALIDATE_PRODUCT = YES;
 			};
 			name = Release;
 		};
@@ -520,23 +541,6 @@
 				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
 			};
 			name = Debug;
-		};
-		9D66E15208EA4F6F8096DED1 /* Release */ = {
-			isa = XCBuildConfiguration;
-			buildSettings = {
-				ALWAYS_SEARCH_USER_PATHS = NO;
-				CLANG_ANALYZER_NONNULL = YES;
-				CLANG_ENABLE_OBJC_ARC = YES;
-				COPY_PHASE_STRIP = NO;
-				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
-				ENABLE_NS_ASSERTIONS = NO;
-				GCC_NO_COMMON_BLOCKS = YES;
-				IPHONEOS_DEPLOYMENT_TARGET = 16.0;
-				SDKROOT = iphoneos;
-				SWIFT_COMPILATION_MODE = wholemodule;
-				VALIDATE_PRODUCT = YES;
-			};
-			name = Release;
 		};
 /* End XCBuildConfiguration section */
 

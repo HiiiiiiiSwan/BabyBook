@@ -150,8 +150,12 @@ class PaymentService: ObservableObject {
             guard response.success else {
                 throw PaymentError.paidButServerError(response.errorMessage ?? "支付验证失败")
             }
-        } catch is APIError, is URLError {
-            // Apple 已扣款，但后端验证网络异常
+        } catch let error as APIError {
+            // Apple 已扣款，但后端返回错误：打印真实原因以定位（401/400/500 等）
+            print("[支付验证失败-后端错误] \(error.localizedDescription)")
+            throw PaymentError.paidButServerError("服务器连接异常，请稍后重试或联系客服")
+        } catch let error as URLError {
+            print("[支付验证失败-网络错误] code=\(error.code.rawValue) \(error.localizedDescription)")
             throw PaymentError.paidButServerError("服务器连接异常，请稍后重试或联系客服")
         }
         #endif

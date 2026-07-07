@@ -11,6 +11,12 @@ class NetworkService {
         let config = URLSessionConfiguration.default
         config.timeoutIntervalForRequest = APIConfig.requestTimeout
         config.timeoutIntervalForResource = APIConfig.uploadTimeout
+        // 等待网络就绪而非立即失败，避免真机首次请求因联网授权时序被拒（-1009）
+        config.waitsForConnectivity = true
+        // 允许蜂窝与受限网络访问，防止系统把请求误判为受限接口而拒绝
+        config.allowsCellularAccess = true
+        config.allowsConstrainedNetworkAccess = true
+        config.allowsExpensiveNetworkAccess = true
         self.session = URLSession(configuration: config)
 
         self.decoder = JSONDecoder()
@@ -50,7 +56,21 @@ class NetworkService {
             request.httpBody = try JSONEncoder().encode(body)
         }
 
-        let (data, response) = try await session.data(for: request)
+        let data: Data
+        let response: URLResponse
+        do {
+            (data, response) = try await session.data(for: request)
+        } catch let urlError as URLError {
+            // 详细打印真机网络失败的确切原因，便于定位
+            print("""
+            [网络失败] URL=\(url.absoluteString)
+              code=\(urlError.code.rawValue) (\(urlError.code))
+              描述=\(urlError.localizedDescription)
+              失败接口=\(urlError.userInfo["_NSURLErrorNWPathKey"] ?? "无")
+              底层错误=\(urlError.userInfo[NSUnderlyingErrorKey].map { String(describing: $0) } ?? "无")
+            """)
+            throw APIError.networkError(urlError)
+        }
 
         guard let httpResponse = response as? HTTPURLResponse else {
             throw APIError.invalidResponse
