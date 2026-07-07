@@ -36,6 +36,10 @@ struct GeneratingView: View {
     @State private var networkRecoveredContinuation: CheckedContinuation<Void, Never>?  // 网络恢复时打断等待
     @State private var networkMonitor: NWPathMonitor?
     @State private var networkMonitorQueue: DispatchQueue?
+    // MARK: - 生成耗时诊断日志字段
+    @State private var generationStartTime: Date? = nil
+    @State private var reached89Time: Date? = nil
+    @State private var completedTime: Date? = nil
     #if canImport(UIKit)
     @State private var preloadedImage: UIImage? = nil
     #endif
@@ -86,6 +90,10 @@ struct GeneratingView: View {
             // 进入生成页时强制重置超时和失败状态，防止上次残留的状态立即触发错误路径
             statusManager.isTimeout = false
             statusManager.pollingFailureCount = 0
+            // 记录生成开始时间，用于诊断 0→89%→COMPLETED 各阶段耗时
+            generationStartTime = Date()
+            reached89Time = nil
+            completedTime = nil
             persistOrderAsGenerating()
             startGeneration()
         }
@@ -270,22 +278,29 @@ struct GeneratingView: View {
     // MARK: - 启动 AI 生图阶段进度动画（匀速缓慢爬升到 89%）
     /// 真实 AI 生图较慢，后端进度会长时间停在 30% 左右，这里让前端进度匀速自增，
     /// 避免进度条死卡。逻辑与整理阶段一致：网络异常时暂停，网络恢复后继续。
+    /// 体验映射：0%=未创建 10%=已创建/排队/已提交 10%~89%=真实生图过程。
     private func startPollingProgressAnimation() {
         pollingProgressTimer?.invalidate()
 
-        // 真实 AI 生图实测约 75~88 秒（均值 ~82 秒）。这里把匀速爬升拉长到 135 秒，
-        // 使「后端起始进度 30% → 89% 封顶」这段耗时（约 88 秒）略长于平均生图时间，
-        // 让生图完成时进度通常还在爬升途中，直接切入整理阶段，避免过早卡在 89%。
-        let totalDuration: TimeInterval = 135
+        // 10% → 89% 这段代表真实 AI 生图过程，实测约 75~88 秒（均值 ~82 秒）。
+        // 把这段匀速爬升拉长到 180 秒，让生图完成时进度通常还在爬升途中，
+        // 避免过早卡在 89%；同时 0%→10% 的任务创建阶段留给用户可见的启动过程。
+        let totalDuration: TimeInterval = 180
         let interval: TimeInterval = 0.5
         let stepCount = Int(totalDuration / interval)
-        let stepValue = 90 / Double(stepCount)
+        let stepValue = 79 / Double(stepCount) // 89 - 10 = 79
 
         pollingProgressTimer = Timer.scheduledTimer(withTimeInterval: interval, repeats: true) { _ in
             // 进入整理阶段/已完成/暂停时不推进
             guard !self.isFinalizing, !self.navigateToComplete, !self.isPollingPaused else { return }
             if self.pollingProgress < 89 {
                 self.pollingProgress = min(89, self.pollingProgress + stepValue)
+                // 记录首次到达 89% 的时间，用于诊断卡在 89% 的等待时长
+                if self.reached89Time == nil && self.pollingProgress >= 89 {
+                    self.reached89Time = Date()
+                    let elapsed = self.generationStartTime.map { Date().timeIntervalSince($0) } ?? 0
+                    print("[生成耗时] 进度到达 89%，自进入生成页已耗时 \(String(format: "%.1f", elapsed)) 秒")
+                }
             }
         }
     }
@@ -309,11 +324,24 @@ struct GeneratingView: View {
     // MARK: - 用后端真实进度抬升前端展示进度地板
     /// 前端展示进度（pollingProgress）只增不减：后端进度更高时把它抬到后端值，
     /// 使定时器从后端进度继续往上爬，避免死卡；封顶 89%，剩余留给整理阶段。
+    /// 注意：后端原以 30% 作为任务启动基准，现统一映射为 10%。
     private func liftPollingProgressFloor(to backendProgress: Int) {
-        let floor = min(89, Double(backendProgress))
+        let mapped = mapBackendProgressToFrontend(backendProgress)
+        let floor = min(89, Double(mapped))
         if pollingProgress < floor {
             pollingProgress = floor
         }
+    }
+
+    // MARK: - 后端进度映射到前端展示进度
+    /// 后端 0%=未创建，30%=已创建/排队/已提交，30%~100%=生图过程。
+    /// 前端 0%=未创建，10%=已创建/排队/已提交，10%~89%=生图过程。
+    private func mapBackendProgressToFrontend(_ backendProgress: Int) -> Int {
+        if backendProgress <= 0 { return 0 }
+        if backendProgress <= 30 { return 10 }
+        // 后端 30~100 线性映射到前端 10~89
+        let mapped = 10 + Int(Double(backendProgress - 30) / 70.0 * 79.0)
+        return min(89, max(10, mapped))
     }
 
     // MARK: - 进入生成页时持久化订单为 GENERATING
@@ -344,9 +372,9 @@ struct GeneratingView: View {
         #else
         // 真机环境：开始轮询任务状态
         statusManager.startPolling(orderId: order.id)
-        // 恢复场景：进度从后端已知进度或合理基准值（30%）开始，避免视觉倒退
+        // 恢复场景：进度从后端已知进度或合理基准值（10%）开始，避免视觉倒退
         if isRestored {
-            let backendProgress = statusManager.currentTask?.progress ?? 30
+            let backendProgress = statusManager.currentTask?.progress ?? 10
             pollingProgress = Double(min(89, backendProgress))
         }
         // 启动 AI 生图阶段进度动画（匀速爬升到 89%，避免进度条死卡在后端 30%）
@@ -504,6 +532,17 @@ struct GeneratingView: View {
         switch task.status {
         case "COMPLETED":
             guard !isFinalizing else { return }
+            // 记录后端任务变为 COMPLETED 的时间，并打印全程耗时与 89% 等待时长
+            completedTime = Date()
+            if let start = generationStartTime {
+                let total = Date().timeIntervalSince(start)
+                if let reached89 = reached89Time {
+                    let stuckAt89 = Date().timeIntervalSince(reached89)
+                    print("[生成耗时] 后端任务 COMPLETED，总耗时 \(String(format: "%.1f", total)) 秒，其中卡在 89% 等待 \(String(format: "%.1f", stuckAt89)) 秒")
+                } else {
+                    print("[生成耗时] 后端任务 COMPLETED，总耗时 \(String(format: "%.1f", total)) 秒，未到达 89%")
+                }
+            }
             statusText = "创作完成 正在呈现…"
             timer?.invalidate()
             statusManager.stopPolling()
