@@ -130,6 +130,11 @@ class OrderStatusManager: ObservableObject {
     @Published var isPolling = false
     @Published var isTimeout = false  // 新增：超时标志
     @Published var pollingFailureCount = 0  // 新增：连续轮询失败次数
+    /// 断网（飞行模式等物理断网）期间暂停总超时计时。
+    /// 由 GeneratingView 的 NWPathMonitor 设置：断网时置 true，恢复时置 false。
+    /// 目的：避免把用户断网等待的时长误判为"生成超时"，导致后端已生成成功却跳失败页。
+    /// 仅在主线程读写。
+    var isTimeoutPaused = false
 
     private var pollingTask: Task<Void, Never>?
     private var timeoutTask: Task<Void, Never>?  // 新增：超时计时器
@@ -184,16 +189,6 @@ class OrderStatusManager: ObservableObject {
         }
 
         return order
-    }
-
-    /// 加载待验证的订单 ID（用于交易恢复）
-    func loadPendingOrderId() -> String? {
-        guard let order = loadLastOrder() else { return nil }
-        // 只有 UNPAID 或 GENERATING 状态的订单才需要恢复
-        if order.status == "UNPAID" || order.status == "GENERATING" || order.status == "PAID" {
-            return order.id
-        }
-        return nil
     }
 
     /// 清除本地保存的订单
@@ -275,9 +270,21 @@ class OrderStatusManager: ObservableObject {
             saveCurrentOrder(order)
         }
 
-        // 启动超时计时器（5分钟）
+        // 启动超时计时器（累计 5 分钟"有网轮询"时长才判超时）
+        // 改为逐秒累加：断网（isTimeoutPaused）期间不计时，避免把用户断网等待
+        // 误判为生成超时——后端此时可能已生成成功，网络恢复后仍能取回结果。
+        isTimeoutPaused = false
         timeoutTask = Task {
-            try? await Task.sleep(nanoseconds: maxPollingDuration)
+            var elapsed: UInt64 = 0
+            let tick: UInt64 = 1_000_000_000 // 1 秒
+            while elapsed < maxPollingDuration {
+                try? await Task.sleep(nanoseconds: tick)
+                if Task.isCancelled { return }
+                let paused = await MainActor.run { self.isTimeoutPaused }
+                if !paused {
+                    elapsed += tick
+                }
+            }
             await MainActor.run {
                 if self.isPolling {
                     self.isTimeout = true

@@ -78,7 +78,25 @@ export class PaymentService {
       where: { paymentId: transactionId },
     });
     if (existingOrder && existingOrder.id !== orderId) {
-      throw new BadRequestException('该交易已完成支付，请勿重复提交');
+      // 该交易号已被别的订单占用。分两种情况：
+      // - 旧订单已 SUCCESS（真正完成并交付的付费）→ 这是真正的重复提交，拒绝。
+      // - 旧订单未 SUCCESS（UNPAID/PAID/GENERATING/FAILED 等）→ 属于测试环境
+      //   （本地 StoreKit / 沙盒）交易号复用产生的脏数据：本地交易号从 0 递增、
+      //   每次重装归零，必然撞上历史订单。此时允许当前订单“接管”该交易号：
+      //   先释放旧订单占用（paymentId 有唯一约束，必须先置空并作废旧订单），
+      //   再让当前订单正常走验证。生产环境交易号全局唯一，永不进入此分支，安全无副作用。
+      if (existingOrder.status === OrderStatus.SUCCESS) {
+        throw new BadRequestException('该交易已完成支付，请勿重复提交');
+      }
+
+      this.logger.warn(
+        `交易号 ${transactionId} 被未完成订单 ${existingOrder.id}（状态 ${existingOrder.status}）占用，判定为测试环境交易号复用，释放并由订单 ${orderId} 接管`,
+      );
+      // 释放旧订单的交易号并作废，避免撞唯一约束、也避免旧订单成为僵尸
+      existingOrder.paymentId = null as unknown as string;
+      existingOrder.status = OrderStatus.FAILED;
+      existingOrder.errorMessage = `交易号被订单 ${orderId} 接管（测试环境交易号复用）`;
+      await this.orderRepository.save(existingOrder);
     }
 
     // 3. 验证 Apple 收据

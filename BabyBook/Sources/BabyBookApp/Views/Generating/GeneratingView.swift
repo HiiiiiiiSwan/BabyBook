@@ -95,6 +95,7 @@ struct GeneratingView: View {
             pollingProgressTimer?.invalidate()
             statusManager.stopPolling()
             statusManager.isTimeout = false          // 清除超时状态，防止下次进入时立即触发
+            statusManager.isTimeoutPaused = false    // 清除断网暂停标志，避免泄漏到下次
             statusManager.pollingFailureCount = 0    // 清除网络失败计数
             downloadTask?.cancel()
             failureVerifyTask?.cancel()
@@ -416,27 +417,61 @@ struct GeneratingView: View {
     }
 
     #if canImport(Network)
-    // MARK: - 监听网络恢复：隐藏 Toast，并在整理阶段立刻打断重试等待
-    // 注意：真机后端为局域网 IP，NWPathMonitor 只能判断"有没有网络接口"，
-    // 不能保证一定能连上后端。因此这里仅用它作为"尽早重试"的触发信号，
-    // 真正能否成功仍由下载结果决定。
+    // MARK: - 监听网络状态变化：断网时主动暂停并提示，恢复时隐藏提示并继续
+    // 关键：URLSession 配置了 waitsForConnectivity=true，断网（飞行模式等）时请求
+    // 不会立即抛错、而是一直挂起，导致 pollingFailureCount 永远不增加——依赖它的
+    // toast 与进度暂停逻辑全部失效，进度会一路爬到 89% 封顶死等，最终误触发 5 分钟超时。
+    // 因此断网感知必须由 NWPathMonitor 主动驱动，而不能只依赖轮询失败计数。
+    // 注意：真机后端为公网地址，NWPathMonitor 只能判断"有没有网络接口"，
+    // 不能保证一定能连上后端。它作为"断网/恢复"的主信号，能否成功仍由请求结果决定。
     private func startNetworkMonitoring() {
         guard networkMonitor == nil else { return }
         let monitor = NWPathMonitor()
         let queue = DispatchQueue(label: "com.babybook.networkmonitor")
         monitor.pathUpdateHandler = { path in
-            guard path.status == .satisfied else { return }
+            let isConnected = path.status == .satisfied
             Task { @MainActor in
-                self.hideNetworkToast()
-                // 整理阶段若正处于重试等待中，立刻打断等待，尽早发起下载
-                if self.isWaitingRetry {
-                    self.resumeRetryWaitImmediately()
+                if isConnected {
+                    self.handleNetworkRecovered()
+                } else {
+                    self.handleNetworkLost()
                 }
             }
         }
         monitor.start(queue: queue)
         networkMonitor = monitor
         networkMonitorQueue = queue
+    }
+
+    // MARK: - 网络断开（飞行模式等）：暂停进度与总超时计时，主动提示
+    @MainActor
+    private func handleNetworkLost() {
+        // 整理/下载阶段的断网由各自的重试逻辑处理，这里只管 AI 生图轮询阶段
+        guard !isFinalizing, !navigateToComplete, !navigateToFailureResult else { return }
+        // 暂停总超时计时，避免把断网等待误判为生成超时
+        statusManager.isTimeoutPaused = true
+        // 暂停前端匀速进度，停在当前位置
+        pausePollingProgressAnimation()
+        showNetworkToast("网络连接异常，请检查网络后重试")
+    }
+
+    // MARK: - 网络恢复：恢复计时与进度，隐藏提示，并确保轮询在运行
+    @MainActor
+    private func handleNetworkRecovered() {
+        // 恢复总超时计时
+        statusManager.isTimeoutPaused = false
+        hideNetworkToast()
+        // 整理阶段若正处于重试等待中，立刻打断等待，尽早发起下载
+        if isWaitingRetry {
+            resumeRetryWaitImmediately()
+            return
+        }
+        // AI 生图阶段：恢复匀速进度，并确保轮询仍在运行（断网期间挂起的请求可能已被系统丢弃）
+        guard !isFinalizing, !navigateToComplete, !navigateToFailureResult else { return }
+        resumePollingProgressAnimation()
+        if !statusManager.isPolling {
+            statusManager.startPolling(orderId: order.id)
+        }
     }
 
     // MARK: - 立刻结束当前重试等待（网络恢复时调用）
