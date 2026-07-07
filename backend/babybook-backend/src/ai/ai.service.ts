@@ -436,15 +436,17 @@ export class AiService {
    */
   private async downloadImageToBase64(imageUrl: string): Promise<string> {
     try {
-      // 如果是本地相对路径（如 /api/upload/image/xxx.jpg），转换为绝对路径
-      if (imageUrl.startsWith('/api/upload/')) {
-        const filename = imageUrl.split('/').pop() || '';
+      // 只要是本服务上传的图片（URL 含 /api/upload/image/，无论前缀是 localhost
+      // 还是生产域名），一律优先读本地文件，绕开 HTTP 认证（DeviceAuthGuard 会返回 401）
+      if (imageUrl.includes('/api/upload/image/')) {
+        const filename = imageUrl.split('/').pop()?.split('?')[0] || '';
         if (filename) {
           const localPath = path.join(process.cwd(), 'uploads', 'temp', filename);
           if (fs.existsSync(localPath)) {
             const buffer = await fs.promises.readFile(localPath);
             return buffer.toString('base64');
           }
+          this.logger.warn(`本地图片文件不存在，回退远程下载: ${localPath}`);
         }
       }
 
