@@ -139,7 +139,7 @@ class OrderStatusManager: ObservableObject {
     private var pollingTask: Task<Void, Never>?
     private var timeoutTask: Task<Void, Never>?  // 新增：超时计时器
     private let pollingInterval: UInt64 = 3_000_000_000 // 3 秒（纳秒）
-    private let maxPollingDuration: UInt64 = 300_000_000_000 // 5 分钟（纳秒）
+    private let maxPollingDuration: UInt64 = 600_000_000_000 // 10 分钟（纳秒），与后端 AI 调用 10 分钟超时对齐
     private let maxPollingFailureCount = 3  // 新增：连续失败阈值
 
     // MARK: - 本地持久化
@@ -291,7 +291,7 @@ class OrderStatusManager: ObservableObject {
                 }
             }
             await MainActor.run {
-                print("[轮询管理器-超时计时] 达到 5 分钟上限，设置 isTimeout=true")
+                print("[轮询管理器-超时计时] 达到 10 分钟上限，设置 isTimeout=true")
                 if self.isPolling {
                     self.isTimeout = true
                     self.isPolling = false
