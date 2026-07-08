@@ -40,6 +40,8 @@ struct GeneratingView: View {
     @State private var generationStartTime: Date? = nil
     @State private var reached89Time: Date? = nil
     @State private var completedTime: Date? = nil
+    // 当前轮询会话 ID，用于过滤只属于自己的超时信号，避免单例竞态
+    @State private var pollingSessionId: UUID? = nil
     #if canImport(UIKit)
     @State private var preloadedImage: UIImage? = nil
     #endif
@@ -106,6 +108,8 @@ struct GeneratingView: View {
             statusManager.isTimeout = false          // 清除超时状态，防止下次进入时立即触发
             statusManager.isTimeoutPaused = false    // 清除断网暂停标志，避免泄漏到下次
             statusManager.pollingFailureCount = 0    // 清除网络失败计数
+            // 清空当前会话 ID，避免旧页面的监听器误响应
+            pollingSessionId = nil
             downloadTask?.cancel()
             failureVerifyTask?.cancel()
             isVerifyingFailure = false
@@ -373,7 +377,10 @@ struct GeneratingView: View {
         }
         #else
         // 真机环境：开始轮询任务状态
-        statusManager.startPolling(orderId: order.id)
+        // 记录当前会话 ID，用于过滤只属于自己的超时信号
+        let sessionId = statusManager.startPolling(orderId: order.id)
+        pollingSessionId = sessionId
+        print("[生成页] 当前轮询会话 sessionId=\(sessionId.uuidString.prefix(8))")
         // 恢复场景：进度从后端已知进度或合理基准值（10%）开始，避免视觉倒退
         if isRestored {
             let backendProgress = statusManager.currentTask?.progress ?? 10
@@ -391,7 +398,12 @@ struct GeneratingView: View {
         Task {
             for await _ in statusManager.$currentTask.values {
                 await MainActor.run {
-                    checkTaskStatus()
+                    // 只有当前会话的 task 更新才响应
+                    guard self.pollingSessionId == sessionId else {
+                        print("[生成页-状态] 收到非当前会话的 task 更新，忽略")
+                        return
+                    }
+                    self.checkTaskStatus()
                 }
             }
         }
@@ -400,7 +412,8 @@ struct GeneratingView: View {
         Task {
             for await _ in statusManager.$pollingFailureCount.values {
                 await MainActor.run {
-                    updateNetworkToast()
+                    guard self.pollingSessionId == sessionId else { return }
+                    self.updateNetworkToast()
                 }
             }
         }
@@ -412,7 +425,18 @@ struct GeneratingView: View {
             for await isTimeout in statusManager.$isTimeout.values {
                 if isTimeout && !statusManager.isPolling {
                     await MainActor.run {
-                        handleTimeout()
+                        // 消费式处理：只处理当前会话且未被消费过的超时
+                        guard self.pollingSessionId == sessionId else {
+                            print("[生成页-超时] 收到非当前会话的超时信号，忽略")
+                            return
+                        }
+                        let consumed = statusManager.consumeTimeout(sessionId: sessionId)
+                        if consumed {
+                            print("[生成页-超时] 消费当前会话超时信号，触发 handleTimeout")
+                            self.handleTimeout()
+                        } else {
+                            print("[生成页-超时] 超时信号已被消费或非当前会话，忽略")
+                        }
                     }
                 }
             }

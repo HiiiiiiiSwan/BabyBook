@@ -128,8 +128,12 @@ class OrderStatusManager: ObservableObject {
     @Published var currentOrder: BackendOrder?
     @Published var currentTask: BackendTask?
     @Published var isPolling = false
-    @Published var isTimeout = false  // 新增：超时标志
+    @Published var isTimeout = false  // 新增：超时标志（一次性信号，处理完后需重置）
     @Published var pollingFailureCount = 0  // 新增：连续轮询失败次数
+    /// 当前轮询会话 ID，用于区分不同次进入生成页的超时任务，避免单例残留竞态
+    private(set) var currentPollingSessionId: UUID?
+    /// 超时信号是否已被消费，防止同一超时被多次处理
+    private(set) var isTimeoutConsumed = false
     /// 断网（飞行模式等物理断网）期间暂停总超时计时。
     /// 由 GeneratingView 的 NWPathMonitor 设置：断网时置 true，恢复时置 false。
     /// 目的：避免把用户断网等待的时长误判为"生成超时"，导致后端已生成成功却跳失败页。
@@ -257,21 +261,26 @@ class OrderStatusManager: ObservableObject {
     }
 
     /// 开始轮询任务状态
-    func startPolling(orderId: String) {
+    /// - Returns: 本次轮询会话的 UUID，GeneratingView 可用它过滤只属于自己的超时信号
+    @discardableResult
+    func startPolling(orderId: String) -> UUID {
         stopPolling()
+        let sessionId = UUID()
+        currentPollingSessionId = sessionId
         isPolling = true
         isTimeout = false
+        isTimeoutConsumed = false
         pollingFailureCount = 0
         // 清空旧 task，避免新的监听器/立即检查读到上次遗留的 FAILED/COMPLETED 状态
         currentTask = nil
-        print("[轮询管理器] startPolling orderId=\(orderId), isPolling=true")
+        print("[轮询管理器] startPolling orderId=\(orderId), sessionId=\(sessionId.uuidString.prefix(8)), isPolling=true")
 
         // 保存当前订单到本地（用于崩溃恢复）
         if let order = currentOrder {
             saveCurrentOrder(order)
         }
 
-        // 启动超时计时器（累计 5 分钟"有网轮询"时长才判超时）
+        // 启动超时计时器（累计 10 分钟"有网轮询"时长才判超时）
         // 改为逐秒累加：断网（isTimeoutPaused）期间不计时，避免把用户断网等待
         // 误判为生成超时——后端此时可能已生成成功，网络恢复后仍能取回结果。
         isTimeoutPaused = false
@@ -281,16 +290,29 @@ class OrderStatusManager: ObservableObject {
             while elapsed < maxPollingDuration {
                 try? await Task.sleep(nanoseconds: tick)
                 if Task.isCancelled { return }
+                // 如果会话已被切换或停止，直接退出，避免旧 session 残留超时
+                let isCurrentSession = await MainActor.run {
+                    self.currentPollingSessionId == sessionId
+                }
+                guard isCurrentSession else {
+                    print("[轮询管理器-超时计时] sessionId=\(sessionId.uuidString.prefix(8)) 已不是当前会话，退出计时")
+                    return
+                }
                 let paused = await MainActor.run { self.isTimeoutPaused }
                 if !paused {
                     elapsed += tick
                 }
                 let elapsedSec = elapsed / 1_000_000_000
                 if elapsedSec % 10 == 0 || paused {
-                    print("[轮询管理器-超时计时] elapsed=\(elapsedSec)s, isTimeoutPaused=\(paused), isPolling=\(self.isPolling)")
+                    print("[轮询管理器-超时计时] sessionId=\(sessionId.uuidString.prefix(8)), elapsed=\(elapsedSec)s, isTimeoutPaused=\(paused), isPolling=\(self.isPolling)")
                 }
             }
             await MainActor.run {
+                // 再次确认仍是当前会话才设置超时
+                guard self.currentPollingSessionId == sessionId else {
+                    print("[轮询管理器-超时计时] 达到 10 分钟上限，但 session 已切换，忽略本次超时")
+                    return
+                }
                 print("[轮询管理器-超时计时] 达到 10 分钟上限，设置 isTimeout=true")
                 if self.isPolling {
                     self.isTimeout = true
@@ -303,9 +325,11 @@ class OrderStatusManager: ObservableObject {
         pollingTask = Task {
             while !Task.isCancelled {
                 do {
-                    print("[轮询管理器] 查询任务状态 orderId=\(orderId)")
+                    print("[轮询管理器] 查询任务状态 orderId=\(orderId), sessionId=\(sessionId.uuidString.prefix(8))")
                     if let task = try await NetworkService.shared.getTaskByOrderId(orderId: orderId) {
                         await MainActor.run {
+                            // 只有当前会话才更新 task，避免旧任务结果污染新会话
+                            guard self.currentPollingSessionId == sessionId else { return }
                             self.currentTask = task
                             self.pollingFailureCount = 0
                             print("[轮询管理器] 任务状态返回 status=\(task.status), progress=\(task.progress)")
@@ -314,6 +338,8 @@ class OrderStatusManager: ObservableObject {
                         // 任务完成或失败，停止轮询
                         if task.status == "COMPLETED" || task.status == "FAILED" || task.status == "CANCELLED" {
                             await MainActor.run {
+                                // 只有当前会话才停止轮询
+                                guard self.currentPollingSessionId == sessionId else { return }
                                 print("[轮询管理器] 任务到达终态 \(task.status)，停止轮询")
                                 self.isPolling = false
                             }
@@ -322,20 +348,20 @@ class OrderStatusManager: ObservableObject {
                     } else {
                         // 任务尚未创建（404），属于正常等待阶段，不计入网络失败
                         await MainActor.run {
+                            guard self.currentPollingSessionId == sessionId else { return }
                             self.pollingFailureCount = 0
                             print("[轮询管理器] 任务尚未创建（404），继续等待")
                         }
                     }
                 } catch {
                     print("[轮询管理器] 轮询任务状态失败: \(error.localizedDescription)")
-                    // 只有真正的网络错误才累计失败次数，业务错误（5xx等）不视为本地断网
-                    if shouldTreatAsNetworkFailure(error) {
-                        await MainActor.run {
+                    await MainActor.run {
+                        guard self.currentPollingSessionId == sessionId else { return }
+                        // 只有真正的网络错误才累计失败次数，业务错误（5xx等）不视为本地断网
+                        if self.shouldTreatAsNetworkFailure(error) {
                             self.pollingFailureCount += 1
                             print("[轮询管理器] 网络失败计数增加到 \(self.pollingFailureCount)")
-                        }
-                    } else {
-                        await MainActor.run {
+                        } else {
                             self.pollingFailureCount = 0
                         }
                     }
@@ -345,6 +371,8 @@ class OrderStatusManager: ObservableObject {
                 try? await Task.sleep(nanoseconds: pollingInterval)
             }
         }
+
+        return sessionId
     }
 
     /// 判断错误是否应被视为网络异常（用于弹网络 Toast）
@@ -381,7 +409,21 @@ class OrderStatusManager: ObservableObject {
         timeoutTask?.cancel()
         timeoutTask = nil
         isPolling = false
+        // 切换会话 ID，使任何残留的旧 timeoutTask/pollingTask 都不再更新状态
+        currentPollingSessionId = nil
         print("[轮询管理器] stopPolling 调用，isPolling=false")
+    }
+
+    /// 消费当前超时信号
+    /// 返回 true 表示成功消费，返回 false 表示已被消费或不是当前会话
+    @MainActor
+    func consumeTimeout(sessionId: UUID) -> Bool {
+        guard currentPollingSessionId == sessionId, isTimeout, !isTimeoutConsumed else {
+            return false
+        }
+        isTimeoutConsumed = true
+        isTimeout = false
+        return true
     }
 
     /// 取消任务
