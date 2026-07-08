@@ -23,7 +23,10 @@ class ImageUploadService {
     /// - Parameter image: 宝宝照片 UIImage
     /// - Returns: 图片 URL 字符串
     func uploadImage(_ image: UIImage) async throws -> String {
-        guard let imageData = image.jpegData(compressionQuality: 0.8) else {
+        // 1. 先压缩图片尺寸：控制短边不超过 1024，减少豆包 AI 处理耗时
+        let compressedImage = compressImageForUpload(image)
+
+        guard let imageData = compressedImage.jpegData(compressionQuality: 0.85) else {
             throw UploadError.imageCompressionFailed
         }
 
@@ -32,6 +35,8 @@ class ImageUploadService {
         guard imageData.count <= maxSize else {
             throw UploadError.fileTooLarge
         }
+
+        print("[图片上传] 原始尺寸: \(image.size.width)×\(image.size.height), 压缩后尺寸: \(compressedImage.size.width)×\(compressedImage.size.height), 上传大小: \(imageData.count) bytes")
 
         // 构建 multipart 请求
         let boundary = UUID().uuidString
@@ -71,9 +76,28 @@ class ImageUploadService {
         return imageUrl
     }
 
+    /// 压缩图片用于上传：控制短边不超过 1024，平衡 AI 参考细节与处理耗时
+    private func compressImageForUpload(_ image: UIImage, maxShortSide: CGFloat = 1024) -> UIImage {
+        let size = image.size
+        let shortSide = min(size.width, size.height)
+
+        // 如果短边已经小于等于限制，直接返回原图
+        guard shortSide > maxShortSide else { return image }
+
+        let scale = maxShortSide / shortSide
+        let newSize = CGSize(width: size.width * scale, height: size.height * scale)
+
+        UIGraphicsBeginImageContextWithOptions(newSize, false, 1.0)
+        defer { UIGraphicsEndImageContext() }
+        image.draw(in: CGRect(origin: .zero, size: newSize))
+        return UIGraphicsGetImageFromCurrentImageContext() ?? image
+    }
+
     /// 将图片转为 Base64（备用方案）
     func imageToBase64(_ image: UIImage, quality: CGFloat = 0.8) -> String? {
-        guard let imageData = image.jpegData(compressionQuality: quality) else {
+        // Base64 场景也使用压缩后的图片，保持前后一致
+        let compressedImage = compressImageForUpload(image)
+        guard let imageData = compressedImage.jpegData(compressionQuality: quality) else {
             return nil
         }
         return imageData.base64EncodedString()
