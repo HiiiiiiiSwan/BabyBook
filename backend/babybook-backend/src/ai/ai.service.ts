@@ -54,7 +54,7 @@ export class AiService {
 
   /**
    * 生成绘本九宫格图片
-   * 核心业务：单本绘本仅调用一次生图模型，输出单张 1024×1024 九宫格图片
+   * 核心业务：单本绘本仅调用一次生图模型，输出单张 1920×1920 九宫格图片
    *
    * 流程：
    * 1. 读取空白模板图（all-none.png）转 Base64
@@ -92,7 +92,7 @@ export class AiService {
     // 4. 构建 Prompt
     const prompt = this.buildPrompt(bookId);
 
-    this.logger.log(`开始生成绘本图片: ${bookId}, 模型: ${this.modelName}, 尺寸: 1K(1024×1024)`);
+    this.logger.log(`开始生成绘本图片: ${bookId}, 模型: ${this.modelName}, 尺寸: 1920×1920`);
     this.logger.log(`模板: ${templatePath}`);
 
     try {
@@ -102,7 +102,7 @@ export class AiService {
         prompt: prompt,
         sequential_image_generation: 'disabled',
         response_format: 'url',
-        size: '1K', // 1024×1024，降低分辨率以缩短生成耗时（MVP 阶段优先保证成功率）
+        size: '1920x1920', // 在满足豆包最小像素限制（3686400）的前提下降低分辨率，缩短生成耗时
         stream: false,
         watermark: true,
         // 多图参考模式：2张图 — 模板 + 宝宝照片

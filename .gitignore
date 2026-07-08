@@ -37,7 +37,8 @@ Package.resolved
 .env.local
 .env.*.local
 
-# 后端构建输出
+# 运行时上传/生成文件（宝宝照片、AI 生成图、测试输出）
+uploads/
 backend/dist/
 backend/build/
 

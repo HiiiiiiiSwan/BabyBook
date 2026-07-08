@@ -11,7 +11,7 @@ class PDFService {
     #if canImport(UIKit)
     /// 将九宫格图片分割为单页并生成 PDF
     /// - Parameters:
-    ///   - image: 1024x1024 的九宫格图片（后端 AI 输出尺寸）
+    ///   - image: 1920x1920 的九宫格图片（后端 AI 输出尺寸）
     ///   - bookName: 绘本名称
     ///   - orderId: 订单ID
     /// - Returns: 生成的 PDF 文件路径

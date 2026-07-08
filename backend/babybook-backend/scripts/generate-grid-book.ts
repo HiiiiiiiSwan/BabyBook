@@ -135,7 +135,7 @@ async function generateGridBook() {
   const requestBody = {
     model: DOUBAO_MODEL,
     prompt: PROMPT,
-    size: '1K',  // 1024x1024，MVP 阶段优先保证生成成功率
+    size: '1920x1920',  // 在满足豆包最小像素限制（3686400）的前提下降低分辨率，缩短生成耗时
     watermark: true,
     sequential_image_generation: 'disabled',
     response_format: 'url',
@@ -149,7 +149,7 @@ async function generateGridBook() {
   console.log('🚀 调用豆包 Seedream 5.0 API...');
   console.log(`   模型: ${DOUBAO_MODEL}`);
   console.log(`   模式: 2图参考（模板 + 宝宝照片）`);
-  console.log(`   尺寸: 1K (1024×1024)`);
+  console.log(`   尺寸: 1920×1920`);
   console.log(`   超时: 300秒`);
 
   // 4. 调用 API
