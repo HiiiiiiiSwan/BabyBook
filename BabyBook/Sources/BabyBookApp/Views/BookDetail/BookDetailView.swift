@@ -457,10 +457,15 @@ struct BookDetailView: View {
     }
 
     private var displayPrice: String {
+        #if targetEnvironment(simulator)
+        // 模拟器统一显示中国区价格，避免沙盒账号地区不同导致截图价格不一致
+        return "¥3.0"
+        #else
         if let displayPrice = paymentService.product(for: book.bookId)?.displayPrice {
             return displayPrice
         }
         return "¥\(String(format: "%.1f", book.price))"
+        #endif
     }
 
     private func pageBundlePath(for named: String) -> String {

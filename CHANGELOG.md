@@ -10,6 +10,20 @@
 
 ## [Unreleased]
 
+### 2026-07-08
+
+- `fix` 修复 iOS 26 模拟器人脸检测崩溃
+  - `FaceDetectionService.swift`：模拟器环境下跳过 Vision 人脸检测，避免 `Could not create inference context` 导致 continuation 重复 resume 崩溃
+  - 真机环境增加 `NSLock` 保护，确保 completion 只调用一次
+
+- `fix` 统一模拟器环境下价格显示为 ¥3.0
+  - `HomeView.swift`：模拟器下首页"一键定制"按钮显示 `¥3.0`
+  - `PaymentView.swift`：模拟器下支付页显示 `¥3.00`
+  - 避免沙盒账号地区不同导致截图价格与中国区 IAP 价格不一致
+
+- `docs` 更新 `PRIVACY_POLICY.md`
+  - 新增"示例照片"章节，说明示例宝宝照片为开发者自有素材、仅用于功能演示和审核截图
+
 ### 2026-07-07
 
 - `revert` 回退到 `d2525d3` — feat(ios): 优化生成中进度体验并添加耗时诊断日志

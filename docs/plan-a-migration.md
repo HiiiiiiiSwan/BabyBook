@@ -174,7 +174,7 @@ import { DataSource } from 'typeorm';
 2. Railway 部署前会自动执行 `npm run migration:run:prod`
 3. 部署完成后访问：
    ```
-   https://babybook-api-production-ef09.up.railway.app/health
+   https://babybook-api-production-d524.up.railway.app/health
    ```
 4. 确认返回：
    ```json
@@ -228,7 +228,7 @@ jobs:
           curl -fsS \
             --retry 3 \
             --max-time 30 \
-            "https://babybook-api-production-ef09.up.railway.app/health" \
+            "https://babybook-api-production-d524.up.railway.app/health" \
             | tee health_response.json
 
       - name: Check database status
@@ -263,7 +263,7 @@ UptimeRobot 免费版可以每 5 分钟检查一次 URL：
 2. 添加 Monitor：
    - **Monitor Type**：HTTP(s)
    - **Friendly Name**：`BabyBook Health`
-   - **URL**：`https://babybook-api-production-ef09.up.railway.app/health`
+   - **URL**：`https://babybook-api-production-d524.up.railway.app/health`
 3. 配置告警方式：
    - 邮箱（免费）
    - 或绑定 Slack / Telegram / 钉钉 Webhook
@@ -322,7 +322,7 @@ export class KeepAliveService {
 ### 监控配置清单
 
 1. **UptimeRobot Monitor**
-   - URL：`https://babybook-api-production-ef09.up.railway.app/health`
+   - URL：`https://babybook-api-production-d524.up.railway.app/health`
    - 检查间隔：5 分钟
    - 超时：30 秒
    - 告警邮箱：你的邮箱
@@ -343,7 +343,7 @@ export class KeepAliveService {
 当 UptimeRobot 检测到后端不可用时，会收到类似邮件：
 
 > Monitor: BabyBook Health  
-> URL: https://babybook-api-production-ef09.up.railway.app/health  
+> URL: https://babybook-api-production-d524.up.railway.app/health  
 > Status: DOWN  
 > Reason: Connection timeout
 

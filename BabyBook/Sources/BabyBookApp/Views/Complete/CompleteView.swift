@@ -284,6 +284,16 @@ struct CompleteView: View {
             return image
         }
 
+        // 模拟器环境：使用本地模板图作为完成页展示，避免等待后端 AI 生成/截图效果不可控
+        #if targetEnvironment(simulator)
+        if let simulatorImage = loadSimulatorMockBookImage() {
+            await MainActor.run {
+                downloadedImage = simulatorImage
+            }
+            return simulatorImage
+        }
+        #endif
+
         // 优先使用预加载图片
         if let preloadedImage = preloadedImage {
             await MainActor.run {
@@ -325,6 +335,13 @@ struct CompleteView: View {
             downloadedImage = image
         }
         return image
+    }
+
+    /// 模拟器下加载本地模板图，用于截图展示
+    private func loadSimulatorMockBookImage() -> UIImage? {
+        let projectPath = "/Users/wang/Documents/Vibe coding/【新】宝贝绘本"
+        let templatePath = "\(projectPath)/templates/\(book.bundleFolder)/all.png"
+        return UIImage(contentsOfFile: templatePath)
     }
 
     // MARK: - 页面进入时自动加载绘本图片（仅用于预览，不触发保存/PDF）

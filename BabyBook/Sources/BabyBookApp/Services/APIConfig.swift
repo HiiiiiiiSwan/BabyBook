@@ -24,7 +24,7 @@ enum APIConfig {
         case .staging:
             return "https://staging-api.babybook.com"
         case .production:
-            return "https://babybook-api-production-ef09.up.railway.app"
+            return "https://babybook-api-production-d524.up.railway.app"
         }
     }
 

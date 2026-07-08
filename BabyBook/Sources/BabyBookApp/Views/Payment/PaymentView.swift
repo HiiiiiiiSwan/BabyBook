@@ -74,10 +74,15 @@ struct PaymentView: View {
     }
 
     private var displayPrice: String {
+        #if targetEnvironment(simulator)
+        // 模拟器统一显示中国区价格，避免沙盒账号地区不同导致截图价格不一致
+        return "¥3.00"
+        #else
         if let displayPrice = paymentService.product(for: book.bookId)?.displayPrice {
             return displayPrice
         }
         return "¥\(String(format: "%.2f", order.amount))"
+        #endif
     }
 
     // MARK: - 顶部标题

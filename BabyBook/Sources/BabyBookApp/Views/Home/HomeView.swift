@@ -80,13 +80,18 @@ struct HomeView: View {
 
     // MARK: - 首页内容
     private var homeContent: some View {
-        ScrollView(showsIndicators: false) {
-            VStack(spacing: 0) {
-                headerSection
-                guideSection
-                bookCarouselSection
+        GeometryReader { geometry in
+            ZStack {
+                ScrollView(showsIndicators: false) {
+                    VStack(spacing: 0) {
+                        headerSection
+                        guideSection
+                        bookCarouselSection
+                        Spacer().frame(height: bottomScrollPadding(for: geometry.size.height))
+                    }
+                }
+
                 bottomActionSection
-                Spacer().frame(height: 40)
             }
         }
         .onAppear {
@@ -94,6 +99,16 @@ struct HomeView: View {
             // 避免用户在上传照片流程中被打断
             triggerNetworkPermissionCheck()
         }
+    }
+
+    /// 计算 ScrollView 底部需要的额外滚动空间
+    /// 当屏幕足够高时返回 0，避免首页出现多余的可滚动空白
+    /// 当屏幕较小时返回刚好能避开底部固定操作区的高度
+    private func bottomScrollPadding(for availableHeight: CGFloat) -> CGFloat {
+        let contentHeight: CGFloat = 580
+        let bottomOverlayHeight: CGFloat = 185
+        let deficit = contentHeight + bottomOverlayHeight - availableHeight
+        return max(0, deficit)
     }
 
     // MARK: - 自定义 TabBar（已移除）
@@ -196,16 +211,16 @@ struct HomeView: View {
 
     // MARK: - 底部操作区
     private var bottomActionSection: some View {
-        ZStack(alignment: .bottom) {
-            // 底部插画（与一键定制按钮底部间距 55px，宽度与页面一致）
-            Image("homeBG")
-                .resizable()
-                .scaledToFit()
-                .frame(maxWidth: .infinity)
-                .padding(.bottom, 65)
+        VStack(spacing: 0) {
+            ZStack(alignment: .bottom) {
+                // 底部插画（与一键定制按钮底部间距 65px，宽度与页面一致）
+                Image("homeBG")
+                    .resizable()
+                    .scaledToFit()
+                    .frame(maxWidth: .infinity)
+                    .padding(.bottom, 65)
 
-            // 按钮内容（置底展示）
-            VStack(spacing: 0) {
+                // 按钮内容（置底展示）
                 VStack(spacing: 16) {
                     // 一键定制按钮（与绘本详情页样式一致）
                     ZStack(alignment: .bottom) {
@@ -264,9 +279,10 @@ struct HomeView: View {
                 .padding(.horizontal, 0)
                 .padding(.vertical, 12)
             }
-            .frame(maxWidth: .infinity, alignment: .bottom)
+            .background(DesignTokens.Colors.background)
         }
-        .padding(.top, DesignTokens.Spacing.xl)
+        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .bottom)
+        .ignoresSafeArea(.keyboard)
     }
 }
 
@@ -866,11 +882,16 @@ struct UploadPhotoSheet: View {
 // MARK: - 根据绘本获取展示价格（优先 StoreKit Product.displayPrice）
 @MainActor
 private func displayPrice(for book: Book?) -> String {
+    #if targetEnvironment(simulator)
+    // 模拟器统一显示中国区价格，避免沙盒账号地区不同导致截图价格不一致
+    return "¥3.0"
+    #else
     guard let book = book else { return "¥3.0" }
     if let displayPrice = PaymentService.shared.product(for: book.bookId)?.displayPrice {
         return displayPrice
     }
     return "¥\(String(format: "%.1f", book.price))"
+    #endif
 }
 
 #if canImport(UIKit)
