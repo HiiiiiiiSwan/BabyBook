@@ -204,7 +204,7 @@ async function generateBook(book: typeof BOOKS[0]) {
   const requestBody = {
     model: DOUBAO_MODEL,
     prompt: book.prompt,
-    size: '2K',  // 2048x2048
+    size: '1K',  // 1024x1024，MVP 阶段优先保证生成成功率
     watermark: true,
     sequential_image_generation: 'disabled',
     response_format: 'url',
@@ -218,7 +218,7 @@ async function generateBook(book: typeof BOOKS[0]) {
   console.log('🚀 调用豆包 Seedream 5.0 API...');
   console.log(`   模型: ${DOUBAO_MODEL}`);
   console.log(`   模式: 2图参考（模板 + 宝宝照片）`);
-  console.log(`   尺寸: 2K (2048×2048)`);
+  console.log(`   尺寸: 1K (1024×1024)`);
   console.log(`   超时: 300秒`);
 
   // 4. 调用 API
