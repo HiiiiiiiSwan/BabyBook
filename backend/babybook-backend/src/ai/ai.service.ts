@@ -54,7 +54,7 @@ export class AiService {
 
   /**
    * 生成绘本九宫格图片
-   * 核心业务：单本绘本仅调用一次生图模型，输出单张 2048×2048 九宫格图片
+   * 核心业务：单本绘本仅调用一次生图模型，输出单张 1024×1024 九宫格图片
    *
    * 流程：
    * 1. 读取空白模板图（all-none.png）转 Base64
@@ -65,6 +65,8 @@ export class AiService {
    */
   async generateBookImage(params: GenerateImageParams): Promise<GenerateImageResult> {
     const { bookId, imageUrl } = params;
+    const stageStart = this.now();
+    const totalStart = stageStart;
 
     if (!this.apiKey) {
       throw new Error('豆包 API Key 未配置');
@@ -79,16 +81,18 @@ export class AiService {
     // 2. 读取模板图转 Base64
     const templateBase64 = await fs.promises.readFile(templatePath)
       .then(b => b.toString('base64'));
+    this.logger.log(`[AI 生成耗时] 读取模板图完成: ${this.elapsed(totalStart)}ms, 路径: ${templatePath}`);
 
     // 3. 从 URL 下载宝宝照片并转 Base64
     this.logger.log(`正在下载宝宝照片: ${imageUrl}`);
+    const downloadStart = this.now();
     const babyPhotoBase64 = await this.downloadImageToBase64(imageUrl);
-    this.logger.log(`宝宝照片下载完成，Base64 长度: ${babyPhotoBase64.length}`);
+    this.logger.log(`[AI 生成耗时] 下载宝宝照片完成: ${this.elapsed(downloadStart)}ms, Base64 长度: ${babyPhotoBase64.length}`);
 
     // 4. 构建 Prompt
     const prompt = this.buildPrompt(bookId);
 
-    this.logger.log(`开始生成绘本图片: ${bookId}, 模型: ${this.modelName}`);
+    this.logger.log(`开始生成绘本图片: ${bookId}, 模型: ${this.modelName}, 尺寸: 1K(1024×1024)`);
     this.logger.log(`模板: ${templatePath}`);
 
     try {
@@ -98,7 +102,7 @@ export class AiService {
         prompt: prompt,
         sequential_image_generation: 'disabled',
         response_format: 'url',
-        size: '2K',
+        size: '1K', // 1024×1024，降低分辨率以缩短生成耗时（MVP 阶段优先保证成功率）
         stream: false,
         watermark: true,
         // 多图参考模式：2张图 — 模板 + 宝宝照片
@@ -108,6 +112,7 @@ export class AiService {
         ],
       };
 
+      const aiStart = this.now();
       const response = await axios.post<SeedreamResponse>(
         this.apiUrl,
         requestBody,
@@ -119,6 +124,7 @@ export class AiService {
           timeout: 600000, // 600 秒（10 分钟）超时：AI 生成九宫格实测需 1~5 分钟，预留充足余量
         },
       );
+      this.logger.log(`[AI 生成耗时] 豆包 API 返回完成: ${this.elapsed(aiStart)}ms`);
 
       if (response.data.error) {
         throw new Error(`AI 生成失败: ${response.data.error.message} (code: ${response.data.error.code})`);
@@ -138,13 +144,15 @@ export class AiService {
       this.logger.log(`绘本图片生成成功: ${resultUrl.substring(0, 60)}...`);
 
       // 下载保存结果到本地
+      const saveStart = this.now();
       const outputDir = path.join(process.cwd(), 'uploads', 'generated');
       if (!fs.existsSync(outputDir)) {
         fs.mkdirSync(outputDir, { recursive: true });
       }
       const outputPath = path.join(outputDir, `book_${bookId}_${Date.now()}.png`);
       await this.saveImageToFile(resultUrl, outputPath);
-      this.logger.log(`图片已保存到: ${outputPath}`);
+      this.logger.log(`[AI 生成耗时] 下载并保存结果图完成: ${this.elapsed(saveStart)}ms, 路径: ${outputPath}`);
+      this.logger.log(`[AI 生成耗时] 全流程总耗时: ${this.elapsed(totalStart)}ms`);
 
       return { resultUrl, localPath: outputPath };
     } catch (error) {
@@ -471,5 +479,19 @@ export class AiService {
       timeout: 60000,
     });
     await fs.promises.writeFile(outputPath, response.data);
+  }
+
+  /**
+   * 获取当前时间戳（毫秒）
+   */
+  private now(): number {
+    return Date.now();
+  }
+
+  /**
+   * 计算从给定时间戳开始的耗时（毫秒）
+   */
+  private elapsed(start: number): number {
+    return Date.now() - start;
   }
 }

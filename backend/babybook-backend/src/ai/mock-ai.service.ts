@@ -18,7 +18,7 @@ export class MockAiService {
   async generateBookImage(params: { bookId: string; imageUrl: string }): Promise<GenerateImageResult> {
     const mockImageUrl = this.configService.get(
       'MOCK_IMAGE_URL',
-      'https://picsum.photos/2048/2048',
+      'https://picsum.photos/1024/1024',
     );
 
     // 模拟生成延迟
