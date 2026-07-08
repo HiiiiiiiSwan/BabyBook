@@ -17,6 +17,20 @@ export class AppController {
   }
 
   /**
+   * 版本与配置检查接口
+   * 用于确认 Railway 部署的是哪个 commit、AI 尺寸配置是否生效，无需认证，不限流
+   */
+  @Get('version')
+  @SkipThrottle()
+  version(): { commit: string; aiImageSize: string; timestamp: number } {
+    return {
+      commit: process.env.RAILWAY_GIT_COMMIT_SHA || 'unknown',
+      aiImageSize: process.env.DOUBAO_IMAGE_SIZE || '1920x1920',
+      timestamp: Date.now(),
+    };
+  }
+
+  /**
    * 健康检查接口
    * 用于容器健康探测与 App 启动时触发网络权限弹窗，无需认证，不限流
    * 迁移到 Supabase 后增加真实数据库探测，便于 keep-alive/监控发现暂停
